@@ -1,59 +1,20 @@
-# GlossyWeb
+# Comandos para build y deploy:
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.0.
+# Construir la imagen (desde la carpeta del proyecto Angular)
+docker build -t glossy-frontend:local .
 
-## Development server
 
-To start a local development server, run:
+# Correr el contenedor
+docker run -d -p 80:80 --name glossy-frontend glossy-frontend:local
 
-```bash
-ng serve
-```
+# Ver logs
+docker logs glossy-frontend
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+# Verificar que está corriendo
+docker ps
 
-## Code scaffolding
+# Probar en el navegador
+curl http://localhost
+# O abre: http://localhost en tu navegador
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

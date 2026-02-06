@@ -1,0 +1,105 @@
+<div>
+
+
+      <!-- Carrusel Delgado y Elegante -->
+      <main class="w-[90%] mx-auto px-4 pt-12 pb-24">
+        <div 
+          class="relative h-[450px] md:h-[580px]  overflow-hidden group shadow-sm"
+          (mouseenter)="pauseAutoplay()"
+          (mouseleave)="startAutoplay()"
+        >
+          <!-- Contenedor de Slides -->
+          <div class="relative w-full h-full">
+            <div 
+              *ngFor="let slide of slides; let i = index"
+              class="absolute inset-0 transition-all duration-1000 ease-out"
+              [class.opacity-100]="current() === i"
+              [class.opacity-0]="current() !== i"
+              [class.invisible]="current() !== i"
+            >
+            
+              <!-- Imagen con zoom suave -->
+              <img 
+                [src]="slide.image" 
+                [alt]="slide.title"
+                class="w-full h-full object-cover transition-transform duration-[4000ms] ease-out"
+                [class.scale-105]="current() === i"
+              />
+              
+              <!-- Overlay Degradado sutil -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+              
+              <!-- Contenido del Slide -->
+              <div class="absolute inset-0 flex items-end p-10 md:p-20">
+                <div 
+                  class="max-w-xl text-white transition-all duration-1000 transform"
+                  [class.translate-y-0]="current() === i"
+                  [class.translate-y-8]="current() !== i"
+                  [class.opacity-100]="current() === i"
+                  [class.opacity-0]="current() !== i"
+                >
+
+                  <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-rose-100/80 mb-3">
+                    {{ slide.subtitle }}
+                  </p>
+                  
+                  <h2 class="text-4xl md:text-6xl font-serif font-light leading-tight mb-6 italic">
+                    {{ slide.title }}
+                  </h2>
+                  
+                  <p class="text-sm md:text-base font-light text-rose-50/90 mb-8 max-w-sm leading-relaxed tracking-wide">
+                    {{ slide.description }}
+                  </p>
+                  
+                  <button
+                    (click)="goToHome()"
+                    class="bg-white/90 backdrop-blur-sm text-rose-400 hover:bg-white px-10 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-105 shadow-sm"
+                  >
+                    EXPLORAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navegación Lateral Delgada -->
+          <div class="absolute inset-y-0 left-6 flex items-center z-20">
+            <button 
+              (click)="prevSlide()"
+              class="p-3 rounded-full text-white/40 hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+          </div>
+          
+          <div class="absolute inset-y-0 right-6 flex items-center z-20">
+            <button 
+              (click)="nextSlide()"
+              class="p-3 rounded-full text-white/40 hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <!-- Indicadores de Progreso Ultra-Delgados -->
+          <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+            <button
+              *ngFor="let slide of slides; let i = index"
+              (click)="setSlide(i)"
+              class="relative h-[2px] w-12 bg-white/20 rounded-full overflow-hidden"
+            >
+              <div 
+                *ngIf="current() === i"
+                class="absolute inset-0 bg-white"
+                [style.animation]="isAutoPlaying() ? 'progress-animation 6s linear forwards' : 'none'"
+                [style.width]="!isAutoPlaying() ? '100%' : '0%'"
+              ></div>
+            </button>
+          </div>
+        </div>
+      </main>
+
+
+    <app-product-list></app-product-list>
+
+</div>

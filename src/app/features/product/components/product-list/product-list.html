@@ -1,0 +1,169 @@
+<div class="bg-white text-gray-800 font-sans selection:bg-gray-100 min-h-screen flex flex-col">
+  <div class="container mx-auto px-6 py-10 flex-grow">
+    <div class="animate-fade-in">
+
+      <!-- Header Productos -->
+      <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 border-b border-gray-100 pb-6">
+        <div>
+          <h2 class="text-xl font-light tracking-[0.2em] text-gray-900 uppercase">
+            Catálogo <span class="font-normal text-gray-400">2026</span>
+          </h2>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-5 w-full md:w-auto items-center">
+          <div class="relative w-full sm:w-60">
+            <input type="text" placeholder="BUSCAR..." (input)="onSearch($event)"
+              class="w-full border-b border-gray-200 py-2 text-sm font-light tracking-widest uppercase focus:border-gray-900 focus:outline-none bg-transparent placeholder-gray-300 transition-colors">
+          </div>
+
+          <!-- <div class="flex gap-4 text-xs font-light uppercase tracking-widest overflow-x-auto w-full sm:w-auto pb-1">
+            <button class="whitespace-nowrap transition-colors hover:text-gray-900"
+              [class.text-gray-900]="selectedCategory === null" [class.underline]="selectedCategory === null"
+              [class.underline-offset-4]="selectedCategory === null" [class.text-gray-400]="selectedCategory !== null"
+              (click)="setCategory(null)">Todos</button>
+            <button *ngFor="let cat of categories$ | async" class="whitespace-nowrap transition-colors hover:text-gray-900"
+              [class.text-gray-900]="selectedCategory === cat.id" [class.underline]="selectedCategory === cat.id"
+              [class.underline-offset-4]="selectedCategory === cat.id"
+              [class.text-gray-400]="selectedCategory !== cat.id"
+              (click)="setCategory(selectedCategory === cat.id ? null : cat.id)">{{ cat.name }}</button>
+          </div> -->
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading$ | async" class="text-center py-24">
+        <p class="text-sm font-light tracking-widest text-gray-400 uppercase">Cargando productos...</p>
+      </div>
+
+      <!-- Error State -->
+      <!-- <div *ngIf="errorMessage && !isLoading" class="text-center py-24">
+        <p class="text-sm font-light tracking-widest text-red-500 uppercase mb-4">{{ errorMessage }}</p>
+        <button (click)="loadProducts()" 
+                class="text-xs underline text-gray-500 hover:text-black">
+          Reintentar
+        </button>
+      </div> -->
+
+      <!-- Grid de Productos -->
+      <div *ngIf="!(isLoading$ | async)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+
+        <div *ngFor="let product of products$ | async"
+          class="flex flex-col group bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
+
+          <!-- Zona de Imagen (Clickable para ir a Detalle) -->
+          <div class="relative aspect-[4/5] overflow-hidden bg-gray-50 cursor-pointer"
+            (click)="viewProductDetail(product)">
+
+            <!-- Badges de stock -->
+            <div class="absolute top-2 left-2 z-20">
+              <span *ngIf="isOutOfStock(product)"
+                class="text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-white/95 px-2 py-0.5 shadow-sm">Agotado</span>
+              <span *ngIf="hasLowStock(product)"
+                class="text-[10px] font-normal uppercase tracking-widest text-red-500 bg-white/95 px-2 py-0.5 shadow-sm">Pocos</span>
+            </div>
+
+            <img [src]="apiImageServer + getProductImages(product)[currentImageIndex[product.id] || 0].url" 
+              [alt]="product.name"
+              class="w-full h-full object-cover transition-transform duration-700 ease-out"
+              [class.group-hover:scale-105]="!isHoveringControls(product.id)" 
+              (error)="handleImageError($event)">
+
+            <div
+              class="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+              <span
+                class="bg-white/90 text-black px-3 py-1 text-[10px] tracking-widest uppercase font-bold shadow-sm backdrop-blur-sm">Ver
+                Detalles</span>
+            </div>
+
+            <ng-container *ngIf="getProductImages(product).length > 1">
+              <!-- Controles Carrusel -->
+              <button (click)="prevImage($event, product)" (mouseenter)="setHoverControl(product.id, true)"
+                (mouseleave)="setHoverControl(product.id, false)"
+                class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+              </button>
+
+              <button (click)="nextImage($event, product)" (mouseenter)="setHoverControl(product.id, true)"
+                (mouseleave)="setHoverControl(product.id, false)"
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
+
+              <!-- Indicadores de puntos -->
+              <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20 pointer-events-none">
+                <div *ngFor="let img of getProductImages(product); let i = index"
+                  class="w-1.5 h-1.5 rounded-full transition-colors duration-300 shadow-sm"
+                  [ngClass]="(currentImageIndex[product.id] || 0) === i ? 'bg-white' : 'bg-white/40'">
+                </div>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Información -->
+          <div class="flex flex-col text-left gap-2 p-4">
+            <h3
+              class="text-sm font-light text-gray-900 tracking-widest uppercase leading-tight line-clamp-1 cursor-pointer hover:text-gray-500 transition-colors"
+              (click)="viewProductDetail(product)" [title]="product.name">
+              {{ product.name }}
+            </h3>
+
+            <p class="text-xs text-gray-400 font-light leading-snug line-clamp-2 min-h-[2.5em]">
+              {{ product.description || 'Sin descripción disponible.' }}
+            </p>
+
+            <div class="mt-2">
+              <!-- Rango de precios -->
+              <span class="text-sm font-normal text-gray-900 tracking-wide block mb-2">
+                {{ getProductPriceRange(product) }}
+              </span>
+
+              <!-- Tonos disponibles -->
+              <div *ngIf="product.variants && product.variants.length > 0" class="flex gap-1.5 mb-3 flex-wrap">
+                <div *ngFor="let variant of product.variants.slice(0, 5)" 
+                     [title]="variant.toneName + ' (' + variant.toneCode + ')' + ' - ' + (variant.stock > 0 ? 'Stock: ' + variant.stock : 'Agotado')"
+                     class="w-5 h-5 rounded-full border-2 transition-all hover:scale-110 cursor-pointer"
+                     [style.background-color]="variant.toneCode || '#e5e7eb'"
+                     [class.border-gray-300]="variant.stock > 0"
+                     [class.border-gray-200]="variant.stock === 0"
+                     [class.opacity-30]="variant.stock === 0">
+                </div>
+                <span *ngIf="product.variants.length > 5" 
+                      class="text-[10px] text-gray-400 self-center ml-1">
+                  +{{ product.variants.length - 5 }}
+                </span>
+              </div>
+
+              <!-- Botón -->
+              <button
+                (click)="viewProductDetail(product)"
+                class="w-full py-2 border border-gray-200 text-gray-600 text-xs font-light uppercase tracking-[0.15em] hover:border-gray-900 hover:text-white hover:bg-gray-900 transition-all duration-300 flex justify-center items-center"
+                [disabled]="isOutOfStock(product)" 
+                [class.opacity-50]="isOutOfStock(product)"
+                [class.cursor-not-allowed]="isOutOfStock(product)">
+                {{ isOutOfStock(product) ? 'Sold Out' : 'Ver Opciones' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="(products$ | async) as products">
+        <div *ngIf="products.length === 0 && !(isLoading$ | async) && !errorMessage" 
+            class="text-center py-24">
+          <p class="text-sm font-light tracking-widest text-gray-300 uppercase">Sin resultados</p>
+          <button (click)="setCategory(null)" 
+                  class="mt-4 text-xs underline text-gray-500 hover:text-black">
+            Ver todos los productos
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
