@@ -22,7 +22,7 @@
                     
                     <!-- Imagen del Producto -->
                     <div class="w-full sm:w-32 h-32 flex-shrink-0 bg-stone-50 relative overflow-hidden group">
-                      <img [src]="item.product.images[0].url" [alt]="item.product.name" class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105">
+                      <img [src]="apiImageServer + item.product.images[0].url" [alt]="item.product.name" class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105">
                     </div>
 
                     <!-- Detalles -->
