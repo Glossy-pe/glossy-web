@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../services/cart.service';
 import { PdfGeneratorService } from '../../services/pdf-generator.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-cart-list',
@@ -11,6 +12,8 @@ import { PdfGeneratorService } from '../../services/pdf-generator.service';
   styleUrl: './cart-list.scss',
 })
 export class CartList {
+  
+  apiImageServer= environment.apiImageServer;
   
   constructor(
     public readonly cartService: CartService,
