@@ -1,118 +1,111 @@
     <div class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
       <div class="max-w-5xl mx-auto">
         
-        <!-- Cabecera -->
+        <!-- Header -->
         <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 class="text-4xl font-black tracking-tight text-slate-800">Categorías</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium italic">Organiza la estructura de tus productos.</p>
+            <h1 class="text-3xl font-black tracking-tight text-slate-800">Estructura de Categorías</h1>
+            <p class="text-slate-500 text-sm font-medium">Administra las familias de productos y sus identidades visuales.</p>
           </div>
           <button 
-            (click)="toggleCreateForm()"
-            class="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 font-bold text-sm">
-            {{ showCreateForm() ? 'Cerrar Formulario' : '+ Nueva Categoría' }}
+            [disabled]="isSaving()"
+            (click)="toggleForm()"
+            class="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 font-bold text-sm">
+            <span *ngIf="showForm() || editingCategory()">Cancelar</span>
+            <span *ngIf="!showForm() && !editingCategory()">+ Nueva Categoría</span>
           </button>
         </header>
 
-        <!-- Formulario de Creación / Edición -->
-        @if (showCreateForm() || editingCategory()) {
-          <div class="bg-white p-8 rounded-[2rem] shadow-xl mb-10 border border-slate-100 animate-in fade-in slide-in-from-top-4 duration-300">
-            <h2 class="text-xl font-black mb-6 text-slate-800 flex items-center gap-3">
-              <span class="w-2 h-6 bg-emerald-500 rounded-full"></span>
-              {{ editingCategory() ? 'Editar Categoría' : 'Nueva Categoría' }}
+        <!-- Formulario (Creación y Edición) -->
+        <div *ngIf="showForm() || editingCategory()" class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl mb-12 border border-slate-200 animate-in fade-in slide-in-from-top-4">
+            <h2 class="text-xl font-black mb-8 text-slate-800 flex items-center gap-3">
+              <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+              {{ editingCategory() ? 'Actualizar Categoría' : 'Registrar Nueva Categoría' }}
             </h2>
             
-            <form [formGroup]="categoryForm" (ngSubmit)="submitForm()" class="space-y-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Nombre -->
                 <div class="space-y-2">
-                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre de la Categoría</label>
-                  <input formControlName="name" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all" placeholder="Ej: Cosméticos, Accesorios...">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Identificador</label>
+                  <input formControlName="name" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold" placeholder="Ej: Cuidado Facial">
                 </div>
+
+                <!-- Imagen (Upload) -->
                 <div class="space-y-2">
-                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">URL de la Imagen</label>
-                  <input formControlName="image" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all" placeholder="http://.../imagen.png">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Imagen Representativa</label>
+                  <div class="relative h-12 group">
+                    <input type="file" (change)="onFileSelected($event)" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
+                    <div class="absolute inset-0 bg-white border-2 border-dashed border-slate-200 rounded-2xl flex items-center px-5 text-xs text-slate-400 group-hover:border-emerald-400 transition-all">
+                       {{ selectedFileName() || (editingCategory() ? 'Mantener imagen actual o subir nueva...' : 'Seleccionar archivo local...') }}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Vista previa de imagen en el form -->
-              @if (categoryForm.get('image')?.value) {
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <div class="w-20 h-20 rounded-xl overflow-hidden shadow-sm bg-white border">
-                    <img [src]="categoryForm.get('image')?.value" class="w-full h-full object-cover" (error)="handleImgError($event)">
-                  </div>
-                  <p class="text-xs text-slate-400 italic">Vista previa de la imagen seleccionada.</p>
+              <!-- Vista previa si existe -->
+              <div *ngIf="previewUrl() || (editingCategory() && !selectedFile)" class="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div class="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-sm bg-white">
+                  <img [src]="previewUrl() || editingCategory()?.image" class="w-full h-full object-cover">
                 </div>
-              }
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Previsualización de la categoría</p>
+              </div>
 
-              <div class="flex justify-end gap-4 pt-4">
-                <button type="button" (click)="resetForm()" class="px-6 py-2 text-slate-400 font-bold hover:text-slate-600 transition-colors uppercase text-xs">Cancelar</button>
-                <button [disabled]="categoryForm.invalid || isProcessing()" type="submit" class="px-10 py-3.5 bg-slate-800 text-white rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-slate-900 disabled:opacity-50 transition-all uppercase text-xs tracking-widest">
-                  {{ isProcessing() ? 'Procesando...' : (editingCategory() ? 'Actualizar' : 'Guardar Categoría') }}
+              <div class="flex justify-end gap-4 mt-8 border-t border-slate-100 pt-8">
+                <button type="button" [disabled]="isSaving()" (click)="resetForm()" class="px-8 py-3 text-slate-400 font-black uppercase text-xs tracking-widest hover:text-slate-600 transition-colors">Descartar</button>
+                <button [disabled]="categoryForm.invalid || isSaving()" type="submit" class="px-12 py-4 bg-slate-900 text-white rounded-[1.5rem] font-black shadow-2xl shadow-slate-200 disabled:bg-slate-300 transition-all uppercase text-xs tracking-[0.2em] flex items-center gap-3">
+                  <div *ngIf="isSaving()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {{ isSaving() ? 'Procesando...' : (editingCategory() ? 'Confirmar Cambios' : 'Crear Categoría') }}
                 </button>
               </div>
             </form>
-          </div>
-        }
+        </div>
 
-        <!-- Tabla de Categorías -->
-        <div class="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-100">
-          <div class="overflow-x-auto">
+        <!-- Listado -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-200">
+          <div *ngIf="isLoading()" class="flex flex-col items-center justify-center py-20 animate-pulse">
+            <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Sincronizando categorías...</p>
+          </div>
+
+          <div class="overflow-x-auto" *ngIf="!isLoading()">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em]">
-                  <th class="px-8 py-6">ID</th>
-                  <th class="px-8 py-6">Imagen</th>
-                  <th class="px-8 py-6">Nombre</th>
-                  <th class="px-8 py-6 text-center">Acciones</th>
+                <tr class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.25em]">
+                  <th class="px-8 py-7">ID</th>
+                  <th class="px-8 py-7">Banner</th>
+                  <th class="px-8 py-7">Nombre</th>
+                  <th class="px-8 py-7 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                @for (cat of categories(); track cat.id) {
-                  <tr class="hover:bg-emerald-50/20 transition-all group">
-                    <td class="px-8 py-6 text-sm font-mono text-slate-400">#{{ cat.id }}</td>
-                    <td class="px-8 py-6">
-                      <div class="w-16 h-16 rounded-2xl border-4 border-white shadow-sm overflow-hidden bg-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        @if (cat.image) {
-                          <img [src]="cat.image" class="w-full h-full object-cover" alt="Category">
-                        } @else {
-                          <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round"/></svg>
-                        }
+                <tr *ngFor="let cat of categories()" class="hover:bg-emerald-50/20 transition-all group">
+                    <td class="px-8 py-5">
+                      <span class="text-xs font-mono text-slate-400">#{{ cat.id }}</span>
+                    </td>
+                    <td class="px-8 py-5">
+                      <div class="w-24 h-14 rounded-xl border-2 border-white shadow-md overflow-hidden bg-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img *ngIf="cat.image" [src]="cat.image" class="w-full h-full object-cover">
+                        <svg *ngIf="!cat.image" class="w-6 h-6 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5" stroke-linecap="round"/></svg>
                       </div>
                     </td>
-                    <td class="px-8 py-6">
-                      <div class="font-black text-slate-800 text-lg tracking-tight">{{ cat.name }}</div>
+                    <td class="px-8 py-5">
+                      <div class="font-black text-slate-800 text-base leading-none tracking-tight">{{ cat.name }}</div>
                     </td>
-                    <td class="px-8 py-6">
+                    <td class="px-8 py-5 text-center">
                       <div class="flex items-center justify-center gap-3">
-                        <button 
-                          (click)="startEdit(cat)"
-                          class="p-3 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm border border-emerald-50"
-                          title="Editar">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
+                        <button (click)="startEdit(cat)" class="p-3 text-emerald-600 bg-white hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm border border-slate-100">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button 
-                          (click)="deleteCategory(cat.id)"
-                          class="p-3 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl transition-all shadow-sm border border-rose-50"
-                          title="Eliminar">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
+                        <button (click)="deleteCategory(cat.id)" class="p-3 text-rose-500 bg-white hover:bg-rose-500 hover:text-white rounded-2xl transition-all shadow-sm border border-slate-100">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                       </div>
                     </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="4" class="px-8 py-20 text-center">
-                      <div class="flex flex-col items-center opacity-20">
-                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke-width="2" stroke-linecap="round"/></svg>
-                        <p class="font-black uppercase tracking-widest text-sm">No hay categorías registradas</p>
-                      </div>
-                    </td>
-                  </tr>
-                }
+                </tr>
+                <tr *ngIf="categories().length === 0 && !isLoading()">
+                  <td colspan="4" class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-xs opacity-50">No hay categorías registradas</td>
+                </tr>
               </tbody>
             </table>
           </div>
