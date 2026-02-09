@@ -1,10 +1,11 @@
-    :host { display: block; }
-    /* Animaciones suaves */
-    .animate-in {
-      animation-duration: 0.3s;
-      animation-fill-mode: both;
-    }
+   :host { display: block; }
+    .animate-in { animation-duration: 0.3s; animation-fill-mode: both; }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    
+    /* Prevenir zoom en inputs móviles */
+    @media (max-width: 768px) {
+      input, select, textarea { font-size: 16px !important; }
+    }
