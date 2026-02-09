@@ -19,6 +19,15 @@ interface ProductResponse {
   variants: ProductVariantResponse[];
 }
 
+interface ProductRequest {
+  name: string;
+  description: string;
+  fullDescription: string;
+  active: boolean;
+  label: string;
+  categoryId: number;
+}
+
 interface ProductImageResponse {
   id: number;
   url: string;
@@ -74,7 +83,7 @@ export class AdminProductList implements OnInit {
   private apiUrl = environment.apiUrl;
   private imageApiBase = environment.apiImageServer;
 
-  // --- Estado Global ---
+  // --- Estado ---
   products = signal<ProductResponse[]>([]);
   categories = signal<CategoryResponse[]>([]);
   labelFilter = signal<string>('');
@@ -87,7 +96,7 @@ export class AdminProductList implements OnInit {
   selectedFile: File | null = null;
   selectedFileName = signal<string>('');
 
-  // --- Creación temporal ---
+  // --- Listas Temporales (Creación) ---
   tempVariants = signal<ProductVariantRequest[]>([]);
   tempImages = signal<any[]>([]); // { file, preview, mainImage }
 
@@ -117,7 +126,9 @@ export class AdminProductList implements OnInit {
     categoryId: [null, [Validators.required]]
   });
 
+  // Getters para controles de edición
   get basicEditNameControl() { return this.basicEditForm.get('name') as FormControl; }
+  get basicEditCategoryControl() { return this.basicEditForm.get('categoryId') as FormControl; }
 
   filteredProducts = computed(() => {
     const f = this.labelFilter().toLowerCase();
@@ -130,7 +141,7 @@ export class AdminProductList implements OnInit {
     this.loadCategories();
   }
 
-  // --- Operaciones de Archivo ---
+  // --- Helpers de Archivo ---
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -146,7 +157,7 @@ export class AdminProductList implements OnInit {
     formData.append('file', file);
     return this.http.post<ImageUploadResponse>(`${this.imageApiBase}/images`, formData).pipe(
       map(res => `${this.imageApiBase}/images/${res.id}/file`),
-      catchError(() => of("https://via.placeholder.com/300?text=Error+Carga"))
+      catchError(() => of("https://via.placeholder.com/300?text=Error+API+Imagen"))
     );
   }
 
@@ -203,7 +214,10 @@ export class AdminProductList implements OnInit {
     if (!p || this.basicEditForm.invalid) return;
     this.isSaving.set(true);
     
-    this.http.put<ProductResponse>(`${this.apiUrl}/products/${p.id}`, this.basicEditForm.value)
+    // Obtenemos los datos del formulario de edición (incluye name y categoryId)
+    const updateData = this.basicEditForm.value;
+
+    this.http.put<ProductResponse>(`${this.apiUrl}/products/${p.id}`, updateData)
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe(res => {
         this.updateLocalProduct(res);
@@ -213,7 +227,7 @@ export class AdminProductList implements OnInit {
   }
 
   deleteProduct(id: number) {
-    if (!confirm('¿Eliminar producto definitivamente?')) return;
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
     this.http.delete(`${this.apiUrl}/products/${id}`).subscribe(() => {
       this.products.update(list => list.filter(p => p.id !== id));
       if (this.selectedProduct()?.id === id) this.selectedProduct.set(null);
@@ -336,8 +350,16 @@ export class AdminProductList implements OnInit {
   }
 
   startEditBasic() {
-    if (this.selectedProduct()) {
-      this.basicEditForm.patchValue(this.selectedProduct()!);
+    const prod = this.selectedProduct();
+    if (prod) {
+      this.basicEditForm.patchValue({
+        name: prod.name,
+        description: prod.description,
+        fullDescription: prod.fullDescription,
+        active: prod.active,
+        label: prod.label,
+        categoryId: prod.categoryId
+      });
       this.isEditingBasic.set(true);
     }
   }
