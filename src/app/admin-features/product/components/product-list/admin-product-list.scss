@@ -1,11 +1,4 @@
-   :host { display: block; }
-    .animate-in { animation-duration: 0.3s; animation-fill-mode: both; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-    
-    /* Prevenir zoom en inputs móviles */
-    @media (max-width: 768px) {
-      input, select, textarea { font-size: 16px !important; }
-    }
+    :host { display: block; }
+    .xs\\:grid-cols-2 { @media (min-width: 480px) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .xs\\:grid-cols-3 { @media (min-width: 480px) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .xs\\:inline { @media (min-width: 480px) { display: inline; } }
