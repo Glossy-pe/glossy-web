@@ -62,7 +62,7 @@
                 class="text-[10px] font-normal uppercase tracking-widest text-red-500 bg-white/95 px-2 py-0.5 shadow-sm">Pocos</span>
             </div>
 
-            <img [src]="apiImageServer + getProductImages(product)[currentImageIndex[product.id] || 0].url" 
+            <img [src]="getProductImages(product)[currentImageIndex[product.id] || 0].url" 
               [alt]="product.name"
               class="w-full h-full object-cover transition-transform duration-700 ease-out"
               [class.group-hover:scale-105]="!isHoveringControls(product.id)" 
