@@ -25,7 +25,7 @@
                     <div class="flex flex-col gap-4">
                         <!-- Imagen Principal -->
                         <div class="aspect-[4/5] bg-gray-50 overflow-hidden relative">
-                            <img [src]="apiImageServer + getProductImages(product)[activeImageIndex].url" 
+                            <img [src]="getProductImages(product)[activeImageIndex].url" 
                                  class="w-full h-full object-cover animate-fade-in"
                                  [alt]="product.name">
                         </div>
@@ -38,7 +38,7 @@
                                     [class.border-black]="activeImageIndex === i"
                                     [class.border-transparent]="activeImageIndex !== i"
                                     [class.opacity-50]="activeImageIndex !== i">
-                                <img [src]="apiImageServer+img.url" class="w-full h-full object-cover" [alt]="product.name">
+                                <img [src]="img.url" class="w-full h-full object-cover" [alt]="product.name">
                             </button>
                         </div>
                     </div>
