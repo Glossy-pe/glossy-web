@@ -4,13 +4,9 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, switchMap, map } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 
-// --- Configuración de Entorno (Ajustar según tu proyecto) ---
-const environment = {
-  apiUrl: 'http://localhost:8080', 
-  apiImageServer: 'http://localhost:8000'
-};
 
 // --- Interfaces ---
 interface ProductImage {
