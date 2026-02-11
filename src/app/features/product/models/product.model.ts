@@ -3,12 +3,13 @@ import { ProductVariant } from "./product-variant.model";
 
 export interface Product {
   id: number;
+  basePrice: number;
   name: string;
   description: string;
   fullDescription?: string | null;
   images: ProductImage[];  // Array de URLs de imágenes
-  basePrice?: number | null;  // Precio base si no hay variantes
   active: boolean;
+  label: string;
   categoryId: number;
   variants: ProductVariant[];
 }

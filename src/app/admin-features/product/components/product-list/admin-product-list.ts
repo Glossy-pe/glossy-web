@@ -1,9 +1,15 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, ViewChild, effect, AfterViewInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormControl, FormsModule } from '@angular/forms';
 import { catchError, finalize, of, forkJoin, switchMap, map, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { MATERIAL_IMPORTS } from '../../../../material.imports';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { ProductService } from '../../../../features/product/services/product.service';
+import { Product } from '../../../../features/product/models/product.model';
+import { Route, Router } from '@angular/router';
 
 // --- Interfaces basadas en OpenAPI ---
 interface ProductResponse {
@@ -47,13 +53,59 @@ interface ImageUploadResponse {
 
 @Component({
   selector: 'app-admin-product-list',
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule, ...MATERIAL_IMPORTS],
   providers: [CurrencyPipe],
   templateUrl: './admin-product-list.html',
   styleUrl: './admin-product-list.scss',
 })
 
-export class AdminProductList implements OnInit {
+export class AdminProductList implements OnInit, AfterViewInit {
+
+  searchName: string = '';
+  pageIndex = 0;
+  pageSize = 10;
+  totalElements = 0;
+
+  displayedColumns: string[] = ['id', 'name', 'image', 'actions'];
+  loadedProducts$!: Observable<Product[]>;
+  // dataSource = new MatTableDataSource<ProductResponse>();
+  // @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  ngAfterViewInit() {
+    // this.dataSource.paginator = this.paginator;
+
+    // effect(() => {
+    //   this.dataSource.data = this.filteredProducts();
+    // });
+  }
+
+  search() {
+    this.pageIndex = 0; // resetear a primera página
+    this.loadAllProducts();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadAllProducts();
+  }
+  
+  constructor(private productService: ProductService, private router: Router){
+
+  }
+
+  loadAllProducts(){
+    const loadedProducts$ = this.productService.getProducts();
+    this.loadedProducts$ = loadedProducts$;
+  }
+
+  editProduct(productId: Number){
+    this.router.navigate([`admin/products/${productId}`]);
+  }
+
+
+  /* SECCION ANTERIOR */
+
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   
@@ -95,6 +147,7 @@ export class AdminProductList implements OnInit {
     name: ['', [Validators.required]],
     categoryId: [null, [Validators.required]],
     description: [''],
+    fullDescription: [''],
     label: [''],
     active: [true]
   });
@@ -117,6 +170,7 @@ export class AdminProductList implements OnInit {
   ngOnInit() {
     this.loadProducts();
     this.loadCategories();
+    this.loadAllProducts();
   }
 
   // --- Lógica de Archivos ---
@@ -200,19 +254,19 @@ export class AdminProductList implements OnInit {
     });
   }
 
-  updateProductBasic() {
-    const p = this.selectedProduct();
-    if (!p || this.basicEditForm.invalid) return;
-    this.isSaving.set(true);
+  // updateProductBasic() {
+  //   const p = this.selectedProduct();
+  //   if (!p || this.basicEditForm.invalid) return;
+  //   this.isSaving.set(true);
 
-    this.http.put<ProductResponse>(`${this.apiUrl}/products/${p.id}`, this.basicEditForm.value)
-      .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe(res => {
-        this.updateLocalProduct(res);
-        this.selectedProduct.set(res);
-        this.isEditingBasic.set(false);
-      });
-  }
+  //   this.http.put<ProductResponse>(`${this.apiUrl}/products/${p.id}`, this.basicEditForm.value)
+  //     .pipe(finalize(() => this.isSaving.set(false)))
+  //     .subscribe(res => {
+  //       this.updateLocalProduct(res);
+  //       this.selectedProduct.set(res);
+  //       this.isEditingBasic.set(false);
+  //     });
+  // }
 
   deleteProduct(id: number) {
     if (!confirm('¿Seguro que deseas eliminar este registro maestro?')) return;
@@ -224,83 +278,83 @@ export class AdminProductList implements OnInit {
 
   // --- CRUD Variantes Modal ---
 
-  saveVariant() {
-    const p = this.selectedProduct();
-    if (!p) return;
-    this.isSaving.set(true);
-    this.http.post(`${this.apiUrl}/products/${p.id}/variants`, this.newVariant)
-      .pipe(
-        switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
-        finalize(() => this.isSaving.set(false))
-      )
-      .subscribe(res => {
-        this.updateLocalProduct(res);
-        this.selectedProduct.set(res);
-        this.showVariantFormInModal.set(false);
-        this.newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
-      });
-  }
+  // saveVariant() {
+  //   const p = this.selectedProduct();
+  //   if (!p) return;
+  //   this.isSaving.set(true);
+  //   this.http.post(`${this.apiUrl}/products/${p.id}/variants`, this.newVariant)
+  //     .pipe(
+  //       switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
+  //       finalize(() => this.isSaving.set(false))
+  //     )
+  //     .subscribe(res => {
+  //       this.updateLocalProduct(res);
+  //       this.selectedProduct.set(res);
+  //       this.showVariantFormInModal.set(false);
+  //       this.newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
+  //     });
+  // }
 
-  deleteVariant(vId: number) {
-    const p = this.selectedProduct();
-    if (!p) return;
-    this.http.delete(`${this.apiUrl}/products/${p.id}/variants/${vId}`)
-      .pipe(switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)))
-      .subscribe(res => {
-        this.updateLocalProduct(res);
-        this.selectedProduct.set(res);
-      });
-  }
+  // deleteVariant(vId: number) {
+  //   const p = this.selectedProduct();
+  //   if (!p) return;
+  //   this.http.delete(`${this.apiUrl}/products/${p.id}/variants/${vId}`)
+  //     .pipe(switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)))
+  //     .subscribe(res => {
+  //       this.updateLocalProduct(res);
+  //       this.selectedProduct.set(res);
+  //     });
+  // }
 
   // --- Galería Modal ---
 
-  uploadAndAddImage(main: boolean) {
-    const p = this.selectedProduct();
-    if (!p || !this.selectedFile) return;
-    this.isSaving.set(true);
+  // uploadAndAddImage(main: boolean) {
+  //   const p = this.selectedProduct();
+  //   if (!p || !this.selectedFile) return;
+  //   this.isSaving.set(true);
     
-    this.uploadFile(this.selectedFile).pipe(
-      switchMap(url => this.http.post(`${this.apiUrl}/products/${p.id}/images`, { url, position: 1, mainImage: main })),
-      switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
-      finalize(() => this.isSaving.set(false))
-    ).subscribe(res => {
-      this.updateLocalProduct(res);
-      this.selectedProduct.set(res);
-      this.showImageFormInModal.set(false);
-      this.selectedFile = null;
-      this.selectedFileName.set('');
-    });
-  }
+  //   this.uploadFile(this.selectedFile).pipe(
+  //     switchMap(url => this.http.post(`${this.apiUrl}/products/${p.id}/images`, { url, position: 1, mainImage: main })),
+  //     switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
+  //     finalize(() => this.isSaving.set(false))
+  //   ).subscribe(res => {
+  //     this.updateLocalProduct(res);
+  //     this.selectedProduct.set(res);
+  //     this.showImageFormInModal.set(false);
+  //     this.selectedFile = null;
+  //     this.selectedFileName.set('');
+  //   });
+  // }
 
-  setImageAsMain(img: ProductImageResponse) {
-    const p = this.selectedProduct();
-    if (!p) return;
-    this.isSaving.set(true);
-    this.http.put(`${this.apiUrl}/products/${p.id}/images/${img.id}`, { ...img, mainImage: true })
-      .pipe(
-        switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
-        finalize(() => this.isSaving.set(false))
-      )
-      .subscribe(res => {
-        this.updateLocalProduct(res);
-        this.selectedProduct.set(res);
-      });
-  }
+  // setImageAsMain(img: ProductImageResponse) {
+  //   const p = this.selectedProduct();
+  //   if (!p) return;
+  //   this.isSaving.set(true);
+  //   this.http.put(`${this.apiUrl}/products/${p.id}/images/${img.id}`, { ...img, mainImage: true })
+  //     .pipe(
+  //       switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
+  //       finalize(() => this.isSaving.set(false))
+  //     )
+  //     .subscribe(res => {
+  //       this.updateLocalProduct(res);
+  //       this.selectedProduct.set(res);
+  //     });
+  // }
 
-  deleteImage(imgId: number) {
-    const p = this.selectedProduct();
-    if (!p) return;
-    this.isSaving.set(true);
-    this.http.delete(`${this.apiUrl}/products/${p.id}/images/${imgId}`)
-      .pipe(
-        switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
-        finalize(() => this.isSaving.set(false))
-      )
-      .subscribe(res => {
-        this.updateLocalProduct(res);
-        this.selectedProduct.set(res);
-      });
-  }
+  // deleteImage(imgId: number) {
+  //   const p = this.selectedProduct();
+  //   if (!p) return;
+  //   this.isSaving.set(true);
+  //   this.http.delete(`${this.apiUrl}/products/${p.id}/images/${imgId}`)
+  //     .pipe(
+  //       switchMap(() => this.http.get<ProductResponse>(`${this.apiUrl}/products/${p.id}`)),
+  //       finalize(() => this.isSaving.set(false))
+  //     )
+  //     .subscribe(res => {
+  //       this.updateLocalProduct(res);
+  //       this.selectedProduct.set(res);
+  //     });
+  // }
 
   // --- Helpers UI ---
 
@@ -316,18 +370,20 @@ export class AdminProductList implements OnInit {
   }
 
   selectProduct(p: ProductResponse) {
-    this.selectedProduct.set(p);
-    this.isEditingBasic.set(false);
-    this.showVariantFormInModal.set(false);
-    this.showImageFormInModal.set(false);
+    this.router.navigate([`/admin/products/${p.id}`])
     
-    this.basicEditForm.patchValue({ 
-      name: p.name, 
-      categoryId: p.categoryId,
-      description: p.description,
-      label: p.label,
-      active: p.active
-    });
+    // this.selectedProduct.set(p);
+    // this.isEditingBasic.set(false);
+    // this.showVariantFormInModal.set(false);
+    // this.showImageFormInModal.set(false);
+    
+    // this.basicEditForm.patchValue({ 
+    //   name: p.name, 
+    //   categoryId: p.categoryId,
+    //   description: p.description,
+    //   label: p.label,
+    //   active: p.active
+    // });
   }
 
   addVariantToList(name: string, code: string, price: string, stock: string) {
@@ -338,9 +394,11 @@ export class AdminProductList implements OnInit {
   removeVariantFromList(idx: number) { this.tempVariants.update(v => v.filter((_, i) => i !== idx)); }
 
   toggleCreateForm() {
+    
     this.showCreateForm.update(v => !v);
     if (!this.showCreateForm()) this.resetForm();
   }
+    
 
   startEditBasic() { this.isEditingBasic.set(true); }
   cancelEditBasic() { this.isEditingBasic.set(false); }
@@ -361,4 +419,9 @@ export class AdminProductList implements OnInit {
   
   toggleVariantForm() { this.showVariantFormInModal.update(v => !v); }
   toggleImageForm() { this.showImageFormInModal.update(v => !v); }
+
+  printDebugFilteredProducts(){
+    console.log(this.filteredProducts());
+  }
+
 }

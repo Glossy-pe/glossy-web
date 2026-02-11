@@ -1,169 +1,165 @@
-    <div class="min-h-screen bg-gray-50 font-sans text-gray-900">
-      <!-- Navbar -->
-      <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between h-16">
-            <div class="flex items-center gap-2">
-              <div class="bg-blue-600 p-1.5 rounded-lg text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-              <span class="text-lg font-bold tracking-tight text-gray-800">Panel de Imágenes</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <button (click)="loadImages()" class="text-gray-500 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100 transition-colors">
-                <svg [class.animate-spin]="isLoading()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+<div class="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-700 p-4 md:p-8">
+  <main class="max-w-[1500px] mx-auto">
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Action Bar -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div class="relative w-full md:w-96">
-            <input (input)="updateSearch($event)" type="text" placeholder="Buscar por nombre o categoría..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            <svg class="w-4 h-4 absolute left-3.5 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          </div>
-          <button (click)="openUploadModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Subir Imagen
-          </button>
-        </div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Repositorio de Media</h1>
+        <p class="text-sm text-slate-500">Gestión de activos visuales y metadatos del sistema.</p>
+      </div>
+      
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <button (click)="loadImages()" 
+          class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-blue-600 rounded-xl transition-all shadow-sm">
+          <svg [class.animate-spin]="isLoading()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2" />
+          </svg>
+        </button>
+        <button (click)="openUploadModal()"
+          class="bg-slate-900 text-white hover:bg-black flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold rounded-xl transition-all shadow-lg shadow-slate-200 active:scale-95 w-full sm:w-auto uppercase tracking-widest">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M12 4v16m8-8H4" stroke-width="2.5" />
+          </svg>
+          Subir Imagen
+        </button>
+      </div>
+    </div>
 
-        <!-- Table Container -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-gray-50/50 border-b border-gray-200">
-                <tr class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  <th class="px-6 py-4">ID</th>
-                  <th class="px-6 py-4">Miniatura</th>
-                  <th class="px-6 py-4">Nombre del Archivo</th>
-                  <th class="px-6 py-4">Categoría</th>
-                  <th class="px-6 py-4">Creado</th>
-                  <th class="px-6 py-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                @for (img of paginatedImages(); track img.id) {
-                  <tr class="hover:bg-gray-50/80 transition-colors">
-                    <td class="px-6 py-4 text-xs font-mono text-gray-400">{{ img.id }}</td>
-                    <td class="px-6 py-4">
-                      <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-100">
-                        <img [src]="getImageFileUrl(img.id)" class="w-full h-full object-cover" (error)="onImageError($event)">
-                      </div>
-                    </td>
-                    <td class="px-6 py-4">
-                      <span class="text-sm font-medium text-gray-800">{{ img.filename }}</span>
-                    </td>
-                    <td class="px-6 py-4">
-                      <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full uppercase">{{ img.category }}</span>
-                    </td>
-                    <td class="px-6 py-4">
-                      <span class="text-xs text-gray-500">{{ img.created_at | date:'short' }}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                      <div class="flex justify-end gap-1">
-                        <button (click)="openEditModal(img)" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Editar">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                        <button (click)="deleteImage(img.id)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">
-                      {{ isLoading() ? 'Cargando datos...' : 'No se encontraron imágenes' }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+    <div class="relative mb-6">
+      <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" /></svg>
+      </span>
+      <input (input)="updateSearch($event)" type="text" placeholder="Filtrar por nombre o categoría..."
+        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all shadow-sm">
+    </div>
 
-          <!-- Pagination -->
-          <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-            <span class="text-xs text-gray-500 font-medium">
-              Mostrando {{ startIdx() + 1 }}-{{ endIdx() }} de {{ filteredImages().length }}
-            </span>
-            <div class="flex gap-2">
-              <button 
-                [disabled]="currentPage() === 0" 
-                (click)="setPage(currentPage() - 1)"
-                class="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all shadow-xs"
-              >
-                Anterior
-              </button>
-              <button 
-                [disabled]="currentPage() >= totalPages() - 1" 
-                (click)="setPage(currentPage() + 1)"
-                class="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all shadow-xs"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <!-- MODAL: UPLOAD / EDIT -->
-      @if (showModal()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in">
-            <div class="p-6">
-              <h2 class="text-xl font-bold text-gray-800 mb-1">
-                {{ modalMode() === 'upload' ? 'Subir Nueva Imagen' : 'Editar Imagen' }}
-              </h2>
-              <p class="text-xs text-gray-500 mb-6 italic">
-                {{ modalMode() === 'upload' ? 'Completa los campos para añadir una imagen' : 'Actualiza los metadatos o reemplaza el archivo' }}
-              </p>
-
-              <form [formGroup]="imageForm" class="space-y-4">
-                <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoría</label>
-                  <input type="text" formControlName="category" placeholder="Ej: Paisajes" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all">
-                </div>
-
-                <div *ngIf="modalMode() === 'edit'">
-                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre del Archivo</label>
-                  <input type="text" formControlName="filename" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all">
-                </div>
-
-                <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Archivo de Imagen</label>
-                  <div class="relative group">
-                    <input type="file" (change)="onFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                    <div class="border-2 border-dashed border-gray-200 group-hover:border-blue-300 rounded-xl py-8 text-center bg-gray-50 transition-all">
-                      <svg class="w-6 h-6 mx-auto text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      <p class="text-xs text-gray-500 font-medium px-4 truncate">{{ selectedFileName() || 'Seleccionar archivo...' }}</p>
-                      <p *ngIf="modalMode() === 'edit'" class="text-[10px] text-gray-400 mt-1">(Opcional para edición)</p>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <th class="px-6 py-4">Recurso</th>
+              <th class="px-6 py-4 hidden md:table-cell text-center">Referencia ID</th>
+              <th class="px-6 py-4">Categoría</th>
+              <th class="px-6 py-4 hidden sm:table-cell">Fecha Registro</th>
+              <th class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            @for (img of paginatedImages(); track img.id) {
+              <tr class="hover:bg-slate-50/80 transition-all group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-sm relative">
+                      <img [src]="getImageFileUrl(img.id)" class="w-full h-full object-cover" (error)="onImageError($event)">
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate max-w-[200px]">{{ img.filename }}</span>
+                      <span class="text-[10px] text-slate-400 font-mono uppercase tracking-tighter">Format: PNG/JPG</span>
                     </div>
                   </div>
-                </div>
-              </form>
+                </td>
+                <td class="px-6 py-4 hidden md:table-cell text-center font-mono text-[11px] text-slate-400">
+                  #{{ img.id }}
+                </td>
+                <td class="px-6 py-4">
+                  <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase border border-blue-100 tracking-tight">
+                    {{ img.category }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 hidden sm:table-cell">
+                  <span class="text-xs font-medium text-slate-500 italic">{{ img.created_at | date:'dd MMM, yyyy' }}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button (click)="openEditModal(img)" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2" /></svg>
+                    </button>
+                    <button (click)="deleteImage(img.id)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" /></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-6 py-20 text-center">
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{{ isLoading() ? 'Procesando Datos...' : 'No se encontraron registros' }}</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-              <div class="mt-8 flex gap-3">
-                <button (click)="closeModal()" class="flex-1 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-all">Cancelar</button>
-                <button (click)="submitForm()" [disabled]="isProcessing() || (imageForm.invalid && modalMode() === 'upload')" class="flex-1 py-2.5 text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 rounded-xl transition-all shadow-md">
-                  {{ isProcessing() ? 'Procesando...' : 'Confirmar' }}
-                </button>
-              </div>
+      <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          Mostrando {{ startIdx() + 1 }} - {{ endIdx() }} de {{ filteredImages().length }} recursos
+        </span>
+        <div class="flex gap-2">
+          <button [disabled]="currentPage() === 0" (click)="setPage(currentPage() - 1)"
+            class="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm">
+            Prev
+          </button>
+          <button [disabled]="currentPage() >= totalPages() - 1" (click)="setPage(currentPage() + 1)"
+            class="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  @if (showModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-white/20">
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900">{{ modalMode() === 'upload' ? 'Nuevo Recurso' : 'Modificar Registro' }}</h2>
+              <p class="text-xs text-slate-500 font-medium">Gestión de metadatos de imagen.</p>
             </div>
           </div>
-        </div>
-      }
 
-      <!-- TOAST NOTIFICATION -->
-      @if (status()) {
-        <div class="fixed bottom-6 right-6 z-[60] animate-slide-up">
-          <div [class]="status()?.type === 'success' ? 'bg-gray-900' : 'bg-red-600'" class="px-6 py-3.5 rounded-2xl shadow-2xl text-white flex items-center gap-3 border border-white/10 backdrop-blur-md">
-            <div [class]="status()?.type === 'success' ? 'bg-green-500' : 'bg-red-400'" class="w-2 h-2 rounded-full animate-pulse"></div>
-            <span class="font-semibold text-sm">{{ status()?.text }}</span>
+          <form [formGroup]="imageForm" class="space-y-5">
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1 tracking-wider">Etiqueta de Categoría</label>
+              <input type="text" formControlName="category" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none text-sm transition-all">
+            </div>
+
+            <div *ngIf="modalMode() === 'edit'" class="space-y-1.5">
+              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1 tracking-wider">Nombre del Archivo</label>
+              <input type="text" formControlName="filename" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none text-sm transition-all">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1 tracking-wider">Archivo Binario</label>
+              <div (click)="fileInput.click()" class="relative border-2 border-dashed border-slate-200 rounded-2xl py-10 text-center bg-slate-50 hover:bg-white hover:border-blue-400 transition-all cursor-pointer group">
+                <input #fileInput type="file" (change)="onFileSelected($event)" class="hidden">
+                <svg class="w-8 h-8 mx-auto text-slate-300 group-hover:text-blue-500 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <p class="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 px-4 truncate uppercase tracking-widest">{{ selectedFileName() || 'Clic para cargar' }}</p>
+              </div>
+            </div>
+          </form>
+
+          <div class="mt-10 flex gap-3">
+            <button (click)="closeModal()" class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-slate-700 uppercase tracking-widest transition-colors">Cerrar</button>
+            <button (click)="submitForm()" [disabled]="isProcessing() || (imageForm.invalid && modalMode() === 'upload')" 
+              class="flex-1 py-3 text-xs font-bold bg-slate-900 text-white hover:bg-black disabled:bg-slate-200 rounded-xl transition-all shadow-lg shadow-slate-100 uppercase tracking-widest">
+              {{ isProcessing() ? 'Procesando...' : 'Confirmar' }}
+            </button>
           </div>
         </div>
-      }
+      </div>
     </div>
+  }
+
+  @if (status()) {
+    <div class="fixed bottom-8 right-8 z-[60] animate-in slide-in-from-bottom-5 duration-300">
+      <div [class]="status()?.type === 'success' ? 'bg-slate-900 border-slate-800' : 'bg-rose-600 border-rose-500'" 
+           class="px-6 py-4 rounded-2xl shadow-2xl text-white flex items-center gap-4 border backdrop-blur-md">
+        <div [class]="status()?.type === 'success' ? 'bg-blue-500' : 'bg-white'" class="w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+        <span class="font-bold text-xs uppercase tracking-widest">{{ status()?.text }}</span>
+      </div>
+    </div>
+  }
+</div>
