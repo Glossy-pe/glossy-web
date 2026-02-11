@@ -195,7 +195,7 @@ export class AdminImagesList implements OnInit {
 
   // Helpers
   getImageFileUrl(id: number): string {
-    return `${this.API}/${id}/file?t=${Date.now()}`;
+    return `${this.API}/${id}/file`;
   }
 
   onImageError(e: any) {

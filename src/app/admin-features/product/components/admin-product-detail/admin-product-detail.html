@@ -1,0 +1,224 @@
+<div class="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-700 p-4 md:p-8">
+  <main class="max-w-[1500px] mx-auto">
+
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div class="flex items-center gap-5">
+        <button (click)="goBack()" 
+          class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-slate-900 rounded-xl transition-all shadow-sm group">
+          <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Editor de Producto</h1>
+            <span [ngClass]="product()?.active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200'" 
+                  class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm">
+              {{ product()?.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-tighter mt-0.5">Reference_ID: {{ productId() }}</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <button (click)="deleteProduct()" 
+          class="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-500 text-xs font-bold rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-all shadow-sm active:scale-95 uppercase tracking-widest">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Eliminar Item
+        </button>
+      </div>
+    </header>
+
+    <div *ngIf="isLoading()" class="flex flex-col items-center justify-center py-24 bg-white border border-slate-200 rounded-3xl">
+      <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+      <p class="mt-4 text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Sincronizando Datos...</p>
+    </div>
+
+    <div *ngIf="!isLoading()" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <div class="lg:col-span-8 space-y-8">
+        
+        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Atributos del Producto</h2>
+            <button (click)="isEditingBasic.set(!isEditingBasic())" 
+                    class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-slate-200 rounded-lg hover:bg-white transition-all"
+                    [class.bg-blue-50]="isEditingBasic()" [class.text-blue-600]="isEditingBasic()">
+              {{ isEditingBasic() ? 'Cancelar' : 'Editar Información' }}
+            </button>
+          </div>
+
+          <div class="p-8">
+            <form [formGroup]="productForm" (ngSubmit)="updateProduct()" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Nombre Público</label>
+                  <input formControlName="name" [readOnly]="!isEditingBasic()"
+                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all"
+                         [class.opacity-60]="!isEditingBasic()">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Categoría Asignada</label>
+                  <select formControlName="categoryId" [attr.disabled]="isEditingBasic() ? null : true"
+                          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all"
+                          [class.opacity-60]="!isEditingBasic()">
+                    <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Resumen Corto</label>
+                <input formControlName="description" [readOnly]="!isEditingBasic()"
+                       class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all"
+                       [class.opacity-60]="!isEditingBasic()">
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción Técnica Completa</label>
+                <textarea formControlName="fullDescription" [readOnly]="!isEditingBasic()" rows="3"
+                          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all resize-none"
+                          [class.opacity-60]="!isEditingBasic()"></textarea>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                  <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Etiqueta de Inventario</label>
+                  <input formControlName="label" [readOnly]="!isEditingBasic()" placeholder="Ej: STOCK_LIMITADO"
+                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all"
+                         [class.opacity-60]="!isEditingBasic()">
+                </div>
+                <div class="flex items-center pt-6">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="active" [attr.disabled]="isEditingBasic() ? null : true" class="sr-only peer">
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <span class="ml-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Activo</span>
+                  </label>
+                </div>
+              </div>
+
+              <div *ngIf="isEditingBasic()" class="flex justify-end pt-4 border-t border-slate-50">
+                <button type="submit" [disabled]="isSaving()"
+                        class="px-8 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50 uppercase tracking-widest">
+                  {{ isSaving() ? 'Procesando...' : 'Confirmar Cambios' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Variantes y Disponibilidad</h2>
+            <button (click)="showVariantForm.set(!showVariantForm())" 
+                    class="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-blue-100">
+              {{ showVariantForm() ? 'Cancelar' : 'Agregar Variante' }}
+            </button>
+          </div>
+
+          <div class="p-8">
+            <div *ngIf="showVariantForm()" class="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl animate-in zoom-in-95 duration-200">
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Tono</label>
+                  <input [(ngModel)]="newVariant.toneName" placeholder="Ej: Midnight" 
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Color HEX</label>
+                  <input [(ngModel)]="newVariant.toneCode" type="color" 
+                         class="w-full h-[34px] rounded-lg border border-slate-200 cursor-pointer bg-white">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Precio Unitario</label>
+                  <input [(ngModel)]="newVariant.price" type="number" placeholder="0.00" 
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Inicial</label>
+                  <input [(ngModel)]="newVariant.stock" type="number" placeholder="0" 
+                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
+                </div>
+              </div>
+              <button (click)="saveVariant()" 
+                      class="w-full py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-black transition-all">
+                Registrar Variante
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div *ngFor="let v of product()?.variants" 
+                   class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-blue-400 transition-all group">
+                <div class="flex items-center gap-4">
+                  <div [style.background-color]="v.toneCode" class="w-10 h-10 rounded-xl border border-slate-100 shadow-inner"></div>
+                  <div>
+                    <p class="text-sm font-bold text-slate-800">{{ v.toneName }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Stock: {{ v.stock }} units</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="text-sm font-bold text-blue-600 tracking-tight">{{ v.price | currency }}</span>
+                  <button (click)="deleteVariant(v.id)" class="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="lg:col-span-4 space-y-8">
+        
+        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/30">
+            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Activos Multimedia</h2>
+          </div>
+
+          <div class="p-8">
+            <div class="relative h-32 mb-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center hover:bg-slate-50 hover:border-blue-400 transition-all cursor-pointer group overflow-hidden">
+              <input type="file" (change)="onFileSelected($event)" class="absolute inset-0 opacity-0 cursor-pointer z-20">
+              <div class="text-center">
+                <svg class="w-8 h-8 text-slate-300 group-hover:text-blue-500 mx-auto mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ selectedFileName() || 'Cargar Imagen' }}</span>
+              </div>
+              <button *ngIf="selectedFile" (click)="uploadImage()" 
+                      class="absolute bottom-2 right-2 px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg shadow-lg z-30">
+                Confirmar
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div *ngFor="let img of product()?.images" 
+                   class="relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group"
+                   [ngClass]="img.mainImage ? 'border-blue-500 ring-4 ring-blue-500/10' : 'border-slate-100 hover:border-slate-300'">
+                <img [src]="img.url" class="object-cover w-full h-full">
+                
+                <div *ngIf="img.mainImage" class="absolute top-2 left-2 px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black uppercase rounded shadow-sm">
+                  Principal
+                </div>
+
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3 backdrop-blur-[2px]">
+                  <button *ngIf="!img.mainImage" (click)="setImageAsMain(img)" 
+                          class="w-full py-1.5 text-[9px] bg-white text-slate-900 font-black uppercase rounded-lg shadow-sm hover:bg-blue-50">
+                    Definir Principal
+                  </button>
+                  <button (click)="deleteImage(img.id)" 
+                          class="w-full py-1.5 text-[9px] bg-rose-500 text-white font-black uppercase rounded-lg shadow-sm hover:bg-rose-600">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>

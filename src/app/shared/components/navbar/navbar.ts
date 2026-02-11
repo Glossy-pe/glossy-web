@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../admin-features/authentication/services/auth.service';  // Ajusta la ruta según tu estructura
 
 @Component({
   selector: 'app-navbar',
@@ -11,9 +12,11 @@ import { Router } from '@angular/router';
 })
 export class Navbar {
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+  ) {}
 
-    // Estado
+  // Estado
   isMobileMenuOpen = signal(false);
   cartCount = signal(2);
 
