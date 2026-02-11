@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -39,7 +40,7 @@ export class Login {
     this.isLoading.set(true);
 
     // Hacer request
-    this.http.post('http://localhost:9000/api/auth/login', {
+    this.http.post(environment.apiOAuth2Server + '/api/auth/login', {
       username: this.username(),
       password: this.password()
     }).subscribe({
