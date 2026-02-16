@@ -1,0 +1,30 @@
+<section class="w-full py-10 bg-sky-100/50 border-y border-sky-200/30 overflow-hidden">
+
+  <div class="mb-8 text-center">
+    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-900/40 uppercase">
+      Nuestras Alianzas
+    </span>
+  </div>
+
+  <div class="relative flex overflow-hidden mask-edges">
+    <div class="flex animate-marquee-linear gap-16 md:gap-24 items-center py-4">
+
+      <ng-container *ngFor="let brand of brands">
+        <div class="flex-none">
+          <img [src]="brand"
+               class="h-8 md:h-12 w-auto object-contain transition-all duration-300"
+               alt="Brand Logo">
+        </div>
+      </ng-container>
+
+      <ng-container *ngFor="let brand of brands">
+        <div class="flex-none">
+          <img [src]="brand"
+               class="h-8 md:h-12 w-auto object-contain  transition-all duration-300"
+               alt="Brand Logo">
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</section>

@@ -21,10 +21,11 @@ export class ProductService {
    */
   getProducts(label?: string): Observable<Product[]> {
     let url = this.apiUrl;
-    
+
     if (label) {
       url += `?label=${label}`;
     }
+    console.log(label);
     return this.http.get<Product[]>(url);
   }
 

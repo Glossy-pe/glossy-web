@@ -84,7 +84,7 @@ export class CartService {
   }
 
   // Agregar producto al carrito
-  addItem(product: Product, selectedVariant: ProductVariant, quantity: number = 1): void {
+  addItem(product: Product, selectedVariant: ProductVariant, quantity = 1): void {
     const currentItems = this.cartItems();
     
     const existingItemIndex = currentItems.findIndex(

@@ -1,0 +1,38 @@
+<section class="relative w-full py-10 overflow-hidden">
+
+  <div class="absolute inset-0 z-0">
+    <img
+      src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop"
+      alt="Fondo Tropical"
+      class="w-full h-full object-cover"
+    />
+    <div class="absolute inset-0 bg-sky-100/70 backdrop-blur-[2px]"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
+
+
+    <div *ngIf="categories$ | async as categories"
+         class="flex flex-row justify-between items-start gap-4 md:gap-8 overflow-x-auto pb-4 hide-scrollbar">
+
+      <div *ngFor="let cat of categories"
+           (click)="selectCategoryAndGoToProducts()"
+           class="group flex flex-col items-center cursor-pointer min-w-[110px] md:min-w-0 flex-1">
+
+        <div class="relative w-20 h-20 md:w-28 md:h-28 rounded-full p-[3px] border border-white bg-white/40 backdrop-blur-sm shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:bg-lime-400 group-hover:border-black">
+
+          <div class="w-full h-full rounded-full overflow-hidden">
+            <img [src]="cat.image" [alt]="cat.name"
+                 class="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500">
+          </div>
+        </div>
+
+        <h3 class="mt-4 text-[10px] md:text-xs font-bold text-black text-center uppercase tracking-[0.2em] leading-tight">
+          {{ cat.name }}
+        </h3>
+
+      </div>
+    </div>
+
+  </div>
+</section>

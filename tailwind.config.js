@@ -16,7 +16,11 @@
 export default {
   content: ["./src/**/*.{html,js}"],
   theme: {
-    extend: {},
+    extend: {
+            fontFamily: {
+        serif: ['"Playfair Display"', 'serif'],
+      },
+    },
   },
   plugins: [],
 }
