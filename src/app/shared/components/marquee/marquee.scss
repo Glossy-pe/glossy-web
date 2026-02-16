@@ -1,0 +1,31 @@
+@keyframes marquee-linear {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-linear {
+  display: flex;
+  width: max-content;
+  animation: marquee-linear 60s linear infinite;
+}
+
+.animate-marquee-linear:hover {
+  animation-play-state: paused;
+}
+
+.mask-edges {
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 15%,
+      black 85%,
+      transparent
+  );
+  -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 15%,
+      black 85%,
+      transparent
+  );
+}

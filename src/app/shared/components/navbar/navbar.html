@@ -1,76 +1,81 @@
-<div>
-  <nav class="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-stone-100 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Altura reducida a h-14 para el efecto "delgado" -->
-      <div class="flex justify-between items-center h-14">
-        
-        <!-- Botón Menú Móvil (Izquierda en móvil) -->
-        <div class="md:hidden flex items-center">
-          <button (click)="toggleMobileMenu()" class="text-stone-800 hover:text-rose-400 focus:outline-none transition-colors">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
+<div class="relative w-full z-50">
 
-        <!-- Logo (Centrado o Izquierda según gusto, aquí Izquierda limpia) -->
-        <div (click)="goToHome()" class="flex-shrink-0 flex items-center cursor-pointer gap-2">
-          <!-- Logo minimalista: Solo texto o icono muy pequeño -->
-          <div class="h-2 w-2 bg-rose-400 rounded-full"></div>
-          <span class="font-serif text-lg tracking-[0.2em] font-medium text-stone-900 uppercase">
-            Glossy.pe
-          </span>
-        </div>
+  <header class="bg-sky-100 pt-5 pb-6 px-6 md:px-10">
 
-        <!-- Links de Escritorio (Centro) - Estilo Editorial -->
-        <div class="hidden md:flex space-x-10 items-center justify-center absolute left-1/2 transform -translate-x-1/2">
-          @for (item of navItems; track item) {
-            <a href="#" class="text-stone-500 hover:text-stone-900 font-normal transition-colors duration-300 text-[11px] tracking-[0.15em] uppercase relative group">
-              {{ item }}
-              <!-- Subrayado animado sutil -->
-              <span class="absolute -bottom-1 left-0 w-0 h-[1px] bg-rose-400 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-          }
-        </div>
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-6">
 
-        <!-- Iconos de Acción (Derecha) - Trazos finos -->
-        <div class="flex items-center space-x-5">
-          <button class="text-stone-800 hover:text-rose-400 transition-colors">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          
-          <button (click)="goToCart()" class="group flex items-center text-stone-800 hover:text-rose-400 transition-colors">
-            <div class="relative">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              @if (cartCount() > 0) {
-                <span class="absolute -top-1 -right-1.5 h-1.5 w-1.5 bg-rose-400 rounded-full animate-pulse"></span>
-              }
-            </div>
-            <span class="ml-2 text-[10px] font-medium tracking-wider hidden md:block">({{ cartCount() }})</span>
-          </button>
+      <div class="flex flex-col items-start gap-2 shrink-0">
+        <a href="#" class="text-4xl font-serif font-black text-black tracking-tight hover:opacity-80 transition">
+          GLOSSY
+        </a>
 
-        </div>
-
+        <button class="px-4 py-1.5 bg-lime-400 hover:bg-lime-300 text-black text-[10px] font-black uppercase tracking-widest rounded border border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-0.5 active:shadow-none -rotate-1">
+          ★ Summer Sale
+        </button>
       </div>
+
+
+      <div class="flex-1 w-full max-w-3xl flex flex-col gap-4 px-0 lg:px-10">
+
+        <nav class="flex flex-wrap justify-center lg:justify-start gap-3">
+          <a href="#" class="px-4 py-1 bg-rose-200 hover:bg-rose-300 text-black text-xs font-bold uppercase rounded-full transition-colors shadow-sm">
+            Rostro
+          </a>
+          <a href="#" class="px-4 py-1 bg-amber-100 hover:bg-amber-200 text-black text-xs font-bold uppercase rounded-full transition-colors shadow-sm">
+            Ojos
+          </a>
+          <a href="#" class="px-4 py-1 bg-purple-200 hover:bg-purple-300 text-black text-xs font-bold uppercase rounded-full transition-colors shadow-sm">
+            Skincare
+          </a>
+          <a href="#" class="px-4 py-1 bg-white hover:bg-white/80 text-black text-xs font-bold uppercase rounded-full border border-sky-200 transition-colors shadow-sm">
+            Kits
+          </a>
+        </nav>
+
+        <div class="flex items-center w-full bg-white rounded-full shadow-md border-b-2 border-sky-200/50 overflow-hidden h-12 relative group">
+
+          <div class="relative h-full flex items-center border-r border-gray-100 pl-5 pr-3 cursor-pointer hover:bg-gray-50 transition-colors">
+            <span class="text-xs font-medium text-gray-500 tracking-wide">Todo</span>
+            <svg class="w-3 h-3 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+
+          <input
+            type="text"
+            class="flex-1 h-full px-4 text-sm font-light text-gray-600 placeholder-gray-300 focus:outline-none bg-transparent"
+            placeholder="Encuentra tu brillo..."
+          />
+
+          <button class="h-full px-6 text-gray-400 hover:text-rose-400 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </button>
+        </div>
+      </div>
+
+
+      <div class="flex items-center justify-end shrink-0">
+        <button (click)="goToCart()" class="flex items-center gap-3 group">
+
+          <div class="relative w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-lg group-hover:bg-lime-400 transition-colors duration-300">
+            <svg class="w-5 h-5 text-white group-hover:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-400 rounded-full border-2 border-sky-100 text-[9px] font-bold text-white flex items-center justify-center">2</span>
+          </div>
+
+          <div class="flex flex-col items-start">
+            <span class="text-[9px] text-gray-400 font-light uppercase tracking-widest">Mi Bolsa</span>
+            <span class="text-xs text-black font-normal border-b border-transparent group-hover:border-black transition-all">Ver (2) Items</span>
+          </div>
+        </button>
+      </div>
+
     </div>
+  </header>
 
-    <!-- Menú Móvil Minimalista -->
-    @if (isMobileMenuOpen()) {
-      <div class="md:hidden bg-white border-t border-stone-100 absolute w-full shadow-sm animation-fade-in">
-        <div class="flex flex-col py-4 items-center space-y-4">
-          @for (item of navItems; track item) {
-            <a href="#" class="text-stone-600 hover:text-rose-400 text-xs tracking-[0.2em] uppercase font-light py-1">
-              {{ item }}
-            </a>
-          }
-          <div class="w-8 h-[1px] bg-stone-100 my-2"></div>
-          
-        </div>
-      </div>
-    }
-  </nav>
+<div class="absolute bottom-0 left-0 w-full translate-y-[98%] z-20 pointer-events-none leading-[0]">
+  <svg class="relative block w-full h-[12px] md:h-[20px]" fill="currentColor" class="text-sky-100" preserveAspectRatio="none" viewBox="0 0 1600 600" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 Q9,32 18,40 T36,40 T54,40 T72,40 T90,40 T108,40 T126,40 T144,40 T162,40 T180,40 T198,40 T216,40 T234,40 T252,40 T270,40 T288,40 T306,40 T324,40 T342,40 T360,40 T378,40 T396,40 T414,40 T432,40 T450,40 T468,40 T486,40 T504,40 T522,40 T540,40 T558,40 T576,40 T594,40 T612,40 T630,40 T648,40 T666,40 T684,40 T702,40 T720,40 T738,40 T756,40 T774,40 T792,40 T810,40 T828,40 T846,40 T864,40 T882,40 T900,40 T918,40 T936,40 T954,40 T972,40 T990,40 T1008,40 T1026,40 T1044,40 T1062,40 T1080,40 T1098,40 T1116,40 T1134,40 T1152,40 T1170,40 T1188,40 T1206,40 T1224,40 T1242,40 T1260,40 T1278,40 T1296,40 T1314,40 T1332,40 T1350,40 T1368,40 T1386,40 T1404,40 T1422,40 T1440,40 T1458,40 T1476,40 T1494,40 T1512,40 T1530,40 T1548,40 T1566,40 T1584,40 T1600,40 V0 H0 Z"></path>
+  </svg>
+</div>
+
 </div>

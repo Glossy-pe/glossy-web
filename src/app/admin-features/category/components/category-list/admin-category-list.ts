@@ -29,7 +29,7 @@ imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule],
   templateUrl: './admin-category-list.html',
   styleUrl: './admin-category-list.scss',
 })
-export class AdminCategoryList {
+export class AdminCategoryList implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   

@@ -1,0 +1,47 @@
+.hero-carousel {
+  width: 100%;
+  height: 600px;
+  overflow: hidden;
+  position: relative;
+
+  .carousel-track {
+    display: flex;
+    width: 400%; // 100% por cada slide (3 + 1 copia)
+    height: 100%;
+    // 15 segundos en total para recorrer las 3 originales
+    animation: infinite-scroll 15s infinite;
+  }
+
+  .slide {
+    width: 100%; // Cada slide es el 25% del track (o 100% del viewport)
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+
+    .overlay {
+      height: 100%;
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3.5rem;
+      font-weight: 800;
+    }
+  }
+}
+
+@keyframes infinite-scroll {
+  // 0% a 30%: Estático en Slide 1
+  0%, 30% { transform: translateX(0); }
+
+  // 33.33% a 63%: Estático en Slide 2
+  33.33%, 63.33% { transform: translateX(-25%); }
+
+  // 66.66% a 96%: Estático en Slide 3
+  66.66%, 96.66% { transform: translateX(-50%); }
+
+  // 100%: Muestra la COPIA del Slide 1
+  // El "infinite" de la animación reinicia esto a 0% instantáneamente
+  100% { transform: translateX(-75%); }
+}

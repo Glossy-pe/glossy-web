@@ -26,14 +26,14 @@ export class ProductDetail implements OnInit, OnDestroy {
 toastMessage = '';
   apiImageServer= environment.apiImageServer;
 
-  activeImageIndex: number = 0;
-  quantity: number = 1;
+  activeImageIndex = 0;
+  quantity = 1;
   selectedVariant: ProductVariant | null = null;
 
   product$!: Observable<Product>;
   categories$!: Observable<Category[]>
   isLoading$!: Observable<boolean>;
-  errorMessage: string = '';
+  errorMessage = '';
 
   constructor(
     private route: ActivatedRoute,

@@ -1,60 +1,52 @@
-import { Component, OnInit, OnDestroy, signal, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product.service';
-import { Product} from '../../models/product.model';
-import { FormsModule } from '@angular/forms';
+import { Product } from '../../models/product.model';
 import { Router } from '@angular/router';
-import { catchError, finalize, map, Observable, of, startWith, Subscription, tap } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { Category } from '../../../category/models/category.model';
-import { CategoryService } from '../../../category/services/category.service';
+import { map, Observable, startWith, Subscription } from 'rxjs';
 import { ProductImage } from '../../models/product-image.model';
 import { environment } from '../../../../../environments/environment';
+import {ProductCard} from '../product-card/product-card';
 
 @Component({
   selector: 'app-product-list',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ProductCard], // Ya no necesitamos FormsModule
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
 export class ProductList implements OnInit, OnDestroy {
 
-  // Input opcional para recibir el label
-  @Input() label?: string;
+  @Input() label?: string = "Nuevos Productos Virales";
+
+  // Referencia al contenedor del slider para hacer scroll
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   private subscription?: Subscription;
-  apiImageServer= environment.apiImageServer;
+  apiImageServer = environment.apiImageServer;
 
   products$!: Observable<Product[]>;
-  categories$!: Observable<Category[]>
   isLoading$!: Observable<boolean>;
+
+  // Estado para controlar índice de imagen y hover
+  currentImageIndex: Record<number, number> = {};
+  hoveringControls: Record<number, boolean> = {};
+  errorMessage = '';
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService,
     private router: Router,
   ) { }
 
   ngOnInit(): void {
-    this.categories$ = this.categoryService.getCategories();
     this.resetState();
     this.loadProducts();
   }
 
   ngOnDestroy(): void {
-    // this.isLoading$ = false;
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
-
-  searchTerm: string = '';
-  selectedCategory: number | null = null;
-
-  // Estado para controlar el índice de la imagen actual de cada producto
-  currentImageIndex: { [productId: number]: number } = {};
-
-  // Estado para evitar el efecto de zoom en la imagen cuando se hace hover sobre las flechas
-  hoveringControls: { [productId: number]: boolean } = {};
-
-  errorMessage: string = '';
 
   resetState(): void {
     this.errorMessage = '';
@@ -63,8 +55,7 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   loadProducts(): void {
-    // Ahora pasas el label al servicio
-    const products$ = this.productService.getProducts(this.label);
+    const products$ = this.productService.getProducts(this.label); // Mantenemos tu lógica original
     this.products$ = products$;
     this.isLoading$ = products$.pipe(
       map(() => false),
@@ -72,56 +63,44 @@ export class ProductList implements OnInit, OnDestroy {
     );
   }
 
-  get filteredProducts(): Product[] {
-    let productos: Product[] = new Array();
-    return productos;
-    // return this.products.filter(product => {
-    //   const matchesCategory = this.selectedCategory === null || product.categoryId === this.selectedCategory;
-    //   const matchesSearch = product.name.toLowerCase().includes(this.searchTerm.toLowerCase());
-    //   return matchesCategory && matchesSearch;
-    // });
+  // --- Lógica del Scroll Horizontal (Slider) ---
+  scrollLeft(): void {
+    if (this.scrollContainer) {
+      this.scrollContainer.nativeElement.scrollBy({ left: -340, behavior: 'smooth' });
+    }
   }
 
-  onSearch(event: any): void {
-    this.searchTerm = event.target.value;
+  scrollRight(): void {
+    if (this.scrollContainer) {
+      this.scrollContainer.nativeElement.scrollBy({ left: 340, behavior: 'smooth' });
+    }
   }
 
-  setCategory(categoryId: number | null): void {
-    this.selectedCategory = categoryId;
-  }
-
+  // --- Manejo de Imágenes ---
   handleImageError(event: any) {
     event.target.src = 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image';
   }
 
-  // --- Helper para manejar imágenes ---
   getProductImages(product: Product): ProductImage[] {
-    // La API devuelve un array de imágenes directamente
     if (product.images && product.images.length > 0) {
       return product.images;
     }
-
-    let tempProductImage: ProductImage = {
+    return [{
       id: 0,
       mainImage: true,
       productId: 0,
       url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
-    };
-
-    // Fallback si no hay imágenes
-    return [tempProductImage];
+    }];
   }
 
-  // --- Lógica del Carrusel ---
+  // --- Lógica del Carrusel Interno de la Card ---
   nextImage(event: Event, product: Product) {
-    event.stopPropagation();
+    event.stopPropagation(); // Importante: evita que el click dispare viewProductDetail
     event.preventDefault();
 
     const images = this.getProductImages(product);
     const currentIndex = this.currentImageIndex[product.id] || 0;
-    const totalImages = images.length;
-
-    this.currentImageIndex[product.id] = (currentIndex + 1) % totalImages;
+    this.currentImageIndex[product.id] = (currentIndex + 1) % images.length;
   }
 
   prevImage(event: Event, product: Product) {
@@ -130,12 +109,9 @@ export class ProductList implements OnInit, OnDestroy {
 
     const images = this.getProductImages(product);
     const currentIndex = this.currentImageIndex[product.id] || 0;
-    const totalImages = images.length;
-
-    this.currentImageIndex[product.id] = (currentIndex - 1 + totalImages) % totalImages;
+    this.currentImageIndex[product.id] = (currentIndex - 1 + images.length) % images.length;
   }
 
-  // Controla el estado del hover sobre los controles para evitar zoom en la imagen
   setHoverControl(productId: number, isHovering: boolean) {
     this.hoveringControls[productId] = isHovering;
   }
@@ -148,13 +124,11 @@ export class ProductList implements OnInit, OnDestroy {
     this.router.navigate(['/products', product.id]);
   }
 
-  // --- Helpers para obtener info del producto ---
+  // --- Helpers de Precios y Stock ---
   getProductPriceRange(product: Product): string {
     if (!product.variants || product.variants.length === 0) {
-      // Si no hay variantes, usar basePrice
       return product.basePrice ? `$${product.basePrice.toFixed(2)}` : 'N/A';
     }
-
     const prices = product.variants.map(v => v.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
@@ -166,9 +140,7 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   getTotalStock(product: Product): number {
-    if (!product.variants || product.variants.length === 0) {
-      return 0;
-    }
+    if (!product.variants || product.variants.length === 0) return 0;
     return product.variants.reduce((sum, v) => sum + v.stock, 0);
   }
 
@@ -180,5 +152,4 @@ export class ProductList implements OnInit, OnDestroy {
   isOutOfStock(product: Product): boolean {
     return this.getTotalStock(product) === 0;
   }
-
 }

@@ -8,17 +8,26 @@
       </div>
       
       <div class="flex items-center gap-3 w-full sm:w-auto">
-        <button (click)="loadProducts()" 
-          class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-blue-600 rounded-xl transition-all shadow-sm">
-          <svg [class.animate-spin]="isLoadingProducts()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button 
+          (click)="loadProducts()" 
+          [disabled]="isLoadingProducts()"
+          class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-blue-600 rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg 
+            [class.animate-spin]="isLoadingProducts()" 
+            class="w-5 h-5 transition-transform" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
             <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2" />
           </svg>
         </button>
-        <button (click)="toggleCreateForm()"
+        <button 
+          (click)="toggleCreateForm()"
+          [disabled]="isLoadingProducts() || isSaving()"
           [class]="showCreateForm() ? 'bg-white border-slate-200 text-slate-700' : 'bg-blue-600 text-white border-blue-600 shadow-blue-100'"
-          class="flex items-center justify-center gap-2 px-6 py-2.5 border text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 w-full sm:w-auto">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path [attr.d]="showCreateForm() ? 'M6 18L18 6M6 6l12 12' : 'M12 4v16m8-8H4'" stroke-width="2.5" />
+          class="flex items-center justify-center gap-2 px-6 py-2.5 border text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4 transition-transform" [class.rotate-45]="showCreateForm()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M12 4v16m8-8H4" stroke-width="2.5" />
           </svg>
           {{ showCreateForm() ? 'Cerrar' : 'Nuevo Producto' }}
         </button>
@@ -27,131 +36,397 @@
 
     <div class="relative mb-6">
       <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" /></svg>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />
+        </svg>
       </span>
-      <input type="text" (input)="updateFilter($event)" placeholder="Buscar por nombre, categoría o ID..."
-        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all shadow-sm">
+      <input 
+        type="text" 
+        (input)="updateFilter($event)" 
+        placeholder="Buscar por nombre, categoría o etiqueta..."
+        [disabled]="isLoadingProducts()"
+        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all shadow-sm disabled:opacity-50">
     </div>
 
-    <div *ngIf="showCreateForm()" class="mb-8 bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden">
-      <div class="px-8 py-4 border-b border-slate-50 bg-slate-50/50">
-        <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Editor de Producto</h2>
+    <div *ngIf="showCreateForm()" class="mb-8 bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden animate-slideDown">
+      <div class="px-8 py-4 border-b border-slate-50 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Editor de Producto</h2>
       </div>
 
       <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="p-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
           <div class="lg:col-span-8 space-y-6">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-1.5">
-                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Nombre</label>
-                <input formControlName="name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none">
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">
+                  Nombre <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  formControlName="name" 
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all"
+                  placeholder="Ej: Esmalte Semipermanente">
+                <div *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched" class="text-xs text-red-500 mt-1 ml-1">
+                  El nombre es obligatorio
+                </div>
               </div>
+              
               <div class="space-y-1.5">
-                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Categoría</label>
-                <select formControlName="categoryId" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none">
-                  <option [value]="null">Seleccionar...</option>
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">
+                  Categoría <span class="text-red-500">*</span>
+                </label>
+                <select 
+                  formControlName="categoryId" 
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all">
+                  <option [value]="null">Seleccionar categoría...</option>
                   <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
                 </select>
+                <div *ngIf="productForm.get('categoryId')?.invalid && productForm.get('categoryId')?.touched" class="text-xs text-red-500 mt-1 ml-1">
+                  La categoría es obligatoria
+                </div>
               </div>
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción</label>
-              <textarea formControlName="fullDescription" rows="2" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none resize-none"></textarea>
+              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción Corta</label>
+              <textarea 
+                formControlName="description" 
+                rows="2" 
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none resize-none transition-all"
+                placeholder="Breve descripción del producto"></textarea>
             </div>
 
-            <div class="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
-              <h3 class="text-[11px] font-bold text-slate-800 uppercase mb-4 tracking-wider">Variantes y Stock</h3>
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción Completa</label>
+              <textarea 
+                formControlName="fullDescription" 
+                rows="3" 
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none resize-none transition-all"
+                placeholder="Descripción detallada del producto"></textarea>
+            </div>
+
+            <div class="p-5 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl">
+              <h3 class="text-[11px] font-bold text-slate-800 uppercase mb-4 tracking-wider">🏷️ Etiquetas</h3>
+              
+              <div *ngIf="isLoadingLabels()" class="flex items-center justify-center py-8">
+                <svg class="animate-spin w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+
+              <div *ngIf="!isLoadingLabels()" class="flex flex-wrap gap-2">
+                <button 
+                  *ngFor="let label of labels()" 
+                  type="button"
+                  (click)="toggleLabel(label.id)"
+                  [disabled]="isSaving()"
+                  [class]="isLabelSelected(label.id) 
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-purple-300'"
+                  class="px-4 py-2 border text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50">
+                  {{ label.name }}
+                </button>
+              </div>
+
+              <div *ngIf="!isLoadingLabels() && labels().length === 0" class="text-center py-6 text-sm text-slate-400">
+                No hay etiquetas disponibles
+              </div>
+            </div>
+
+            <div class="p-5 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl">
+              <h3 class="text-[11px] font-bold text-slate-800 uppercase mb-4 tracking-wider">
+                🎨 Variantes y Stock
+              </h3>
+              
               <div class="flex flex-wrap gap-3 mb-4">
-                <input #vName placeholder="Nombre" class="flex-grow min-w-[120px] px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none">
-                <input #vPrice type="number" placeholder="Precio" class="w-24 px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none">
-                <input #vStock type="number" placeholder="Stock" class="w-20 px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none">
-                <button type="button" (click)="addVariantToList(vName.value, '#000', vPrice.value, vStock.value); vName.value=''; vPrice.value=''; vStock.value=''"
-                  class="bg-blue-600 text-white px-5 py-2 text-[11px] font-bold rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100">Añadir</button>
+                <input 
+                  #vName 
+                  placeholder="Nombre de variante" 
+                  [disabled]="isSaving()"
+                  class="flex-grow min-w-[140px] px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50">
+                
+                <div class="relative">
+                  <input 
+                    #vColor 
+                    type="color" 
+                    value="#6366f1"
+                    [disabled]="isSaving()"
+                    class="w-16 h-9 cursor-pointer rounded-lg border border-slate-200 disabled:opacity-50">
+                  <label class="absolute -top-5 left-0 text-[9px] font-bold text-slate-400 uppercase">Color</label>
+                </div>
+                
+                <input 
+                  #vPrice 
+                  type="number" 
+                  placeholder="Precio" 
+                  [disabled]="isSaving()"
+                  class="w-28 px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50">
+                
+                <input 
+                  #vStock 
+                  type="number" 
+                  placeholder="Stock" 
+                  [disabled]="isSaving()"
+                  class="w-24 px-3 py-2 bg-white text-xs border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50">
+                
+                <button 
+                  type="button" 
+                  (click)="addVariantToList(vName.value, vColor.value, vPrice.value, vStock.value); vName.value=''; vColor.value='#6366f1'; vPrice.value=''; vStock.value=''"
+                  [disabled]="isSaving()"
+                  class="bg-blue-600 text-white px-5 py-2 text-[11px] font-bold rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100 transition-all active:scale-95 disabled:opacity-50">
+                  + Añadir
+                </button>
               </div>
               
-              <div class="flex flex-wrap gap-2">
-                <div *ngFor="let v of tempVariants(); let i = index" class="flex items-center gap-3 bg-white border border-slate-200 pl-4 pr-2 py-1.5 rounded-xl text-[11px] font-semibold text-slate-700">
+              <div class="flex flex-wrap gap-2 min-h-[60px]">
+                <div 
+                  *ngFor="let v of tempVariants(); let i = index" 
+                  class="flex items-center gap-3 bg-white border border-slate-200 pl-4 pr-2 py-2 rounded-xl text-[11px] font-semibold text-slate-700 shadow-sm hover:shadow-md transition-all animate-fadeIn">
+                  <div class="w-4 h-4 rounded-full border-2 border-white shadow-sm" [style.background-color]="v.toneCode"></div>
                   <span>{{ v.toneName }}</span>
-                  <span class="text-blue-600">{{ v.price | currency }}</span>
+                  <span class="text-blue-600 font-bold">{{ v.price | currency }}</span>
                   <span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-500">{{ v.stock }} ud.</span>
-                  <button type="button" (click)="removeVariantFromList(i)" class="p-1 text-slate-300 hover:text-red-500"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" /></svg></button>
+                  <button 
+                    type="button" 
+                    (click)="removeVariantFromList(i)" 
+                    [disabled]="isSaving()"
+                    class="p-1 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+                    </svg>
+                  </button>
                 </div>
+              </div>
+
+              <div *ngIf="tempVariants().length === 0" class="text-center py-6 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
+                No hay variantes agregadas (opcional)
               </div>
             </div>
           </div>
 
           <div class="lg:col-span-4 space-y-4">
-            <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Imagen del producto</label>
-            <div (click)="fileInput.click()" class="aspect-square border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center bg-slate-50 hover:bg-white hover:border-blue-400 cursor-pointer overflow-hidden transition-all group">
-              <input #fileInput type="file" (change)="onFileSelected($event)" class="hidden">
-              <svg class="w-10 h-10 text-slate-300 group-hover:text-blue-400 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5" /></svg>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">{{ selectedFileName() || 'Clic para subir' }}</p>
+            <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">
+              Imagen del producto
+            </label>
+            
+            <div 
+              (click)="fileInput.click()" 
+              [class.border-blue-400]="imagePreview()"
+              class="aspect-square border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center bg-slate-50 hover:bg-white hover:border-blue-400 cursor-pointer overflow-hidden transition-all group relative">
+              
+              <input 
+                #fileInput 
+                type="file" 
+                accept="image/*"
+                (change)="onFileSelected($event)" 
+                [disabled]="isSaving()"
+                class="hidden">
+              
+              <div *ngIf="imagePreview()" class="absolute inset-0 w-full h-full animate-fadeIn">
+                <img 
+                  [src]="imagePreview()" 
+                  class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                  <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5" />
+                  </svg>
+                </div>
+              </div>
+
+              <div *ngIf="!imagePreview()" class="flex flex-col items-center">
+                <svg class="w-12 h-12 text-slate-300 group-hover:text-blue-400 mb-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5" />
+                </svg>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">
+                  {{ selectedFileName() || 'Clic para subir imagen' }}
+                </p>
+                <p class="text-[9px] text-slate-300 mt-2">JPG, PNG o WEBP</p>
+              </div>
+
+              <div *ngIf="isUploadingImage()" class="absolute inset-0 bg-white/90 flex items-center justify-center">
+                <svg class="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div *ngIf="selectedFileName()" class="text-xs text-slate-500 text-center truncate px-4">
+              {{ selectedFileName() }}
+            </div>
+
+            <button 
+              *ngIf="selectedFile"
+              type="button"
+              (click)="addImageToList()"
+              [disabled]="isSaving() || isUploadingImage()"
+              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 text-sm font-bold rounded-xl hover:shadow-lg transition-all active:scale-95 disabled:opacity-50">
+              + Agregar Imagen
+            </button>
+
+            <div *ngIf="tempImages().length > 0" class="space-y-2 mt-4">
+              <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Imágenes agregadas ({{ tempImages().length }})</label>
+              <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                <div 
+                  *ngFor="let img of tempImages(); let i = index"
+                  class="flex items-center gap-3 bg-white border border-slate-200 p-2 rounded-xl hover:border-blue-300 transition-all animate-fadeIn">
+                  <img [src]="img.preview" class="w-12 h-12 object-cover rounded-lg">
+                  <div class="flex-grow min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-slate-700 truncate">Imagen {{ i + 1 }}</span>
+                      <button
+                        type="button"
+                        (click)="setMainInTemp(i)"
+                        [disabled]="isSaving()"
+                        [class]="img.mainImage ? 'bg-yellow-100 text-yellow-700 border-yellow-300' : 'bg-slate-50 text-slate-400 border-slate-200'"
+                        class="text-[9px] font-bold px-2 py-0.5 rounded border transition-all disabled:opacity-50">
+                        {{ img.mainImage ? '★' : '☆' }}
+                      </button>
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    (click)="removeImageFromList(i)"
+                    [disabled]="isSaving()"
+                    class="p-1.5 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="tempImages().length === 0" class="text-center py-4 text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
+              No hay imágenes agregadas (opcional)
             </div>
           </div>
         </div>
 
         <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
-          <button type="button" (click)="resetForm()" class="px-6 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest">Descartar</button>
-          <button type="submit" [disabled]="productForm.invalid || isSaving()"
-            class="px-10 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50">
-            {{ isSaving() ? 'GUARDANDO...' : 'GUARDAR CAMBIOS' }}
+          <button 
+            type="button" 
+            (click)="resetForm()" 
+            [disabled]="isSaving()"
+            class="px-6 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors disabled:opacity-50">
+            Descartar
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="isSaving()"
+            class="px-10 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <svg *ngIf="isSaving()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isSaving() ? 'GUARDANDO...' : 'GUARDAR PRODUCTO' }}
           </button>
         </div>
       </form>
     </div>
 
-    <div *ngIf="!isLoadingProducts()" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div *ngIf="!isLoadingProducts()" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-fadeIn">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-50/50 border-b border-slate-100">
+            <tr class="bg-gradient-to-r from-slate-50 to-slate-50/50 border-b border-slate-100">
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Categoría</th>
-              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Disponibilidad</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden lg:table-cell">Etiquetas</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50">
-            <tr *ngFor="let product of filteredProducts()" class="hover:bg-slate-50/50 transition-colors group">
+            <tr 
+              *ngFor="let product of filteredProducts()" 
+              class="hover:bg-slate-50/50 transition-colors group">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                    <img *ngIf="getMainImage(product)" [src]="getMainImage(product)" class="w-full h-full object-cover">
+                  <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-sm">
+                    <img 
+                      [src]="getMainImage(product)" 
+                      [alt]="product.name"
+                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      loading="lazy">
                   </div>
                   <div>
                     <h3 class="text-sm font-bold text-slate-800">{{ product.name }}</h3>
-                    <p class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">ID: {{ (product.id + '').slice(-8) }}</p>
+                    <p class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">ID: {{ product.id }}</p>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 hidden md:table-cell">
-                <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg uppercase border border-blue-100">
+                <span class="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg uppercase border border-blue-100">
                   {{ getCategoryName(product.categoryId) }}
                 </span>
+              </td>
+              <td class="px-6 py-4 hidden lg:table-cell">
+                <div class="flex flex-wrap gap-1 max-w-xs">
+                  <span 
+                    *ngFor="let label of product.labels" 
+                    class="px-2 py-1 bg-purple-50 text-purple-600 text-[9px] font-bold rounded-md uppercase border border-purple-100">
+                    {{ label.name }}
+                  </span>
+                  <span 
+                    *ngIf="!product.labels || product.labels.length === 0"
+                    class="text-xs text-slate-300 italic">
+                    Sin etiquetas
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-bold text-slate-700">{{ getTotalStock(product) }}</span>
-                  <div class="w-2 h-2 rounded-full" [class]="getTotalStock(product) > 0 ? 'bg-green-500' : 'bg-rose-500'"></div>
+                  <div 
+                    class="w-2 h-2 rounded-full animate-pulse" 
+                    [class]="getTotalStock(product) > 0 ? 'bg-green-500' : 'bg-rose-500'">
+                  </div>
                 </div>
               </td>
               <td class="px-6 py-4 text-right">
                 <div class="flex justify-end gap-1">
-                  <button (click)="selectProduct(product)" 
-                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" /></svg>
+                  <button 
+                    (click)="selectProduct(product)" 
+                    [disabled]="isSaving()"
+                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-95 disabled:opacity-50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" />
+                    </svg>
                   </button>
-                  <button (click)="deleteProduct(product.id)" 
-                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" /></svg>
+                  <button 
+                    (click)="deleteProduct(product.id)" 
+                    [disabled]="isSaving()"
+                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-95 disabled:opacity-50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" />
+                    </svg>
                   </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div *ngIf="filteredProducts().length === 0" class="text-center py-16">
+        <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" stroke-width="2" />
+        </svg>
+        <h3 class="text-lg font-bold text-slate-700 mb-2">No se encontraron productos</h3>
+        <p class="text-sm text-slate-400">Intenta ajustar los filtros de búsqueda</p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoadingProducts()" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden p-16">
+      <div class="flex flex-col items-center justify-center">
+        <svg class="animate-spin w-12 h-12 text-blue-600 mb-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-sm font-semibold text-slate-600">Cargando productos...</p>
       </div>
     </div>
 

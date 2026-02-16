@@ -9,7 +9,7 @@ export const routes: Routes = [
         children: [
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: 'home', loadComponent: () => import('./features/home/components/home/home').then(m => m.Home) },
-            { path: 'categories', loadComponent: () => import('./features/category/components/catergory-list/catergory-list').then(m => m.CatergoryList) },
+            { path: 'categories', loadComponent: () => import('./features/category/components/category-list/category-list').then(m => m.CategoryList) },
             { path: 'products', loadComponent: () => import('./features/product/components/product-list/product-list').then(m => m.ProductList) },
             { path: 'products/:id', loadComponent: () => import('./features/product/components/product-detail/product-detail').then(m => m.ProductDetail) },
             { path: 'cart', loadComponent: () => import('./features/cart/components/cart-list/cart-list').then(m => m.CartList) },
