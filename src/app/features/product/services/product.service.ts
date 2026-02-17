@@ -23,7 +23,7 @@ export class ProductService {
     let url = this.apiUrl;
 
     if (label) {
-      url += `?label=${label}`;
+      url += `?labelId=${label}`;
     }
     console.log(label);
     return this.http.get<Product[]>(url);

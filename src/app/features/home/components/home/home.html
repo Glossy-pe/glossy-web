@@ -2,40 +2,53 @@
 
   <!-- Carrusel Delgado y Elegante -->
   <app-home-hero></app-home-hero>
-  <section class="w-full px-6 md:px-16 py-10 bg-white">
-    <div class=" mx-auto flex flex-col md:flex-row gap-12 justify-start items-stretch">
+<section class="w-full px-4 py-6 md:px-16 md:py-10 bg-white">
+  
+  <div class="mx-auto flex flex-row gap-3 md:gap-12 justify-center items-center">
 
-      <div class="relative flex-1 aspect-[4/3] md:aspect-auto md:h-[300px]">
-        <img src="https://img.freepik.com/fotos-premium/suero-facial-colageno-antienvejecimiento-botella-vidrio-crema-facial-sobre-fondo-beige-espacio-copia-concepto-belleza-cosmetica-organica-natural_105596-5072.jpg"
-             class="w-full h-full object-cover" alt="Categoría 1">
+    <div class="relative w-1/2 aspect-[4/3] md:aspect-auto md:h-[300px] group overflow-hidden rounded-sm shadow-sm">
+      <img src="https://img.freepik.com/fotos-premium/suero-facial-colageno-antienvejecimiento-botella-vidrio-crema-facial-sobre-fondo-beige-espacio-copia-concepto-belleza-cosmetica-organica-natural_105596-5072.jpg"
+           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Solares">
 
-        <div class="absolute inset-0 p-8 flex flex-col justify-center ">
-          <h3 class="text-white text-2xl font-serif font-bold italic">Solares</h3>
-          <p class="text-white/90 text-sm font-light">Protección esencial de verano</p>
-        </div>
+      <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
+
+      <div class="absolute inset-0 p-2 flex flex-col justify-center items-center text-center">
+        <h3 class="text-white text-base md:text-2xl font-serif font-bold italic drop-shadow-md">
+          Solares
+        </h3>
+        <p class="text-white/90 text-[10px] md:text-sm font-light leading-tight mt-1 drop-shadow-sm">
+          Protección esencial
+        </p>
       </div>
-
-      <div class="relative flex-1 overflow-hidden aspect-[4/3] md:aspect-auto md:h-[300px]">
-        <img src="https://perilecosmetics.co.za/cdn/shop/articles/Perile_Styled_Low_Res_11.jpg?v=1723720037&width=2048"
-             class="w-full h-full object-cover" alt="Categoría 2">
-
-        <div class="absolute inset-0 p-8 flex flex-col justify-center">
-          <h3 class="text-white text-2xl font-serif font-bold italic">Skincare</h3>
-          <p class="text-white/90 text-sm font-light">Rutina de noche profunda</p>
-        </div>
-      </div>
-
     </div>
-  </section>
+
+    <div class="relative w-1/2 aspect-[4/3] md:aspect-auto md:h-[300px] group overflow-hidden rounded-sm shadow-sm">
+      <img src="https://perilecosmetics.co.za/cdn/shop/articles/Perile_Styled_Low_Res_11.jpg?v=1723720037&width=2048"
+           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Skincare">
+
+      <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
+
+      <div class="absolute inset-0 p-2 flex flex-col justify-center items-center text-center">
+        <h3 class="text-white text-base md:text-2xl font-serif font-bold italic drop-shadow-md">
+          Skincare
+        </h3>
+        <p class="text-white/90 text-[10px] md:text-sm font-light leading-tight mt-1 drop-shadow-sm">
+          Rutina de noche
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
 
   <main class=" pt-12 pb-24">
 
-      <app-product-list label="Viral"></app-product-list>
+      <app-product-list labelId="1" labelName="Nuevos Productos"></app-product-list>
 
       <app-category-list></app-category-list>
 
         <div class="bg-[#FFFBF0] border-t border-[#F3EEE0]">
-          <app-product-list label="San Valentin"></app-product-list>
+          <app-product-list labelId="2" labelName="Productos Virales"></app-product-list>
         </div>
 
       <app-marquee></app-marquee>

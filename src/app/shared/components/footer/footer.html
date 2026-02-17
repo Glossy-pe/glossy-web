@@ -1,4 +1,4 @@
-<footer class="relative w-full bg-sky-100/50 pt-24 pb-12 overflow-hidden border-t border-sky-100">
+<footer class="relative w-full bg-sky-100/50 pt-16 pb-6 md:pt-24 md:pb-12 overflow-hidden border-t border-sky-100">
 
   <div class="absolute top-0 left-0 w-full -translate-y-[1%] z-20 pointer-events-none rotate-180">
     <svg class="relative block w-full h-[15px] md:h-[25px] text-white" fill="currentColor" preserveAspectRatio="none" viewBox="0 0 1600 600" xmlns="http://www.w3.org/2000/svg">
@@ -6,64 +6,71 @@
     </svg>
   </div>
 
-  <div class="container mx-auto px-6 max-w-7xl relative z-30">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
+  <div class="container mx-auto px-4 md:px-6 max-w-7xl relative z-30">
+    
+    <div class="flex flex-col md:grid md:grid-cols-4 gap-8 md:gap-16 mb-10 md:mb-20">
 
-      <div class="md:col-span-1 space-y-5">
-        <h2 class="text-3xl font-serif font-light text-gray-800 tracking-tight">GLOSSY</h2>
-        <p class="text-[13px] font-light text-gray-500 leading-relaxed">
-          Cosmética de lujo diseñada para los corazones que aún creen en el romance clásico.
+      <div class="md:col-span-1 space-y-3 md:space-y-5">
+        <div class="flex justify-between items-start md:block">
+          <h2 class="text-2xl md:text-3xl font-serif font-light text-gray-800 tracking-tight">GLOSSY</h2>
+          
+          <div class="flex md:hidden gap-2">
+            <div class="w-7 h-7 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 text-[10px] shadow-sm">ig</div>
+            <div class="w-7 h-7 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 text-[10px] shadow-sm">tk</div>
+          </div>
+        </div>
+
+        <p class="text-[11px] md:text-[13px] font-light text-gray-500 leading-relaxed max-w-sm">
+          Cosmética de lujo para corazones que creen en el romance clásico.
         </p>
-        <div class="flex gap-3">
-          <div class="w-8 h-8 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 hover:text-rose-300 transition-colors cursor-pointer shadow-sm">
-            <small>ig</small>
-          </div>
-          <div class="w-8 h-8 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 hover:text-rose-300 transition-colors cursor-pointer shadow-sm">
-            <small>tk</small>
-          </div>
+        
+        <div class="hidden md:flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 hover:text-rose-300 transition-colors cursor-pointer shadow-sm"><small>ig</small></div>
+          <div class="w-8 h-8 rounded-full bg-white border border-sky-100 flex items-center justify-center text-gray-400 hover:text-rose-300 transition-colors cursor-pointer shadow-sm"><small>tk</small></div>
         </div>
       </div>
 
-      <div class="space-y-6">
-        <h4 class="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Colecciones</h4>
-        <ul class="space-y-3">
-          <li><a href="#" class="px-4 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-400 text-[11px] font-medium uppercase rounded-full transition-colors inline-block border border-rose-100/50">San Valentín</a></li>
-          <li><a href="#" class="px-4 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-500 text-[11px] font-medium uppercase rounded-full transition-colors inline-block border border-amber-100/50">Edición Especial</a></li>
-          <li><a href="#" class="px-4 py-1.5 bg-white hover:bg-gray-50 text-gray-500 text-[11px] font-medium uppercase rounded-full border border-sky-100 transition-colors inline-block shadow-sm">Best Sellers</a></li>
-        </ul>
+      <div class="grid grid-cols-2 gap-4 md:contents"> <div class="space-y-4 md:space-y-6">
+          <h4 class="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Colecciones</h4>
+          <ul class="space-y-2 md:space-y-3">
+            <li><a href="#" class="px-3 py-1 md:px-4 md:py-1.5 bg-rose-50 text-rose-400 text-[9px] md:text-[11px] font-medium uppercase rounded-full border border-rose-100/50 inline-block whitespace-nowrap">San Valentín</a></li>
+            <li><a href="#" class="px-3 py-1 md:px-4 md:py-1.5 bg-amber-50 text-amber-500 text-[9px] md:text-[11px] font-medium uppercase rounded-full border border-amber-100/50 inline-block whitespace-nowrap">Edición Esp.</a></li>
+            <li><a href="#" class="px-3 py-1 md:px-4 md:py-1.5 bg-white text-gray-500 text-[9px] md:text-[11px] font-medium uppercase rounded-full border border-sky-100 inline-block whitespace-nowrap">Best Sellers</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-4 md:space-y-6 pl-4 md:pl-0 border-l border-sky-100 md:border-none">
+          <h4 class="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Ayuda</h4>
+          <ul class="space-y-2 md:space-y-4 text-[11px] md:text-[13px] font-light text-gray-600">
+            <li class="hover:text-rose-400 cursor-pointer transition-colors">Envíos / Cambios</li> <li class="hover:text-rose-400 cursor-pointer transition-colors">Preguntas Frecuentes</li>
+            <li class="hover:text-rose-400 cursor-pointer transition-colors">Contacto</li>
+          </ul>
+        </div>
+
       </div>
 
-      <div class="space-y-6">
-        <h4 class="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Ayuda</h4>
-        <ul class="space-y-4 text-[13px] font-light text-gray-600">
-          <li class="hover:text-rose-400 cursor-pointer transition-colors">Envíos & Devoluciones</li>
-          <li class="hover:text-rose-400 cursor-pointer transition-colors">Preguntas Frecuentes</li>
-          <li class="hover:text-rose-400 cursor-pointer transition-colors">Contacto</li>
-        </ul>
-      </div>
-
-      <div class="space-y-6">
-        <h4 class="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Newsletter</h4>
-        <div class="flex flex-col gap-3">
-          <div class="flex items-center w-full bg-white rounded-full shadow-sm border border-sky-100 overflow-hidden h-11">
+      <div class="space-y-4 md:space-y-6">
+        <h4 class="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Newsletter</h4>
+        <div class="flex flex-col gap-2 md:gap-3">
+          <div class="flex items-center w-full bg-white rounded-full shadow-sm border border-sky-100 overflow-hidden h-10 md:h-11">
             <input
               type="text"
-              placeholder="Tu email aquí..."
-              class="flex-1 bg-transparent text-xs font-light px-5 outline-none text-gray-600 placeholder-gray-300"
+              placeholder="Tu email..."
+              class="flex-1 bg-transparent text-xs font-light px-4 md:px-5 outline-none text-gray-600 placeholder-gray-300"
             >
-            <button class="h-full px-5 text-sky-300 hover:text-rose-400 font-medium text-xs transition-colors">
+            <button class="h-full px-4 md:px-5 text-sky-300 hover:text-rose-400 font-medium text-[10px] md:text-xs transition-colors uppercase tracking-wider">
               Enviar
             </button>
           </div>
-          <p class="text-[10px] font-light text-gray-400 italic">Suscríbete para recibir noticias exclusivas.</p>
+          <p class="text-[9px] md:text-[10px] font-light text-gray-400 italic">Suscríbete para recibir noticias.</p>
         </div>
       </div>
 
     </div>
 
-    <div class="text-center pt-10 border-t border-sky-200/30">
-      <p class="text-[10px] font-light text-gray-400 tracking-[0.8em] uppercase">
-        GLOSSY · PE · LIMA · 2026
+    <div class="text-center pt-6 md:pt-10 border-t border-sky-200/30">
+      <p class="text-[9px] md:text-[10px] font-light text-gray-400 tracking-[0.6em] md:tracking-[0.8em] uppercase">
+        GLOSSY · LIMA · 2026
       </p>
     </div>
   </div>

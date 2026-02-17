@@ -28,6 +28,7 @@ export const routes: Routes = [
             { path: 'products/:id', loadComponent: () => import('./admin-features/product/components/admin-product-detail/admin-product-detail').then(m => m.AdminProductDetail) },
             { path: 'categories', loadComponent: () => import('./admin-features/category/components/category-list/admin-category-list').then(m => m.AdminCategoryList) },
             { path: 'images', loadComponent: () => import('./admin-features/images/components/images-list/admin-images-list').then(m => m.AdminImagesList) },
+            { path: 'labels', loadComponent: () => import('./admin-features/label/components/label-list/label-list').then(m => m.LabelList) },
         ]
     },
 
