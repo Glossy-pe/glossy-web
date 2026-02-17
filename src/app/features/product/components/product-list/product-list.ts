@@ -1,156 +1,52 @@
-import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product.service';
+import { Observable, combineLatest, map, startWith } from 'rxjs';
 import { Product } from '../../models/product.model';
-import { Router } from '@angular/router';
-import { map, Observable, startWith, Subscription } from 'rxjs';
-import { ProductImage } from '../../models/product-image.model';
-import { environment } from '../../../../../environments/environment';
-import {ProductCard} from '../product-card/product-card';
-
+import { ProductCard } from "../product-card/product-card";
+import { LabelService } from '../../../../admin-features/label/services/label-service';
+import { LabelResponse } from '../../../../admin-features/label/models/label.interface';
+import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Necesario para el buscador
 @Component({
   selector: 'app-product-list',
-  imports: [CommonModule, ProductCard], // Ya no necesitamos FormsModule
+  imports: [CommonModule, ProductCard, ReactiveFormsModule], // Ya no necesitamos FormsModule
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
-export class ProductList implements OnInit, OnDestroy {
+export class ProductList implements OnInit{
+products$!: Observable<Product[]>;
+  filteredProducts$!: Observable<Product[]>;
+  labels$!: Observable<LabelResponse[]>;
+  
+  searchControl = new FormControl('');
+  showFilters = false;
 
-  @Input() labelId?: string = "1";
-  @Input() labelName?: string = "Productos";
-
-  // Referencia al contenedor del slider para hacer scroll
-  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
-
-  private subscription?: Subscription;
-  apiImageServer = environment.apiImageServer;
-
-  products$!: Observable<Product[]>;
-  isLoading$!: Observable<boolean>;
-
-  // Estado para controlar índice de imagen y hover
-  currentImageIndex: Record<number, number> = {};
-  hoveringControls: Record<number, boolean> = {};
-  errorMessage = '';
-
-  constructor(
-    private productService: ProductService,
-    private router: Router,
-  ) { }
+  constructor(private productService: ProductService, private labelService: LabelService){}
 
   ngOnInit(): void {
-    this.resetState();
-    this.loadProducts();
+    this.labels$ = this.labelService.getAll();
+    this.loadProducts(""); // Ahora el valor por defecto es vacío
   }
 
-  ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-  }
-
-  resetState(): void {
-    this.errorMessage = '';
-    this.currentImageIndex = {};
-    this.hoveringControls = {};
-  }
-
-  loadProducts(): void {
-    const products$ = this.productService.getProducts(this.labelId); // Mantenemos tu lógica original
-    this.products$ = products$;
-    this.isLoading$ = products$.pipe(
-      map(() => false),
-      startWith(true)
+  loadProducts(labelId: string = ""){
+    this.products$ = this.productService.getProducts(labelId);
+    
+    // Combinamos la búsqueda por nombre con los productos obtenidos
+    this.filteredProducts$ = combineLatest([
+      this.products$,
+      this.searchControl.valueChanges.pipe(startWith(''))
+    ]).pipe(
+      map(([products, searchTerm]) => {
+        const term = searchTerm?.toLowerCase() || '';
+        return products.filter(p => p.name.toLowerCase().includes(term));
+      })
     );
+
+    if (window.innerWidth < 768) this.showFilters = false;
   }
 
-  // --- Lógica del Scroll Horizontal (Slider) ---
-  scrollLeft(): void {
-    if (this.scrollContainer) {
-      this.scrollContainer.nativeElement.scrollBy({ left: -340, behavior: 'smooth' });
-    }
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
   }
 
-  scrollRight(): void {
-    if (this.scrollContainer) {
-      this.scrollContainer.nativeElement.scrollBy({ left: 340, behavior: 'smooth' });
-    }
-  }
-
-  // --- Manejo de Imágenes ---
-  handleImageError(event: any) {
-    event.target.src = 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image';
-  }
-
-  getProductImages(product: Product): ProductImage[] {
-    if (product.images && product.images.length > 0) {
-      return product.images;
-    }
-    return [{
-      id: 0,
-      mainImage: true,
-      productId: 0,
-      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
-    }];
-  }
-
-  // --- Lógica del Carrusel Interno de la Card ---
-  nextImage(event: Event, product: Product) {
-    event.stopPropagation(); // Importante: evita que el click dispare viewProductDetail
-    event.preventDefault();
-
-    const images = this.getProductImages(product);
-    const currentIndex = this.currentImageIndex[product.id] || 0;
-    this.currentImageIndex[product.id] = (currentIndex + 1) % images.length;
-  }
-
-  prevImage(event: Event, product: Product) {
-    event.stopPropagation();
-    event.preventDefault();
-
-    const images = this.getProductImages(product);
-    const currentIndex = this.currentImageIndex[product.id] || 0;
-    this.currentImageIndex[product.id] = (currentIndex - 1 + images.length) % images.length;
-  }
-
-  setHoverControl(productId: number, isHovering: boolean) {
-    this.hoveringControls[productId] = isHovering;
-  }
-
-  isHoveringControls(productId: number): boolean {
-    return !!this.hoveringControls[productId];
-  }
-
-  viewProductDetail(product: Product) {
-    this.router.navigate(['/products', product.id]);
-  }
-
-  // --- Helpers de Precios y Stock ---
-  getProductPriceRange(product: Product): string {
-    if (!product.variants || product.variants.length === 0) {
-      return product.basePrice ? `$${product.basePrice.toFixed(2)}` : 'N/A';
-    }
-    const prices = product.variants.map(v => v.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-
-    if (minPrice === maxPrice) {
-      return `$${minPrice.toFixed(2)}`;
-    }
-    return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
-  }
-
-  getTotalStock(product: Product): number {
-    if (!product.variants || product.variants.length === 0) return 0;
-    return product.variants.reduce((sum, v) => sum + v.stock, 0);
-  }
-
-  hasLowStock(product: Product): boolean {
-    const total = this.getTotalStock(product);
-    return total > 0 && total < 10;
-  }
-
-  isOutOfStock(product: Product): boolean {
-    return this.getTotalStock(product) === 0;
-  }
 }

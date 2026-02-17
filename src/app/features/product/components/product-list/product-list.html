@@ -1,48 +1,64 @@
-<div class="w-full relative group/slider py-8 px-4 md:px-16 md:py-12 bg-white">
-
-  <div class="flex flex-row justify-between items-end mb-4 md:mb-10 gap-2">
-
-    <div *ngIf="labelId" class="text-left relative z-10">
-      <h2 class="text-xl md:text-4xl font-serif font-light text-black tracking-tight leading-none mb-1 md:mb-3">
-        {{ labelName }}
-      </h2>
-      
-      <p class="text-stone-500 text-[10px] md:text-base font-light max-w-[220px] md:max-w-lg leading-tight md:leading-relaxed">
-        Selección exclusiva para tu brillo natural.
-      </p>
-    </div>
-
-    <div class="flex gap-1 md:gap-2 shrink-0 mb-0.5">
-      <button (click)="scrollLeft()"
-              class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white border border-stone-200 text-black transition-all duration-300 hover:bg-lime-400 hover:border-black active:scale-95 disabled:opacity-30 rounded-full md:rounded-none">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-      </button>
-
-      <button (click)="scrollRight()"
-              class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white border border-stone-200 text-black transition-all duration-300 hover:bg-lime-400 hover:border-black active:scale-95 disabled:opacity-30 rounded-full md:rounded-none">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
+<div class="max-w-7xl mx-auto p-4 md:p-10 bg-[#FCFBF9] min-h-screen font-sans text-gray-800">
+  
+  <header class="mb-12 space-y-6">
+    <div class="flex justify-between items-end">
+      <div>
+        <h1 class="text-3xl md:text-5xl font-light uppercase tracking-tighter italic">Glossy</h1>
+        <p class="text-orange-300 font-bold tracking-[0.3em] uppercase text-[10px]">Beach Edition</p>
+      </div>
+      <button (click)="toggleFilters()" class="md:hidden border border-gray-200 px-4 py-2 text-xs uppercase tracking-widest bg-white">
+        Filtros
       </button>
     </div>
-  </div>
 
-  <div *ngIf="isLoading$ | async" class="text-center py-12 md:py-24 border-t border-stone-100">
-    <p class="text-[9px] md:text-[10px] font-light tracking-[0.3em] text-stone-300 uppercase animate-pulse">Cargando...</p>
-  </div>
+    <div class="relative w-full max-w-2xl ml-auto">
+      <input 
+        [formControl]="searchControl"
+        type="text" 
+        placeholder="Buscar producto..." 
+        class="w-full p-4 bg-white border border-gray-200 focus:outline-none focus:border-blue-200 text-sm uppercase tracking-wider transition-colors"
+      />
+      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">🔍</span>
+    </div>
+  </header>
 
-  <div *ngIf="!(isLoading$ | async)" class="relative">
-    <div #scrollContainer
-         class="flex gap-3 md:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 md:pb-10 hide-scrollbar scroll-pl-4 md:scroll-pl-0">
+  <div class="flex flex-col md:flex-row gap-8">
+    
+    <aside [class.hidden]="!showFilters" class="w-full md:block md:w-56 flex-shrink-0">
+      <div class="sticky top-6 space-y-4">
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mb-6">Categorías</h3>
+        
+        <div class="flex flex-col gap-2">
+          <button (click)="loadProducts('')" 
+            class="w-full text-left p-4 text-xs font-bold uppercase tracking-widest border border-gray-100 bg-white hover:bg-gray-50 transition-colors">
+            Todos
+          </button>
 
-      <div *ngFor="let product of products$ | async"
-           class="flex-none w-[180px] xs:w-[220px] md:w-[300px] snap-start first:pl-0">
-         <app-product-card [product]="product" class="h-full block"></app-product-card>
+          <button *ngFor="let label of labels$ | async; let i = index"
+            (click)="loadProducts(label.id.toString())"
+            [ngClass]="{
+              'bg-blue-50 text-blue-500': i % 3 === 0,
+              'bg-pink-50 text-pink-500': i % 3 === 1,
+              'bg-teal-50 text-teal-500': i % 3 === 2
+            }"
+            class="w-full text-left p-4 text-xs font-bold uppercase tracking-widest border border-transparent hover:border-white transition-all">
+            {{ label.name }}
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-grow">
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div *ngFor="let product of filteredProducts$ | async" class="flex justify-center border border-gray-100 bg-white p-2">
+          <app-product-card [product]="product" class="w-full"></app-product-card>
+        </div>
       </div>
 
-      <div class="w-4 md:w-8 flex-none"></div>
-    </div>
+      <div *ngIf="(filteredProducts$ | async)?.length === 0" class="py-20 text-center border border-gray-100 mt-4 bg-white">
+        <p class="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">Sin resultados</p>
+      </div>
+    </main>
+
   </div>
 </div>

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LabelRequest, LabelResponse } from '../models/label.interface';
+import { environment } from '../../../../environments/environment';
 
 
 @Injectable({
@@ -9,7 +10,7 @@ import { LabelRequest, LabelResponse } from '../models/label.interface';
 })
 export class LabelService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/labels';
+  private apiUrl = `${environment.apiUrl}/labels`;
 
   getAll(): Observable<LabelResponse[]> {
     return this.http.get<LabelResponse[]>(this.apiUrl);

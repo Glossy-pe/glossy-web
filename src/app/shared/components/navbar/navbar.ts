@@ -35,4 +35,8 @@ export class Navbar {
     this.router.navigate(['/home']);
   }
 
+  goProducts(){
+    this.router.navigate(['/products']);
+  }
+
 }

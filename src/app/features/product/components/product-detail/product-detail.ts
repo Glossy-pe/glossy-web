@@ -156,7 +156,7 @@ addToCart(): void {
 
 
   goBack(): void {
-    this.router.navigate(['/home']);
+    this.router.navigate(['/products']);
   }
 
   decreaseQuantity(): void {
