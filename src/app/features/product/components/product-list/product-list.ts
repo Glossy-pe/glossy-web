@@ -16,7 +16,8 @@ import {ProductCard} from '../product-card/product-card';
 })
 export class ProductList implements OnInit, OnDestroy {
 
-  @Input() label?: string = "Nuevos Productos Virales";
+  @Input() labelId?: string = "1";
+  @Input() labelName?: string = "Productos";
 
   // Referencia al contenedor del slider para hacer scroll
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
@@ -55,7 +56,7 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   loadProducts(): void {
-    const products$ = this.productService.getProducts(this.label); // Mantenemos tu lógica original
+    const products$ = this.productService.getProducts(this.labelId); // Mantenemos tu lógica original
     this.products$ = products$;
     this.isLoading$ = products$.pipe(
       map(() => false),
