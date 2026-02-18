@@ -50,8 +50,8 @@ export class PdfGeneratorService {
       item.product.name,
       item.selectedVariant.toneName,
       item.quantity.toString(),
-      `$${item.selectedVariant.price.toFixed(2)}`,
-      `$${(item.selectedVariant.price * item.quantity).toFixed(2)}`
+      `S/. ${item.selectedVariant.price.toFixed(2)}`,
+      `S/. ${(item.selectedVariant.price * item.quantity).toFixed(2)}`
     ]);
     
     autoTable(doc, {
@@ -94,7 +94,7 @@ export class PdfGeneratorService {
     
     // Subtotal
     doc.text('Subtotal:', totalsX, currentY);
-    doc.text(`$${subtotal.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
+    doc.text(`S/. ${subtotal.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
     currentY += 8;
     
     // Envío
@@ -106,7 +106,7 @@ export class PdfGeneratorService {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(120, 113, 108);
     } else {
-      doc.text(`$${shipping.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
+      doc.text(`S/. ${shipping.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
     }
     currentY += 12;
     
@@ -120,7 +120,7 @@ export class PdfGeneratorService {
     doc.setFontSize(12);
     doc.setTextColor(41, 37, 36);
     doc.text('TOTAL:', totalsX, currentY);
-    doc.text(`$${total.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
+    doc.text(`S/. ${total.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
     
     // ========== FOOTER ==========
     doc.setFont('helvetica', 'italic');

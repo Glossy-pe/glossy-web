@@ -76,9 +76,23 @@ export class ProductCard implements OnInit, OnDestroy{
     const maxPrice = Math.max(...prices);
 
     if (minPrice === maxPrice) {
-      return `$${minPrice.toFixed(2)}`;
+      return `S/. ${minPrice.toFixed(2)}`;
     }
-    return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
+  }
+
+    getFirstProductPrice(product: Product): string {
+    if (!product.variants || product.variants.length === 0) {
+      return product.basePrice ? `S/. ${product.basePrice.toFixed(2)}` : 'N/A';
+    }
+    const prices = product.variants.map(v => v.price);
+    const minPrice = Math.min(...prices)*1.15;
+    const maxPrice = Math.max(...prices)*1.15;
+
+    if (minPrice === maxPrice) {
+      return `S/. ${minPrice.toFixed(2)}`;
+    }
+    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
   }
 
   getTotalStock(product: Product): number {

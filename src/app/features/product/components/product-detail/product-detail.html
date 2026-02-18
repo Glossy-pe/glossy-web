@@ -61,11 +61,11 @@
                         <!-- Precio (de la variante seleccionada o basePrice) -->
                         <p class="text-xl font-normal text-gray-900 mb-6">
                             <ng-container *ngIf="selectedVariant">
-                                ${{ selectedVariant.price.toFixed(2) }}
+                                S/. {{ selectedVariant.price.toFixed(2) }}
                                 <span class="text-sm text-gray-500 font-light ml-2">{{ selectedVariant.toneCode }}</span>
                             </ng-container>
                             <ng-container *ngIf="!selectedVariant && product.basePrice">
-                                ${{ product.basePrice.toFixed(2) }}
+                                S/. {{ product.basePrice.toFixed(2) }}
                             </ng-container>
                         </p>
 

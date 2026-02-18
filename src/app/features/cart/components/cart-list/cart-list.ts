@@ -46,7 +46,7 @@ export class CartList {
 
   // ← NUEVO MÉTODO
   generateProformaPDF() {
-    const shipping = this.subtotal() > 50 ? 0 : 5;
+    const shipping = this.subtotal() > 30 ? 0 : 5;
     
     this.pdfGenerator.generateProforma(
       this.cartItems(),
