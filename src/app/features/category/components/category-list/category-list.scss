@@ -3,3 +3,12 @@
 //   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 //   -webkit-font-smoothing: antialiased;
 // }
+
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }

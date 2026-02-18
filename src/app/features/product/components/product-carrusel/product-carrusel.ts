@@ -127,16 +127,16 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
   // --- Helpers de Precios y Stock ---
   getProductPriceRange(product: Product): string {
     if (!product.variants || product.variants.length === 0) {
-      return product.basePrice ? `$${product.basePrice.toFixed(2)}` : 'N/A';
+      return product.basePrice ? `S/. ${product.basePrice.toFixed(2)}` : 'N/A';
     }
     const prices = product.variants.map(v => v.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
     if (minPrice === maxPrice) {
-      return `$${minPrice.toFixed(2)}`;
+      return `S/. ${minPrice.toFixed(2)}`;
     }
-    return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
   }
 
   getTotalStock(product: Product): number {
