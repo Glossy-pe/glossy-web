@@ -11,8 +11,8 @@ import {NgForOf} from '@angular/common';
 })
 export class Marquee {
   brands: string[] = [
-    'assets/icons/KevinAndCoco_Logo.png', 'assets/icons/Revel_logo.png', 'assets/icons/brand3.svg',
-    'assets/icons/brand4.svg', 'assets/icons/brand5.svg', 'assets/icons/brand6.svg'
+    'assets/icons/KevinAndCoco_logo.png', 'assets/icons/Revel_logo.png', 'assets/icons/lofshe.svg',
+    'assets/icons/magicshop.svg', 'assets/icons/nossa.svg', 'assets/icons/italiadeluxe.svg', 'assets/icons/gagk.svg'
   ];
 
 }
