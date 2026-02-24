@@ -77,6 +77,10 @@ export class AdminProductDetail implements OnInit {
   showImageForm = signal<boolean>(false);
   isUploadingImage = signal<boolean>(false);
 
+  // Variant editing state
+  editingVariantIndex = signal<number | null>(null);
+  editingVariant = signal<{ toneName: string; toneCode: string; price: number; stock: number } | null>(null);
+
   newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
   selectedFile: File | null = null;
   selectedFileName = signal<string>('');
@@ -264,6 +268,90 @@ export class AdminProductDetail implements OnInit {
         }
       });
   }
+
+  // ── VARIANT EDITING ────────────────────────────────────────────────────────
+
+  startEditVariant(index: number) {
+    const variant = this.product()?.variants[index];
+    if (!variant) return;
+    this.editingVariantIndex.set(index);
+    this.editingVariant.set({
+      toneName: variant.toneName,
+      toneCode: variant.toneCode,
+      price: variant.price,
+      stock: variant.stock
+    });
+    // Close the "new variant" form to avoid conflicts
+    this.showVariantForm.set(false);
+  }
+
+  cancelEditVariant() {
+    this.editingVariantIndex.set(null);
+    this.editingVariant.set(null);
+  }
+
+  saveEditVariant(index: number) {
+    const edited = this.editingVariant();
+    if (!edited) return;
+
+    if (!edited.toneName || !edited.price) {
+      alert('Por favor completa el nombre y precio de la variante');
+      return;
+    }
+
+    const currentProduct = this.product();
+    if (!currentProduct) return;
+
+    this.isSaving.set(true);
+
+    const updatedVariants = currentProduct.variants.map((v, i) => {
+      if (i === index) {
+        return {
+          toneName: edited.toneName,
+          toneCode: edited.toneCode,
+          price: edited.price,
+          stock: edited.stock
+        };
+      }
+      return {
+        toneName: v.toneName,
+        toneCode: v.toneCode,
+        price: v.price,
+        stock: v.stock
+      };
+    });
+
+    const updateRequest = {
+      ...this.productForm.getRawValue(),
+      images: currentProduct.images.map(img => ({
+        url: img.url,
+        position: img.position,
+        mainImage: img.mainImage
+      })),
+      variants: updatedVariants,
+      labelsIds: this.selectedLabels()
+    };
+
+    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
+      .pipe(
+        finalize(() => this.isSaving.set(false)),
+        catchError(err => {
+          console.error('Error editando variante:', err);
+          alert('Error al editar la variante');
+          return of(null);
+        })
+      )
+      .subscribe(res => {
+        if (res) {
+          this.product.set(res);
+          this.editingVariantIndex.set(null);
+          this.editingVariant.set(null);
+          alert('Variante actualizada exitosamente');
+        }
+      });
+  }
+
+  // ── END VARIANT EDITING ────────────────────────────────────────────────────
 
   deleteVariant(index: number) {
     if (!confirm('¿Eliminar esta variante?')) return;

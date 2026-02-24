@@ -53,7 +53,7 @@ interface ImageUploadResponse {
 @Component({
   selector: 'app-admin-product-list',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule, ],
+  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule],
   providers: [CurrencyPipe],
   templateUrl: './admin-product-list.html',
   styleUrl: './admin-product-list.scss'
@@ -83,6 +83,11 @@ export class AdminProductList implements OnInit {
   tempVariants = signal<any[]>([]);
   tempImages = signal<any[]>([]);
   selectedLabels = signal<number[]>([]);
+
+  // ── Variant inline editing ──────────────────────────────────────────────────
+  editingTempVariantIndex = signal<number | null>(null);
+  editingTempVariant = signal<{ toneName: string; toneCode: string; price: number; stock: number } | null>(null);
+  // ───────────────────────────────────────────────────────────────────────────
 
   productForm: FormGroup = this.fb.group({
     name: ['', [Validators.required]],
@@ -180,6 +185,61 @@ export class AdminProductList implements OnInit {
     return this.selectedLabels().includes(labelId);
   }
 
+  // ── Variant list management ─────────────────────────────────────────────────
+
+  addVariantToList(name: string, code: string, price: string, stock: string) {
+    if (!name || !price) {
+      alert('Nombre y precio son obligatorios');
+      return;
+    }
+    this.tempVariants.update(v => [...v, {
+      toneName: name,
+      toneCode: code || '#000000',
+      price: +price,
+      stock: +stock || 0
+    }]);
+  }
+
+  removeVariantFromList(idx: number) {
+    // Cancel edit if deleting the variant being edited
+    if (this.editingTempVariantIndex() === idx) {
+      this.cancelEditTempVariant();
+    }
+    this.tempVariants.update(v => v.filter((_, i) => i !== idx));
+    // Adjust editing index if needed
+    const editIdx = this.editingTempVariantIndex();
+    if (editIdx !== null && idx < editIdx) {
+      this.editingTempVariantIndex.set(editIdx - 1);
+    }
+  }
+
+  startEditTempVariant(index: number) {
+    const variant = this.tempVariants()[index];
+    if (!variant) return;
+    this.editingTempVariantIndex.set(index);
+    this.editingTempVariant.set({ ...variant });
+  }
+
+  cancelEditTempVariant() {
+    this.editingTempVariantIndex.set(null);
+    this.editingTempVariant.set(null);
+  }
+
+  saveEditTempVariant(index: number) {
+    const edited = this.editingTempVariant();
+    if (!edited) return;
+    if (!edited.toneName || !edited.price) {
+      alert('Nombre y precio son obligatorios');
+      return;
+    }
+    this.tempVariants.update(variants =>
+      variants.map((v, i) => i === index ? { ...edited } : v)
+    );
+    this.cancelEditTempVariant();
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+
   saveProduct() {
     if (this.productForm.invalid) {
       alert('Por favor completa los campos obligatorios: Nombre y Categoría');
@@ -192,7 +252,6 @@ export class AdminProductList implements OnInit {
     const imageUploadTasks = this.tempImages().map(ti => this.uploadFile(ti.file));
 
     if (imageUploadTasks.length === 0) {
-      // Sin imágenes, crear producto directamente
       const productRequest = {
         ...this.productForm.getRawValue(),
         images: [],
@@ -223,7 +282,6 @@ export class AdminProductList implements OnInit {
         }
       });
     } else {
-      // Con imágenes
       forkJoin(imageUploadTasks).pipe(
         switchMap((uploadedUrls: string[]) => {
           const productRequest = {
@@ -241,7 +299,6 @@ export class AdminProductList implements OnInit {
             })),
             labelsIds: this.selectedLabels()
           };
-
           return this.http.post<ProductResponseV2>(`${this.apiUrl}/products`, productRequest);
         }),
         finalize(() => {
@@ -323,24 +380,6 @@ export class AdminProductList implements OnInit {
     this.router.navigate([`/admin/products/${p.id}`]);
   }
 
-  addVariantToList(name: string, code: string, price: string, stock: string) {
-    if (!name || !price) {
-      alert('Nombre y precio son obligatorios');
-      return;
-    }
-
-    this.tempVariants.update(v => [...v, {
-      toneName: name,
-      toneCode: code || '#000000',
-      price: +price,
-      stock: +stock || 0
-    }]);
-  }
-
-  removeVariantFromList(idx: number) {
-    this.tempVariants.update(v => v.filter((_, i) => i !== idx));
-  }
-
   toggleCreateForm() {
     this.showCreateForm.update(v => !v);
     if (!this.showCreateForm()) this.resetForm();
@@ -355,6 +394,7 @@ export class AdminProductList implements OnInit {
     this.selectedFile = null;
     this.selectedFileName.set('');
     this.imagePreview.set('');
+    this.cancelEditTempVariant();
   }
 
   updateFilter(e: Event) {
