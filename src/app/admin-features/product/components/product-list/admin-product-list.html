@@ -410,6 +410,7 @@
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Categoría</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden lg:table-cell">Etiquetas</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
             </tr>
@@ -453,6 +454,15 @@
                 </div>
               </td>
               <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-slate-700">{{ getPrecio(product) }}</span>
+                  <div 
+                    class="w-2 h-2 rounded-full animate-pulse" 
+                    [class]="getPrecio(product) > 0 ? 'bg-green-500' : 'bg-rose-500'">
+                  </div>
+                </div>
+              </td>
+                            <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-bold text-slate-700">{{ getTotalStock(product) }}</span>
                   <div 

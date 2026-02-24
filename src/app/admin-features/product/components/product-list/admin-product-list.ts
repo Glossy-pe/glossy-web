@@ -409,6 +409,10 @@ export class AdminProductList implements OnInit {
     return p.variants?.reduce((a, v) => a + v.stock, 0) || 0;
   }
 
+  getPrecio(p: ProductResponseV2) {
+    return p.variants?.at(0)?.price || 0;
+  }
+
   getCategoryName(id: number) {
     return this.categories().find(c => c.id === id)?.name || 'N/A';
   }
