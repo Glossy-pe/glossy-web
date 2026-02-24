@@ -135,11 +135,15 @@
               </div>
             </div>
 
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!--  VARIANTES Y STOCK                                         -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
             <div class="p-5 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl">
               <h3 class="text-[11px] font-bold text-slate-800 uppercase mb-4 tracking-wider">
                 🎨 Variantes y Stock
               </h3>
               
+              <!-- Fila de nueva variante -->
               <div class="flex flex-wrap gap-3 mb-4">
                 <input 
                   #vName 
@@ -180,27 +184,98 @@
                 </button>
               </div>
               
-              <div class="flex flex-wrap gap-2 min-h-[60px]">
-                <div 
-                  *ngFor="let v of tempVariants(); let i = index" 
-                  class="flex items-center gap-3 bg-white border border-slate-200 pl-4 pr-2 py-2 rounded-xl text-[11px] font-semibold text-slate-700 shadow-sm hover:shadow-md transition-all animate-fadeIn">
-                  <div class="w-4 h-4 rounded-full border-2 border-white shadow-sm" [style.background-color]="v.toneCode"></div>
-                  <span>{{ v.toneName }}</span>
-                  <span class="text-blue-600 font-bold">{{ v.price | currency }}</span>
-                  <span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-500">{{ v.stock }} ud.</span>
-                  <button 
-                    type="button" 
-                    (click)="removeVariantFromList(i)" 
-                    [disabled]="isSaving()"
-                    class="p-1 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
-                    </svg>
-                  </button>
-                </div>
+              <!-- Lista de variantes -->
+              <div class="space-y-2 min-h-[60px]">
+                <ng-container *ngFor="let v of tempVariants(); let i = index">
+
+                  <!-- ── Modo edición inline ── -->
+                  <div *ngIf="editingTempVariantIndex() === i"
+                       class="p-4 bg-white border-2 border-amber-300 rounded-xl animate-fadeIn">
+                    <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-3">Editando variante</p>
+                    <div class="flex flex-wrap gap-3 mb-3">
+                      <input 
+                        [(ngModel)]="editingTempVariant()!.toneName"
+                        [ngModelOptions]="{standalone: true}"
+                        placeholder="Nombre"
+                        class="flex-grow min-w-[120px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                      <div class="relative">
+                        <input 
+                          [(ngModel)]="editingTempVariant()!.toneCode"
+                          [ngModelOptions]="{standalone: true}"
+                          type="color"
+                          class="w-16 h-9 cursor-pointer rounded-lg border border-slate-200">
+                        <label class="absolute -top-5 left-0 text-[9px] font-bold text-slate-400 uppercase">Color</label>
+                      </div>
+                      <input 
+                        [(ngModel)]="editingTempVariant()!.price"
+                        [ngModelOptions]="{standalone: true}"
+                        type="number"
+                        placeholder="Precio"
+                        class="w-28 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                      <input 
+                        [(ngModel)]="editingTempVariant()!.stock"
+                        [ngModelOptions]="{standalone: true}"
+                        type="number"
+                        placeholder="Stock"
+                        class="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                    </div>
+                    <div class="flex gap-2">
+                      <button 
+                        type="button"
+                        (click)="saveEditTempVariant(i)"
+                        [disabled]="isSaving()"
+                        class="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-black transition-all disabled:opacity-50">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Guardar
+                      </button>
+                      <button 
+                        type="button"
+                        (click)="cancelEditTempVariant()"
+                        [disabled]="isSaving()"
+                        class="px-4 py-2 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all disabled:opacity-50">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- ── Modo visualización ── -->
+                  <div 
+                    *ngIf="editingTempVariantIndex() !== i"
+                    class="flex items-center gap-3 bg-white border border-slate-200 pl-4 pr-2 py-2 rounded-xl text-[11px] font-semibold text-slate-700 shadow-sm hover:shadow-md transition-all animate-fadeIn">
+                    <div class="w-4 h-4 rounded-full border-2 border-white shadow-sm shrink-0" [style.background-color]="v.toneCode"></div>
+                    <span class="flex-grow truncate">{{ v.toneName }}</span>
+                    <span class="text-blue-600 font-bold shrink-0">{{ v.price | currency }}</span>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-500 shrink-0">{{ v.stock }} ud.</span>
+                    <!-- Botón editar -->
+                    <button 
+                      type="button"
+                      (click)="startEditTempVariant(i)"
+                      [disabled]="isSaving()"
+                      class="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50"
+                      title="Editar variante">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <!-- Botón eliminar -->
+                    <button 
+                      type="button" 
+                      (click)="removeVariantFromList(i)" 
+                      [disabled]="isSaving()"
+                      class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      title="Eliminar variante">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                </ng-container>
               </div>
 
-              <div *ngIf="tempVariants().length === 0" class="text-center py-6 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
+              <div *ngIf="tempVariants().length === 0" class="text-center py-6 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl mt-2">
                 No hay variantes agregadas (opcional)
               </div>
             </div>

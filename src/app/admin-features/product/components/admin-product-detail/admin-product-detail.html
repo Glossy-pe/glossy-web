@@ -137,10 +137,13 @@
           </div>
         </section>
 
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!--  VARIANTES Y STOCK                                             -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
         <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
           <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-cyan-50">
             <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">🎨 Variantes y Stock</h2>
-            <button (click)="showVariantForm.set(!showVariantForm())" 
+            <button (click)="showVariantForm.set(!showVariantForm()); cancelEditVariant()" 
                     [disabled]="isSaving()"
                     class="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-blue-100 disabled:opacity-50">
               {{ showVariantForm() ? 'Cancelar' : '+ Nueva Variante' }}
@@ -148,7 +151,10 @@
           </div>
 
           <div class="p-8">
+
+            <!-- Formulario nueva variante -->
             <div *ngIf="showVariantForm()" class="mb-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-100 rounded-2xl animate-fadeIn">
+              <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Nueva Variante</p>
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
                 <div class="space-y-1.5">
                   <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Nombre</label>
@@ -182,25 +188,89 @@
               </button>
             </div>
 
+            <!-- Grid de variantes -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div *ngFor="let v of product()?.variants; let i = index" 
-                   class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-blue-400 transition-all group animate-fadeIn">
-                <div class="flex items-center gap-4">
-                  <div [style.background-color]="v.toneCode" class="w-10 h-10 rounded-xl border-2 border-white shadow-md"></div>
-                  <div>
-                    <p class="text-sm font-bold text-slate-800">{{ v.toneName }}</p>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Stock: {{ v.stock }} unid.</p>
+              <ng-container *ngFor="let v of product()?.variants; let i = index">
+
+                <!-- ── Modo edición inline ── -->
+                <div *ngIf="editingVariantIndex() === i"
+                     class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl animate-fadeIn">
+                  <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-3">Editando variante</p>
+                  <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="space-y-1">
+                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre</label>
+                      <input [(ngModel)]="editingVariant()!.toneName"
+                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Color</label>
+                      <input [(ngModel)]="editingVariant()!.toneCode" type="color"
+                             class="w-full h-[34px] rounded-lg border border-slate-200 cursor-pointer bg-white">
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio</label>
+                      <input [(ngModel)]="editingVariant()!.price" type="number"
+                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Stock</label>
+                      <input [(ngModel)]="editingVariant()!.stock" type="number"
+                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="saveEditVariant(i)"
+                            [disabled]="isSaving()"
+                            class="flex-1 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-1.5">
+                      <svg *ngIf="isSaving()" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <svg *ngIf="!isSaving()" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      {{ isSaving() ? 'Guardando...' : 'Guardar' }}
+                    </button>
+                    <button (click)="cancelEditVariant()"
+                            [disabled]="isSaving()"
+                            class="px-4 py-2 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all disabled:opacity-50">
+                      Cancelar
+                    </button>
                   </div>
                 </div>
-                <div class="flex items-center gap-4">
-                  <span class="text-sm font-bold text-blue-600 tracking-tight">{{ v.price | currency }}</span>
-                  <button (click)="deleteVariant(i)" 
-                          [disabled]="isSaving()"
-                          class="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-50">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5"/></svg>
-                  </button>
+
+                <!-- ── Modo visualización ── -->
+                <div *ngIf="editingVariantIndex() !== i"
+                     class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-blue-400 transition-all group animate-fadeIn">
+                  <div class="flex items-center gap-4">
+                    <div [style.background-color]="v.toneCode" class="w-10 h-10 rounded-xl border-2 border-white shadow-md"></div>
+                    <div>
+                      <p class="text-sm font-bold text-slate-800">{{ v.toneName }}</p>
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Stock: {{ v.stock }} unid.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-blue-600 tracking-tight mr-2">{{ v.price | currency }}</span>
+                    <!-- Botón editar -->
+                    <button (click)="startEditVariant(i)"
+                            [disabled]="isSaving()"
+                            class="p-2 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-50"
+                            title="Editar variante">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <!-- Botón eliminar -->
+                    <button (click)="deleteVariant(i)" 
+                            [disabled]="isSaving()"
+                            class="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-50"
+                            title="Eliminar variante">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5"/></svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
+
+              </ng-container>
             </div>
 
             <div *ngIf="!product()?.variants || product()?.variants!.length === 0" class="text-center py-12 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
