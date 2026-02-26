@@ -13,8 +13,8 @@ export class SocialNews implements OnInit {
 // TUS VIDEOS AQUÍ:
 
   videoUrls = [
-    'https://www.tiktok.com/@glossy.pe/video/7576841105623272725?is_from_webapp=1&sender_device=pc&web_id=7555962752482788871',
-    'https://www.tiktok.com/@glossy.pe/video/7581202344080100629?is_from_webapp=1&sender_device=pc&web_id=7555962752482788871', // Ejemplo
+    'https://www.tiktok.com/@glossy.pe/video/7611005546996436244?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
+    'https://www.tiktok.com/@glossy.pe/video/7608412047348337941?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484', // Ejemplo
     'https://www.tiktok.com/@glossy.pe/video/7594222084914515220?is_from_webapp=1&sender_device=pc&web_id=7555962752482788871', // Repetido para ejemplo
     'https://www.tiktok.com/@glossy.pe/video/7606186637378227477?is_from_webapp=1&sender_device=pc&web_id=7555962752482788871'  // Repetido para ejemplo
   ];
