@@ -43,17 +43,20 @@ toastMessage = '';
     private cartService: CartService // ← Inyectar
   ) { }
 
-  ngOnInit(): void {
-    this.resetState();
-    this.categories$ = this.categoryService.getCategories();
+ngOnInit(): void {
+  this.resetState();
+  this.categories$ = this.categoryService.getCategories();
 
-    const productId = this.route.snapshot.paramMap.get('id');
+  this.route.paramMap.subscribe(params => {
+    const productId = params.get('id');
     if (productId) {
+      this.resetState();
       this.loadProduct(Number(productId));
     } else {
       this.errorMessage = 'ID de producto no válido';
     }
-  }
+  });
+}
 
   ngOnDestroy(): void {
     if (this.subscription) {

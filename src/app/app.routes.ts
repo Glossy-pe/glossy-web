@@ -29,6 +29,15 @@ export const routes: Routes = [
             { path: 'categories', loadComponent: () => import('./admin-features/category/components/category-list/admin-category-list').then(m => m.AdminCategoryList) },
             { path: 'images', loadComponent: () => import('./admin-features/images/components/images-list/admin-images-list').then(m => m.AdminImagesList) },
             { path: 'labels', loadComponent: () => import('./admin-features/label/components/label-list/label-list').then(m => m.LabelList) },
+{ path: 'orders', loadComponent: () => import('./admin-features/order/components/admin-order-list/admin-order-list').then(m => m.AdminOrderList) },
+{
+  path: 'orders/new',
+  loadComponent: () => import('./admin-features/order/components/admin-order-create/admin-order-create').then(m => m.AdminOrderCreate)
+},
+{ 
+    path: 'orders/:id', // ✅ Después la dinámica
+    loadComponent: () => import('./admin-features/order/components/admin-order-detail/admin-order-detail').then(m => m.AdminOrderDetail) 
+},
         ]
     },
 
