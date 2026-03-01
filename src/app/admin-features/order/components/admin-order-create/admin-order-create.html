@@ -1,0 +1,252 @@
+<div class="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans antialiased text-slate-700">
+  <div class="max-w-[800px] mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-8">
+      <button (click)="goBack()"
+        class="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:bg-slate-50 transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15 19l-7-7 7-7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Crear Nueva Orden</h1>
+        <p class="text-sm text-slate-500">Busca y agrega productos al pedido</p>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+
+      <!-- Buscador + Selector -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Agregar Producto</h2>
+
+        <div *ngIf="isLoadingProducts(); else formTpl" class="flex justify-center py-8">
+          <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
+        <ng-template #formTpl>
+          <div class="space-y-5">
+
+            <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+  <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Datos del Cliente</h2>
+
+  <div class="space-y-4">
+    <div>
+      <label class="block text-xs font-bold text-slate-500 mb-2">Nombre del cliente</label>
+      <input type="text"
+        placeholder="Ej. Juan Pérez"
+        [ngModel]="customerName()"
+        (ngModelChange)="customerName.set($event)"
+        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all">
+    </div>
+
+    <div>
+      <label class="block text-xs font-bold text-slate-500 mb-2">Dirección de entrega</label>
+      <input type="text"
+        placeholder="Ej. Av. Principal 123, Lima"
+        [ngModel]="customerAddress()"
+        (ngModelChange)="customerAddress.set($event)"
+        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all">
+    </div>
+  </div>
+</div>
+
+            <!-- Paso 1: Buscador -->
+            <div *ngIf="!selectedProduct()">
+              <label class="block text-xs font-bold text-slate-500 mb-2">Buscar producto</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2"/>
+                  </svg>
+                </span>
+                <input type="text"
+                  placeholder="Escribe el nombre del producto..."
+                  [ngModel]="searchTerm()"
+                  (ngModelChange)="searchTerm.set($event)"
+                  class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all">
+              </div>
+
+              <!-- Resultados -->
+              <div *ngIf="searchTerm().length > 0" class="mt-2 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                @for (product of filteredProducts(); track product.id) {
+                  <button type="button" (click)="selectProduct(product)"
+                    class="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-slate-50 last:border-0">
+                    <div>
+                      <p class="text-sm font-bold text-slate-700">{{ product.name }}</p>
+                      <p class="text-xs text-slate-400">{{ product.variants.length }} variante(s)</p>
+                    </div>
+                    <span class="text-xs font-bold text-blue-500">Seleccionar →</span>
+                  </button>
+                } @empty {
+                  <div class="px-4 py-6 text-center text-sm text-slate-400 italic">
+                    No se encontraron productos.
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Paso 2: Producto seleccionado + variantes -->
+            <div *ngIf="selectedProduct() as product">
+
+              <!-- Chip producto seleccionado -->
+              <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl mb-4">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span class="text-sm font-bold text-blue-700">{{ product.name }}</span>
+                </div>
+                <button type="button" (click)="selectedProduct.set(null); selectedVariant.set(null)"
+                  class="text-xs text-blue-400 hover:text-blue-600 font-bold">Cambiar</button>
+              </div>
+
+              <!-- Variantes -->
+              <label class="block text-xs font-bold text-slate-500 mb-3">Selecciona una variante</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @for (variant of product.variants; track variant.id) {
+                  <button type="button"
+                    (click)="selectVariant(variant)"
+                    [disabled]="variant.stock === 0"
+                    [class.ring-2]="selectedVariant()?.id === variant.id"
+                    [class.ring-blue-500]="selectedVariant()?.id === variant.id"
+                    [class.opacity-40]="variant.stock === 0"
+                    [class.cursor-not-allowed]="variant.stock === 0"
+                    class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all text-left">
+                    <div class="w-9 h-9 rounded-xl border border-white shadow-sm shrink-0"
+                      [style.backgroundColor]="variant.toneCode"></div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold text-slate-700 truncate">{{ variant.toneName }}</p>
+                      <p class="text-xs text-slate-400">{{ variant.price | currency }}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <span class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                        [ngClass]="variant.stock > 5
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : variant.stock > 0
+                            ? 'bg-amber-50 text-amber-600'
+                            : 'bg-rose-50 text-rose-500'">
+                        {{ variant.stock > 0 ? 'Stock: ' + variant.stock : 'Agotado' }}
+                      </span>
+                    </div>
+                  </button>
+                }
+              </div>
+
+              <!-- Paso 3: Cantidad -->
+              <div *ngIf="selectedVariant()" class="mt-5 pt-5 border-t border-slate-100">
+                <label class="block text-xs font-bold text-slate-500 mb-3">
+                  Cantidad
+                  <span class="ml-2 font-normal text-slate-400">(Máx. disponible: {{ availableStock() }})</span>
+                </label>
+
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center gap-2 bg-slate-50 border rounded-xl px-3 py-2"
+                    [ngClass]="stockError() ? 'border-rose-300' : 'border-slate-200'">
+                    <button type="button" (click)="setQuantity(quantity() - 1)"
+                      [disabled]="quantity() <= 1"
+                      class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold text-xl">−</button>
+                    <input type="number"
+                      [ngModel]="quantity()"
+                      (ngModelChange)="setQuantity($event)"
+                      min="1" [max]="availableStock()"
+                      class="w-12 text-center text-sm font-bold text-slate-700 bg-transparent outline-none">
+                    <button type="button" (click)="setQuantity(quantity() + 1)"
+                      [disabled]="quantity() >= availableStock()"
+                      class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold text-xl">+</button>
+                  </div>
+
+                  <button type="button" (click)="addToCart()"
+                    class="flex-1 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all active:scale-95">
+                    + Agregar al pedido
+                  </button>
+                </div>
+
+                <!-- Error stock -->
+                <p *ngIf="stockError()" class="mt-2 text-xs font-bold text-rose-500 flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  {{ stockError() }}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Carrito -->
+      <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <div class="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Productos en la orden
+          </h2>
+          <span *ngIf="cart().length > 0"
+            class="px-2.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
+            {{ cart().length }}
+          </span>
+        </div>
+
+        <div class="p-6 space-y-3">
+          @for (item of cart(); track item.productVariantId) {
+            <div class="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+              <div class="w-10 h-10 rounded-xl border border-white shadow-sm shrink-0"
+                [style.backgroundColor]="item.toneCode"></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate">{{ item.productName }}</p>
+                <p class="text-xs text-slate-400">{{ item.toneName }} · {{ item.price | currency }} c/u</p>
+              </div>
+
+              <!-- Cantidad editable con validación stock -->
+              <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2 py-1.5">
+                <button type="button"
+                  (click)="updateCartQuantity(item.productVariantId, item.quantity - 1)"
+                  [disabled]="item.quantity <= 1"
+                  class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">−</button>
+                <span class="w-7 text-center text-sm font-bold text-slate-700">{{ item.quantity }}</span>
+                <button type="button"
+                  (click)="updateCartQuantity(item.productVariantId, item.quantity + 1)"
+                  [disabled]="item.quantity >= item.stock"
+                  class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">+</button>
+              </div>
+
+              <span class="text-sm font-black text-slate-900 w-20 text-right shrink-0">
+                {{ item.price * item.quantity | currency }}
+              </span>
+
+              <button type="button" (click)="removeFromCart(item.productVariantId)"
+                class="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          } @empty {
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+              No hay productos agregados aún.
+            </div>
+          }
+
+          <!-- Total y guardar -->
+          <div class="pt-6 mt-2 border-t border-slate-100 flex justify-between items-end">
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p>
+              <p class="text-3xl font-black text-blue-600">{{ total() | currency }}</p>
+            </div>
+            <button type="button" (click)="saveOrder()"
+              [disabled]="!canSave()"
+              class="px-8 py-3 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+              <span *ngIf="isSaving()"
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              {{ isSaving() ? 'GUARDANDO...' : 'GUARDAR ORDEN' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

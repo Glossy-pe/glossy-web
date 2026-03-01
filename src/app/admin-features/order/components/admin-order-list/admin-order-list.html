@@ -1,0 +1,126 @@
+<div class="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-700 p-4 md:p-8">
+  <main class="max-w-[1200px] mx-auto">
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Gestión de Órdenes</h1>
+        <p class="text-sm text-slate-500">Administración y seguimiento de pedidos de clientes.</p>
+      </div>
+      <button (click)="goToCreate()"
+        class="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 text-sm font-bold rounded-xl transition-all active:scale-95 w-full sm:w-auto cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Nueva Orden
+      </button>
+    </div>
+
+    <div class="relative mb-6">
+      <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2"/>
+        </svg>
+      </span>
+      <input type="text"
+        placeholder="Buscar por ID, nombre o email..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all shadow-sm">
+    </div>
+
+    <div *ngIf="!isLoading(); else loadingTpl"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50 border-b border-slate-100">
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Orden ID</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dirección</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell text-center">Fecha</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell text-center">Estado</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right w-32">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            @for (order of filteredOrders(); track order.id) {
+              <tr class="hover:bg-slate-50/50 transition-colors group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                    <span class="text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
+                      #{{ order.id }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
+                      {{ order.customerName }}
+                    </div>
+                    <div>
+                      <!-- <p class="text-sm font-medium text-slate-700">{{ order.user?.name || 'Sin nombre' }}</p> -->
+                      <!-- <p class="text-xs text-slate-400">{{ order.user?.email || '' }}</p> -->
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-sm text-slate-600">{{ order.customerAddress }}</span>
+                </td>
+                <td class="px-6 py-4 hidden md:table-cell text-center text-sm font-mono text-slate-400">
+                  {{ order.createdAt | date:'dd/MM/yyyy' }}
+                </td>
+                <td class="px-6 py-4 hidden md:table-cell text-center">
+                  <span class="px-2 py-1 text-[10px] font-black rounded-full uppercase tracking-wider"
+                    [ngClass]="{
+                      'bg-emerald-50 text-emerald-600': order.status === 'COMPLETED',
+                      'bg-amber-50 text-amber-600': order.status === 'PENDING',
+                      'bg-blue-50 text-blue-600': order.status === 'CREATED',
+                      'bg-rose-50 text-rose-600': order.status === 'CANCELLED'
+                    }">
+                    {{ order.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-1">
+                    <button (click)="viewOrder(order.id)" title="Ver Detalle"
+                      class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2"/>
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2"/>
+                      </svg>
+                    </button>
+                    <button (click)="deleteOrder(order.id)" title="Eliminar"
+                      class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                  <p class="text-sm italic">No se encontraron órdenes registradas.</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <ng-template #loadingTpl>
+      <div class="py-20 text-center bg-white border border-slate-200 rounded-2xl shadow-sm">
+        <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Cargando Órdenes</p>
+      </div>
+    </ng-template>
+
+  </main>
+</div>
