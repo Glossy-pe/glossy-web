@@ -95,7 +95,7 @@
                   <span>Subtotal</span>
                   <span class="font-medium text-stone-900">S/. {{ subtotal() }}</span>
                 </div>
-                <div class="flex justify-between">
+                <!-- <div class="flex justify-between">
                   <span>Envío estimado</span>
                   @if (subtotal() > 30) {
                     <span class="text-rose-500 font-bold text-xs bg-rose-50 px-2 py-0.5 rounded-full">GRATIS</span>
@@ -103,13 +103,12 @@
                     <span>S/. 5.00</span>
                   }
                 </div>
-                <!-- Barra de progreso para envío gratis -->
                 @if (subtotal() <= 30 && subtotal() > 0) {
                     <div class="bg-stone-100 rounded-full h-1.5 w-full overflow-hidden mt-2">
                         <div class="bg-rose-300 h-full" [style.width.%]="(subtotal()/30)*100"></div>
                     </div>
                     <p class="text-[10px] text-stone-400 text-right mt-1">Faltan S/. {{ (30 - subtotal())}} para envío gratis</p>
-                }
+                } -->
               </div>
 
               <div class="border-t border-stone-100 mt-6 pt-4 flex justify-between items-center">

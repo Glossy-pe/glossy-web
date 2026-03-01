@@ -99,16 +99,16 @@ export class PdfGeneratorService {
     currentY += 8;
     
     // Envío
-    doc.text('Envío:', totalsX, currentY);
-    if (shipping === 0) {
-      doc.setTextColor(244, 63, 94); // rose-500
-      doc.setFont('helvetica', 'bold');
-      doc.text('GRATIS', pageWidth - 15, currentY, { align: 'right' });
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 113, 108);
-    } else {
-      doc.text(`S/. ${shipping.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
-    }
+    // doc.text('Envío:', totalsX, currentY);
+    // if (shipping === 0) {
+    //   doc.setTextColor(244, 63, 94); // rose-500
+    //   doc.setFont('helvetica', 'bold');
+    //   doc.text('GRATIS', pageWidth - 15, currentY, { align: 'right' });
+    //   doc.setFont('helvetica', 'normal');
+    //   doc.setTextColor(120, 113, 108);
+    // } else {
+    //   doc.text(`S/. ${shipping.toFixed(2)}`, pageWidth - 15, currentY, { align: 'right' });
+    // }
     currentY += 12;
     
     // Línea divisoria
