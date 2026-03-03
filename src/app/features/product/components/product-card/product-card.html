@@ -7,6 +7,14 @@
           <span class="text-[9px] font-light uppercase tracking-[0.2em] text-white bg-black/80 px-2 py-1">
             Últimas unidades
           </span>
+          
+
+    </div>
+
+    <div class="absolute top-3 left-3 z-20" *ngIf="getTotalStock(this.product!)==0" >
+          <span class="text-[9px] font-light uppercase tracking-[0.2em] text-white bg-red-600/80 px-2 py-1">
+            Agotado
+          </span>
     </div>
 
     <img [src]="getProductImages(this.product!)[0].url" [alt]="this.product!.name"

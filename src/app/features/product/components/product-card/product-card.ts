@@ -105,4 +105,9 @@ export class ProductCard implements OnInit, OnDestroy{
     return total > 0 && total < 10;
   }
 
+  hasNotStock(product: Product): boolean {
+    const total = this.getTotalStock(product);
+    return total == 0;
+  }
+
 }

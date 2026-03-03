@@ -12,7 +12,7 @@ import { environment } from '../../../../../environments/environment';
   styleUrl: './cart-list.scss',
 })
 export class CartList {
-  
+  numero = "51923895798";
   apiImageServer= environment.apiImageServer;
   
   constructor(
@@ -55,4 +55,20 @@ export class CartList {
       this.total()
     );
   }
+
+  
+goToPay() {
+  const items = this.cartItems();
+  if (items.length === 0) return;
+
+  const lineas = items
+    .map(item => `• ${item.product.name} (${item.selectedVariant.toneName}) x${item.quantity} — S/. ${(item.selectedVariant.price * item.quantity).toFixed(2)}`)
+    .join('\n');
+
+  const mensaje = `Hola! 👋 Quiero hacer este pedido:\n\n${lineas}\n\n*Total: S/. ${this.total().toFixed(2)}*`;
+
+  const url = `https://api.whatsapp.com/send?phone=${this.numero}&text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+}
+  
 }
