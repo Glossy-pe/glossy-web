@@ -140,23 +140,27 @@ ngOnInit(): void {
     return category ? category.name : 'Sin categoría';
   }
 
-addToCart(): void {
-  if (!this.canAddToCart() || !this.currentProduct || !this.selectedVariant) {
-    console.log('No se puede agregar - sin stock o sin variante seleccionada');
-    return;
+  addToCart(): void {
+    if (!this.canAddToCart() || !this.currentProduct || !this.selectedVariant) {
+      console.log('No se puede agregar - sin stock o sin variante seleccionada');
+      return;
+    }
+
+    this.cartService.addItem(
+      this.currentProduct.id,
+      this.selectedVariant.id,
+      this.quantity
+    );
+
+    this.toastMessage = `${this.currentProduct.name} - ${this.selectedVariant.toneName} (x${this.quantity}) agregado al carrito`;
+    this.showToast = true;
+
+    setTimeout(() => {
+      this.showToast = false;
+    }, 2500);
+
+    this.quantity = 1;
   }
-
-  this.cartService.addItem(this.currentProduct, this.selectedVariant, this.quantity);
-
-  this.toastMessage = `${this.currentProduct.name} - ${this.selectedVariant.toneName} (x${this.quantity}) agregado al carrito`;
-  this.showToast = true;
-
-  setTimeout(() => {
-    this.showToast = false;
-  }, 2500);
-
-  this.quantity = 1;
-}
 
 
   goBack(): void {

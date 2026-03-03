@@ -7,6 +7,8 @@ import { ProductCard } from "../product-card/product-card";
 import { LabelService } from '../../../../admin-features/label/services/label-service';
 import { LabelResponse } from '../../../../admin-features/label/models/label.interface';
 import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Necesario para el buscador
+import { Category } from '../../../category/models/category.model';
+import { CategoryService } from '../../../category/services/category.service';
 @Component({
   selector: 'app-product-list',
   imports: [CommonModule, ProductCard, ReactiveFormsModule], // Ya no necesitamos FormsModule
@@ -17,19 +19,21 @@ export class ProductList implements OnInit{
 products$!: Observable<Product[]>;
   filteredProducts$!: Observable<Product[]>;
   labels$!: Observable<LabelResponse[]>;
+  categories$!: Observable<Category[]>;
   
   searchControl = new FormControl('');
   showFilters = false;
 
-  constructor(private productService: ProductService, private labelService: LabelService){}
+  constructor(private productService: ProductService, private labelService: LabelService, private categoryService: CategoryService){}
 
   ngOnInit(): void {
     this.labels$ = this.labelService.getAll();
+    this.categories$ = this.categoryService.getCategories();
     this.loadProducts(""); // Ahora el valor por defecto es vacío
   }
 
-  loadProducts(labelId: string = ""){
-    this.products$ = this.productService.getProducts(labelId);
+  loadProducts(categoryId: string = ""){
+    this.products$ = this.productService.getProducts(categoryId);
     
     // Combinamos la búsqueda por nombre con los productos obtenidos
     this.filteredProducts$ = combineLatest([

@@ -55,7 +55,7 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
   }
 
   loadProducts(): void {
-    const products$ = this.productService.getProducts(this.labelId); // Mantenemos tu lógica original
+    const products$ = this.productService.getProductsByLabel(this.labelId); // Mantenemos tu lógica original
     this.products$ = products$;
     this.isLoading$ = products$.pipe(
       map(() => false),

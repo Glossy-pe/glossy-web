@@ -1,163 +1,167 @@
-// src/app/features/cart/services/cart.service.ts
-import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Product } from '../../product/models/product.model';
-import { ProductVariant } from '../../product/models/product-variant.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CartStorage } from '../components/models/cart-storage.model';
 import { CartItem } from '../components/models/cart-item.model';
+import { Product } from '../../product/models/product.model';
+import { ProductService } from '../../product/services/product.service';
+import { environment } from '../../../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class CartService {
   private readonly STORAGE_KEY = 'beauty_cart';
   private platformId = inject(PLATFORM_ID);
-  private isBrowser: boolean;
+  private productService = inject(ProductService);
 
-  // Signal para el estado del carrito
-  private cartItems = signal<CartItem[]>([]);
+  // Solo IDs + cantidad en el signal
+  private storedItems = signal<CartStorage[]>(this.loadFromStorage());
 
-  // Exponemos como readonly
-  readonly items = this.cartItems.asReadonly();
+  // Signal público de CartItems resueltos (async)
+  // Se usa en el componente con async pipe o toSignal
+  resolvedItems = signal<CartItem[]>([]);
 
-  // Computados
-  readonly totalItems = computed(() => {
-    return this.cartItems().reduce((acc, item) => acc + item.quantity, 0);
-  });
+  readonly totalItems = computed(() =>
+    this.storedItems().reduce((acc, i) => acc + i.quantity, 0)
+  );
 
-  readonly subtotal = computed(() => {
-    return this.cartItems().reduce((acc, item) => 
-      acc + (item.selectedVariant.price * item.quantity), 0
-    );
-  });
+  // subtotal y total dependen de resolvedItems
+  readonly subtotal = computed(() =>
+    this.resolvedItems().reduce(
+      (acc, i) => acc + i.selectedVariant.price * i.quantity, 0
+    )
+  );
 
-  readonly total = computed(() => {
-    const shipping = this.subtotal() > 30 ? 0 : 0;
-    return this.subtotal() + shipping;
-  });
+  readonly total = computed(() => this.subtotal());
 
   constructor() {
-    // Primero verificar la plataforma
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    
-    // Luego cargar los datos
-    this.cartItems.set(this.loadFromStorage());
-
-    // ← AGREGAR: Escuchar cambios en localStorage desde otras pestañas
-    if (this.isBrowser) {
-      window.addEventListener('storage', (event) => {
-        if (event.key === this.STORAGE_KEY) {
-          // Recargar el carrito cuando cambie en otra pestaña
-          this.cartItems.set(this.loadFromStorage());
-          console.log('Cart synced from another tab');
-        }
-      });
-    }
+    // Resolver items al iniciar y cada vez que storedItems cambie
+    this.refreshResolvedItems();
   }
 
-  // Cargar desde localStorage
-  private loadFromStorage(): CartItem[] {
-    if (!this.isBrowser) {
-      return [];
-    }
-
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error loading cart from storage:', error);
-      return [];
-    }
-  }
-
-  // Guardar en localStorage
-  private saveToStorage(): void {
-    if (!this.isBrowser) {
+  // Llama a la API para resolver productos frescos desde los IDs guardados
+  refreshResolvedItems(): void {
+    const stored = this.storedItems();
+    if (stored.length === 0) {
+      this.resolvedItems.set([]);
       return;
     }
 
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.cartItems()));
-      console.log('Cart saved to localStorage:', this.cartItems());
-    } catch (error) {
-      console.error('Error saving cart to storage:', error);
-    }
-  }
+    // Obtener IDs únicos de productos
+    const uniqueProductIds = [...new Set(stored.map(i => i.productId))];
 
-  // Agregar producto al carrito
-  addItem(product: Product, selectedVariant: ProductVariant, quantity = 1): void {
-    const currentItems = this.cartItems();
-    
-    const existingItemIndex = currentItems.findIndex(
-      item => item.product.id === product.id && 
-              item.selectedVariant.id === selectedVariant.id
+    // Fetch paralelo de cada producto
+    const requests: Observable<Product>[] = uniqueProductIds.map(id =>
+      this.productService.getProductById(id)
     );
 
-    if (existingItemIndex > -1) {
-      const existingItem = currentItems[existingItemIndex];
-      const newQuantity = existingItem.quantity + quantity;
-      
-      if (newQuantity <= selectedVariant.stock) {
-        existingItem.quantity = newQuantity;
-        this.cartItems.set([...currentItems]);
-      } else {
-        if (this.isBrowser) {
-          alert(`Solo hay ${selectedVariant.stock} unidades disponibles de ${selectedVariant.toneName}`);
-        }
-        return; // ← No guardar si excede el stock
+    forkJoin(requests).subscribe({
+      next: (products) => {
+        const resolved: CartItem[] = stored
+          .map(stored => {
+            const product = products.find(p => p.id === stored.productId);
+            const variant = product?.variants?.find(v => v.id === stored.variantId);
+            if (!product || !variant) return null;
+            return { product, selectedVariant: variant, quantity: stored.quantity };
+          })
+          .filter((item): item is CartItem => item !== null);
+
+        this.resolvedItems.set(resolved);
+      },
+      error: (err) => {
+        console.error('Error resolving cart items:', err);
       }
+    });
+  }
+
+  addItem(productId: number, variantId: number, quantity = 1): void {
+    const current = this.storedItems();
+    const existingIndex = current.findIndex(
+      i => i.productId === productId && i.variantId === variantId
+    );
+
+    if (existingIndex > -1) {
+      const updated = current.map((item, idx) =>
+        idx === existingIndex
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+      this.storedItems.set(updated);
     } else {
-      const newItem: CartItem = {
-        product,
-        selectedVariant,
-        quantity
-      };
-      this.cartItems.set([...currentItems, newItem]);
+      this.storedItems.set([...current, { productId, variantId, quantity }]);
     }
+
+    this.saveToStorage();
+    this.refreshResolvedItems(); // re-fetch para tener datos frescos
+  }
+
+  updateQuantity(item: CartItem, change: number): void {
+    const newQty = item.quantity + change;
+    if (newQty < 1) return;
+
+    this.storedItems.update(items =>
+      items.map(i =>
+        i.productId === item.product.id && i.variantId === item.selectedVariant.id
+          ? { ...i, quantity: newQty }
+          : i
+      )
+    );
+
+    // Actualizar también resolvedItems localmente (sin re-fetch innecesario)
+    this.resolvedItems.update(items =>
+      items.map(i =>
+        i.product.id === item.product.id && i.selectedVariant.id === item.selectedVariant.id
+          ? { ...i, quantity: newQty }
+          : i
+      )
+    );
 
     this.saveToStorage();
   }
 
-  // Actualizar cantidad
-  updateQuantity(item: CartItem, change: number): void {
-    const currentItems = this.cartItems();
-    const index = currentItems.findIndex(
-      i => i.product.id === item.product.id && 
-           i.selectedVariant.id === item.selectedVariant.id
-    );
-    
-    if (index === -1) return;
-
-    const newQuantity = item.quantity + change;
-
-    if (newQuantity >= 1 && newQuantity <= item.selectedVariant.stock) {
-      currentItems[index].quantity = newQuantity;
-      this.cartItems.set([...currentItems]);
-      this.saveToStorage();
-    }
-  }
-
-  // Eliminar item
   removeItem(item: CartItem): void {
-    this.cartItems.update(items => 
-      items.filter(i => 
-        !(i.product.id === item.product.id && 
-          i.selectedVariant.id === item.selectedVariant.id)
+    this.storedItems.update(items =>
+      items.filter(i =>
+        !(i.productId === item.product.id && i.variantId === item.selectedVariant.id)
+      )
+    );
+    this.resolvedItems.update(items =>
+      items.filter(i =>
+        !(i.product.id === item.product.id && i.selectedVariant.id === item.selectedVariant.id)
       )
     );
     this.saveToStorage();
   }
 
-  // Limpiar carrito
   clearCart(): void {
-    this.cartItems.set([]);
+    this.storedItems.set([]);
+    this.resolvedItems.set([]);
     this.saveToStorage();
   }
 
-  // Obtener cantidad de un producto/variante específica
   getItemQuantity(productId: number, variantId: number): number {
-    const item = this.cartItems().find(
-      i => i.product.id === productId && i.selectedVariant.id === variantId
-    );
-    return item ? item.quantity : 0;
+    return this.storedItems().find(
+      i => i.productId === productId && i.variantId === variantId
+    )?.quantity ?? 0;
+  }
+
+  private loadFromStorage(): CartStorage[] {
+    if (!isPlatformBrowser(this.platformId)) return [];
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveToStorage(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.storedItems()));
+    } catch (err) {
+      console.error('Error saving cart:', err);
+    }
   }
 }

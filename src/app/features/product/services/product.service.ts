@@ -19,7 +19,17 @@ export class ProductService {
   /**
    * Obtiene todos los productos
    */
-  getProducts(label?: string): Observable<Product[]> {
+  getProducts(categoryId?: string): Observable<Product[]> {
+    let url = this.apiUrl;
+
+    if (categoryId) {
+      url += `?categoryId=${categoryId}`;
+    }
+    console.log(categoryId);
+    return this.http.get<Product[]>(url);
+  }
+
+  getProductsByLabel(label?: string): Observable<Product[]> {
     let url = this.apiUrl;
 
     if (label) {

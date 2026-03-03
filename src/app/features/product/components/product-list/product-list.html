@@ -34,15 +34,15 @@
             Todos
           </button>
 
-          <button *ngFor="let label of labels$ | async; let i = index"
-            (click)="loadProducts(label.id.toString())"
+          <button *ngFor="let category of categories$ | async; let i = index"
+            (click)="loadProducts(category.id.toString())"
             [ngClass]="{
               'bg-blue-50 text-blue-500': i % 3 === 0,
               'bg-pink-50 text-pink-500': i % 3 === 1,
               'bg-teal-50 text-teal-500': i % 3 === 2
             }"
             class="w-full text-left p-4 text-xs font-bold uppercase tracking-widest border border-transparent hover:border-white transition-all">
-            {{ label.name }}
+            {{ category.name }}
           </button>
         </div>
       </div>

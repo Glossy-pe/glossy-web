@@ -1,153 +1,301 @@
-    <div class="min-h-screen bg-[#FAFAF9] font-sans text-stone-800">
-      
-      <!-- Header -->
-      <header class="bg-white border-b border-stone-100 py-6 sticky top-0 z-10 shadow-sm/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 class="font-serif text-2xl tracking-widest uppercase">Tu Bolsa</h1>
-          <span class="text-sm text-stone-500">{{ totalItems() }} Artículos</span>
-        </div>
-      </header>
+<div class="min-h-screen bg-[#FAFAF9] font-sans text-stone-800">
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-start">
-          
-          <!-- COLUMNA IZQUIERDA: LISTA DE PRODUCTOS -->
-          <section class="lg:col-span-8">
-            @if (cartItems().length > 0) {
-              <div class="space-y-6">
-                <!-- Usamos 'track item.selectedVariant.id' para asegurar que variantes distintas sean filas distintas -->
-                @for (item of cartItems(); track item.selectedVariant.id) {
-                  
-                  <div class="bg-white p-6 rounded-none shadow-sm border border-stone-100 flex flex-col sm:flex-row gap-6 transition-all hover:shadow-md">
-                    
-                    <!-- Imagen del Producto -->
-                    <div class="w-full sm:w-32 h-32 flex-shrink-0 bg-stone-50 relative overflow-hidden group">
-                      <img [src]="item.product.images[0].url" [alt]="item.product.name" class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105">
-                    </div>
+  <header class="bg-white border-b border-stone-100 py-6 sticky top-0 z-10 shadow-sm/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <h1 class="font-serif text-2xl tracking-widest uppercase">Tu Bolsa</h1>
+      <span class="text-sm text-stone-500">{{ totalItems() }} Artículos</span>
+    </div>
+  </header>
 
-                    <!-- Detalles -->
-                    <div class="flex-1 flex flex-col justify-between">
-                      <div class="flex justify-between items-start">
-                        <div>
-                          <h3 class="font-serif text-lg text-stone-900">{{ item.product.name }}</h3>
-                          <!-- Descripción corta -->
-                          <p class="text-xs text-stone-500 mt-1 line-clamp-1">{{ item.product.description }}</p>
-                          
-                          <!-- VARIANTE SELECCIONADA (Clave visual) -->
-                          <div class="flex items-center mt-3 gap-2 bg-stone-50 px-3 py-1.5 rounded-full w-fit">
-                            <span class="w-4 h-4 rounded-full border border-stone-200 shadow-sm" [style.background-color]="item.selectedVariant.toneCode"></span>
-                            <span class="text-xs font-bold text-stone-700 uppercase tracking-wide">
-                              {{ item.selectedVariant.toneName }}
-                            </span>
-                          </div>
-                        </div>
-                        <div class="text-right">
-                          <p class="font-medium text-stone-900 text-lg">
-                            S/. {{ item.selectedVariant.price }}
-                          </p>
-                          @if (item.quantity > 1) {
-                            <p class="text-xs text-stone-400 mt-1">
-                              S/. {{ item.selectedVariant.price }} c/u
-                            </p>
-                          }
-                        </div>
-                      </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-start">
 
-                      <!-- Controles Inferiores -->
-                      <div class="flex justify-between items-end mt-4 pt-4 border-t border-dashed border-stone-100">
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center border border-stone-200 rounded-full px-2 py-1 bg-white">
-                            <button (click)="updateQuantity(item, -1)" class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30" [disabled]="item.quantity <= 1">-</button>
-                            <span class="mx-2 text-sm font-medium w-4 text-center tabular-nums">{{ item.quantity }}</span>
-                            <button (click)="updateQuantity(item, 1)" class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30" [disabled]="item.quantity >= item.selectedVariant.stock">+</button>
-                            </div>
-                            @if (item.quantity >= item.selectedVariant.stock) {
-                                <span class="text-[10px] text-orange-400 font-medium">Max. Stock</span>
-                            }
-                        </div>
-                        
-                        <button (click)="removeItem(item)" class="text-xs text-stone-400 hover:text-rose-500 uppercase tracking-wider underline decoration-stone-200 hover:decoration-rose-300 transition-all">
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="text-center py-20 bg-white border border-stone-100 shadow-sm">
-                <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+      <!-- COLUMNA IZQUIERDA -->
+      <section class="lg:col-span-8">
+
+        @if (cartItems().length > 0) {
+
+          <!-- Barra seleccionar todo -->
+          <div class="flex items-center gap-3 mb-5 px-1">
+            <input
+              type="checkbox"
+              id="select-all"
+              class="w-4 h-4 accent-stone-900 cursor-pointer"
+              [checked]="allAvailableSelected"
+              (change)="toggleAll()"
+            />
+            <label for="select-all" class="text-xs uppercase tracking-widest text-stone-500 cursor-pointer select-none">
+              Seleccionar todo ({{ availableItems().length }} disponibles)
+            </label>
+            <span class="ml-auto text-xs text-stone-400">
+              {{ selectedItems().length }} seleccionados
+            </span>
+          </div>
+
+          <div class="space-y-4">
+            @for (item of cartItems(); track item.selectedVariant.id) {
+
+              <div class="bg-white p-6 rounded-none shadow-sm border transition-all hover:shadow-md flex gap-4"
+                   [class.border-stone-900]="isSelected(item)"
+                   [class.border-stone-100]="!isSelected(item)"
+                   [class.opacity-60]="item.selectedVariant.stock === 0">
+
+                <!-- Checkbox -->
+                <div class="flex items-start pt-1 flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    class="w-4 h-4 accent-stone-900"
+                    [checked]="isSelected(item)"
+                    [disabled]="item.selectedVariant.stock === 0"
+                    [class.cursor-not-allowed]="item.selectedVariant.stock === 0"
+                    [class.cursor-pointer]="item.selectedVariant.stock > 0"
+                    (change)="toggleItem(item)"
+                  />
                 </div>
-                <p class="text-stone-400 font-serif italic text-xl">Tu bolsa de belleza está vacía.</p>
-                <button class="mt-4 text-rose-500 text-xs uppercase tracking-widest hover:underline font-bold">Descubrir Novedades</button>
-              </div>
-            }
-          </section>
 
-          <!-- COLUMNA DERECHA: RESUMEN -->
-          <section class="lg:col-span-4 mt-10 lg:mt-0">
-            <div class="bg-white p-8 border border-stone-100 sticky top-28 shadow-sm">
-              <h2 class="font-serif text-xl mb-6 border-b border-stone-100 pb-4">Resumen del Pedido</h2>
-              
-              <div class="space-y-4 text-sm text-stone-600">
-                <div class="flex justify-between">
-                  <span>Subtotal</span>
-                  <span class="font-medium text-stone-900">S/. {{ subtotal() }}</span>
-                </div>
-                <!-- <div class="flex justify-between">
-                  <span>Envío estimado</span>
-                  @if (subtotal() > 30) {
-                    <span class="text-rose-500 font-bold text-xs bg-rose-50 px-2 py-0.5 rounded-full">GRATIS</span>
-                  } @else {
-                    <span>S/. 5.00</span>
+                <!-- Imagen -->
+                <div class="w-28 h-28 flex-shrink-0 bg-stone-50 relative overflow-hidden group">
+                  <img [src]="item.product.images[0].url" [alt]="item.product.name"
+                       class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+                       [class.grayscale]="item.selectedVariant.stock === 0">
+                  @if (item.selectedVariant.stock === 0) {
+                    <div class="absolute inset-0 bg-stone-900/40 flex items-center justify-center">
+                      <span class="bg-white text-stone-900 text-[10px] font-bold uppercase tracking-widest px-3 py-1 shadow-lg">
+                        Agotado
+                      </span>
+                    </div>
                   }
                 </div>
-                @if (subtotal() <= 30 && subtotal() > 0) {
-                    <div class="bg-stone-100 rounded-full h-1.5 w-full overflow-hidden mt-2">
-                        <div class="bg-rose-300 h-full" [style.width.%]="(subtotal()/30)*100"></div>
+
+                <!-- Detalles -->
+                <div class="flex-1 flex flex-col justify-between min-w-0">
+                  <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                      <a [href]="'/products/' + item.product.id" class="hover:underline">
+                        <h3 class="font-serif text-lg truncate"
+                            [class.text-stone-900]="item.selectedVariant.stock > 0"
+                            [class.text-stone-400]="item.selectedVariant.stock === 0">
+                          {{ item.product.name }}
+                        </h3>
+                      </a>
+
+                      @if (item.selectedVariant.stock === 0) {
+                        <div class="mt-1 flex items-center gap-1.5 text-rose-600">
+                          <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                          </span>
+                          <p class="text-[11px] font-bold uppercase tracking-tight">No disponible</p>
+                        </div>
+                      }
+
+                      <p class="text-xs text-stone-500 mt-1 line-clamp-1">{{ item.product.description }}</p>
+
+                      <div class="flex items-center mt-3 gap-2 bg-stone-50 px-3 py-1.5 rounded-full w-fit">
+                        <span class="w-4 h-4 rounded-full border border-stone-200 shadow-sm"
+                              [style.background-color]="item.selectedVariant.toneCode"></span>
+                        <span class="text-xs font-bold text-stone-700 uppercase tracking-wide">
+                          {{ item.selectedVariant.toneName }}
+                        </span>
+                      </div>
                     </div>
-                    <p class="text-[10px] text-stone-400 text-right mt-1">Faltan S/. {{ (30 - subtotal())}} para envío gratis</p>
-                } -->
+
+                    <div class="text-right flex-shrink-0">
+                      <p class="font-medium text-lg"
+                         [class.text-stone-900]="item.selectedVariant.stock > 0"
+                         [class.text-stone-400]="item.selectedVariant.stock === 0">
+                        S/. {{ (item.selectedVariant.price * item.quantity).toFixed(2) }}
+                      </p>
+                      @if (item.quantity > 1) {
+                        <p class="text-xs text-stone-400 mt-1">S/. {{ item.selectedVariant.price }} c/u</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Controles -->
+                  <div class="flex justify-between items-end mt-4 pt-4 border-t border-dashed border-stone-100">
+                    <div class="flex items-center gap-3">
+                      <div class="flex items-center border border-stone-200 rounded-full px-2 py-1 bg-white"
+                           [class.opacity-40]="item.selectedVariant.stock === 0">
+                        <button (click)="updateQuantity(item, -1)"
+                                class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                                [disabled]="item.quantity <= 1 || item.selectedVariant.stock === 0">-</button>
+                        <span class="mx-2 text-sm font-medium w-4 text-center tabular-nums">
+                          {{ item.selectedVariant.stock === 0 ? 0 : item.quantity }}
+                        </span>
+                        <button (click)="updateQuantity(item, 1)"
+                                class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                                [disabled]="item.quantity >= item.selectedVariant.stock">+</button>
+                      </div>
+
+                      @if (item.selectedVariant.stock === 0) {
+                        <span class="text-[10px] text-rose-500 font-bold uppercase">Sin existencias</span>
+                      } @else if (item.quantity >= item.selectedVariant.stock) {
+                        <span class="text-[10px] text-orange-400 font-medium">Máx. stock</span>
+                      }
+                    </div>
+
+                    <button (click)="removeItem(item)"
+                            class="text-xs text-stone-400 hover:text-rose-500 uppercase tracking-wider underline decoration-stone-200 hover:decoration-rose-300 transition-all">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+
               </div>
+            }
+          </div>
 
-              <div class="border-t border-stone-100 mt-6 pt-4 flex justify-between items-center">
-                <span class="font-serif text-lg text-stone-900">Total</span>
-                <span class="font-bold text-xl text-stone-900">S/. {{ total() }}</span>
-              </div>
-
-              <!-- <button class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:hover:bg-stone-900" [disabled]="cartItems().length === 0"> -->
-              <button (click)="goToPay()" class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:hover:bg-stone-900" [disabled]="0">
-                Ir a Pagar
-              </button>
-
-              <button 
-                (click)="generateProformaPDF()"
-                class="w-full mt-4 bg-white border-2 border-stone-900 text-stone-900 py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-stone-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" 
-                [disabled]="cartItems().length === 0">
-                📄 Descargar Prefactura
-              </button>
-
-              <!-- O si prefieres un icono SVG: -->
-              <!-- <button 
-                (click)="generateProformaPDF()"
-                class="w-full mt-4 bg-white border-2 border-stone-900 text-stone-900 py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-stone-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
-                [disabled]="cartItems().length === 0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-                Descargar Prefactura
-              </button> -->
-              
-              <div class="mt-6 flex justify-center gap-4 opacity-40 grayscale">
-                 <!-- Iconos de tarjetas simulados -->
-                 <div class="h-6 w-10 bg-stone-200 rounded"></div>
-                 <div class="h-6 w-10 bg-stone-200 rounded"></div>
-                 <div class="h-6 w-10 bg-stone-200 rounded"></div>
-              </div>
+        } @else {
+          <div class="text-center py-20 bg-white border border-stone-100 shadow-sm">
+            <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
             </div>
-          </section>
+            <p class="text-stone-400 font-serif italic text-xl">Tu bolsa de belleza está vacía.</p>
+            <button class="mt-4 text-rose-500 text-xs uppercase tracking-widest hover:underline font-bold">Descubrir Novedades</button>
+          </div>
+        }
 
+      </section>
+
+      <!-- COLUMNA DERECHA: RESUMEN -->
+      <section class="lg:col-span-4 mt-10 lg:mt-0">
+        <div class="bg-white p-8 border border-stone-100 sticky top-28 shadow-sm">
+          <h2 class="font-serif text-xl mb-6 border-b border-stone-100 pb-4">Resumen del Pedido</h2>
+
+          <div class="space-y-4 text-sm text-stone-600">
+            <div class="flex justify-between">
+              <span>Subtotal
+                <span class="text-stone-400 text-xs">({{ selectedItems().length }} items)</span>
+              </span>
+              <span class="font-medium text-stone-900">S/. {{ subtotal().toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <div class="border-t border-stone-100 mt-6 pt-4 flex justify-between items-center">
+            <span class="font-serif text-lg text-stone-900">Total</span>
+            <span class="font-bold text-xl text-stone-900">S/. {{ total().toFixed(2) }}</span>
+          </div>
+
+          <button (click)="goToPay()"
+                  class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-900"
+                  [disabled]="selectedItems().length === 0">
+            Ir a Pagar ({{ selectedItems().length }})
+          </button>
+
+          <button (click)="generateProformaPDF()"
+                  class="w-full mt-4 bg-white border-2 border-stone-900 text-stone-900 py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-stone-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="selectedItems().length === 0">
+            📄 Prefactura ({{ selectedItems().length }})
+          </button>
+
+          <div class="mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+  <p class="text-xs text-amber-700 font-medium">
+    * Pedido mínimo: S/ 20.00
+  </p>
+</div>
+
+          <div class="mt-6 flex justify-center gap-4 opacity-40 grayscale">
+            <div class="h-6 w-10 bg-stone-200 rounded"></div>
+            <div class="h-6 w-10 bg-stone-200 rounded"></div>
+            <div class="h-6 w-10 bg-stone-200 rounded"></div>
+          </div>
         </div>
-      </main>
+      </section>
+
     </div>
+
+<section class="mt-6 bg-pink-50 border border-pink-200 rounded-2xl p-5">
+  <h2 class="text-lg font-bold text-pink-700 mb-4">
+    💖 Preguntas Frecuentes
+  </h2>
+
+  <div class="space-y-3">
+
+    <!-- Pedido mínimo -->
+    <details class="group bg-white rounded-xl border border-pink-100 p-3">
+      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
+        🌸 ¿Cuál es el pedido mínimo?
+        <span class="transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+      <p class="mt-2 text-sm text-slate-700">
+        Bella, el pedido mínimo es de <span class="font-semibold">S/ 20.00</span> 🤗
+      </p>
+    </details>
+
+    <!-- Pago en partes -->
+    <details class="group bg-white rounded-xl border border-pink-100 p-3">
+      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
+        💄 ¿Puedo pagar en partes para separar mis productos?
+        <span class="transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+
+      <div class="mt-2 text-sm text-slate-700 space-y-2">
+        <p>¡Sí! Puedes pagar lo que vas agregando ✨</p>
+
+        <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100">
+          <p>Ejemplo:</p>
+          <p>• Corrector + Labiales + Uñas = <b>S/ 11.50</b></p>
+          <p>Pagas S/ 11.50 💕</p>
+
+          <p class="mt-1">Luego agregas:</p>
+          <p>• Delineador = <b>S/ 12.00</b></p>
+          <p>Pagas S/ 12.00 ✨</p>
+
+          <p class="mt-2 font-medium text-pink-600">
+            Total: S/ 23.50 ✅ Listo para enviar
+          </p>
+          <p>Puedes seguir agregando más 🤗</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Envíos -->
+    <details class="group bg-white rounded-xl border border-pink-100 p-3">
+      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
+        🚚 ¿Cómo funcionan los envíos?
+        <span class="transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+
+      <div class="mt-2 text-sm text-slate-700 space-y-2">
+        <p>Enviamos por <span class="font-semibold">Shalom</span> a Lima y todo Perú 🇵🇪</p>
+
+        <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100 space-y-1">
+          <p><b>Costo desde S/ 8.00</b> (según tamaño del paquete):</p>
+          <p>• XXS: S/ 8</p>
+          <p>• XS: S/ 10</p>
+          <p>• S: S/ 12</p>
+          <p>• M: S/ 14</p>
+          <p class="mt-1">El costo aumenta según la cantidad de productos ✨</p>
+        </div>
+
+        <p>Con Shalom puedes rastrear tu pedido 📦</p>
+        <p>El envío se paga directamente en la agencia al recibir el producto.</p>
+        <p>Debe recibirlo una persona mayor de edad.</p>
+      </div>
+    </details>
+
+    <!-- Pagos -->
+    <details class="group bg-white rounded-xl border border-pink-100 p-3">
+      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
+        💳 ¿Cómo realizo mi pago?
+        <span class="transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+
+      <div class="mt-2 text-sm text-slate-700 space-y-2">
+        <p>Todo pago se coordina por WhatsApp 🤍</p>
+        <p>Puedes pagar con <b>Yape</b> o <b>Plin</b>.</p>
+        <p>Envía la captura del pago para confirmar tu pedido ✨</p>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+    
+  </main>
+
+  
+</div>
