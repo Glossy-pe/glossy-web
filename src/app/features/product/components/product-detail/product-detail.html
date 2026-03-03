@@ -84,7 +84,7 @@
                             </div>
 
                             <div class="flex flex-wrap gap-3">
-                                <button *ngFor="let variant of product.variants" 
+                                <button *ngFor="let variant of product.variants | sortBy:'position'" 
                                         (click)="selectVariant(variant)"
                                         class="w-8 h-8 rounded-full border shadow-sm relative transition-all focus:outline-none"
                                         [class.border-gray-200]="!isVariantSelected(variant)"
