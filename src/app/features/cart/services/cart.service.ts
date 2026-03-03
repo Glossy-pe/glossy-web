@@ -12,6 +12,8 @@ import { environment } from '../../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private readonly STORAGE_KEY = 'beauty_cart';
+  private readonly STORAGE_VERSION = 'v2';
+  private readonly VERSION_KEY = 'beauty_cart_version';
   private platformId = inject(PLATFORM_ID);
   private productService = inject(ProductService);
 
@@ -148,9 +150,19 @@ export class CartService {
 
   private loadFromStorage(): CartStorage[] {
     if (!isPlatformBrowser(this.platformId)) return [];
+
     try {
+      const currentVersion = localStorage.getItem(this.VERSION_KEY);
+
+      if (currentVersion !== this.STORAGE_VERSION) {
+        localStorage.removeItem(this.STORAGE_KEY);
+        localStorage.setItem(this.VERSION_KEY, this.STORAGE_VERSION);
+        return [];
+      }
+
       const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
+
     } catch {
       return [];
     }
