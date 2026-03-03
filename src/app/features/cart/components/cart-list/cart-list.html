@@ -117,7 +117,7 @@
               </div>
 
               <!-- <button class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:hover:bg-stone-900" [disabled]="cartItems().length === 0"> -->
-              <button class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:hover:bg-stone-900" [disabled]="1">
+              <button (click)="goToPay()" class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:hover:bg-stone-900" [disabled]="0">
                 Ir a Pagar
               </button>
 

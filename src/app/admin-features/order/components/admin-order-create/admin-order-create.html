@@ -70,16 +70,31 @@
 
               <!-- Resultados -->
               <div *ngIf="searchTerm().length > 0" class="mt-2 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                @for (product of filteredProducts(); track product.id) {
-                  <button type="button" (click)="selectProduct(product)"
-                    class="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-slate-50 last:border-0">
-                    <div>
-                      <p class="text-sm font-bold text-slate-700">{{ product.name }}</p>
-                      <p class="text-xs text-slate-400">{{ product.variants.length }} variante(s)</p>
-                    </div>
-                    <span class="text-xs font-bold text-blue-500">Seleccionar →</span>
-                  </button>
-                } @empty {
+@for (product of filteredProducts(); track product.id) {
+  <button type="button" (click)="selectProduct(product)"
+    class="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-slate-50 last:border-0">
+    <div class="flex items-center gap-3">
+      <!-- Miniatura imagen -->
+      <!-- <div class="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 flex items-center justify-center">
+        <img *ngIf="product.images"
+          [src]="product.images[0].url"
+          [alt]="product.name"
+          class="w-full h-full object-cover">
+        <svg *ngIf="!product.images[0]"
+          class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div> -->
+
+      <div>
+        <p class="text-sm font-bold text-slate-700">{{ product.name }}</p>
+        <p class="text-xs text-slate-400">{{ product.variants.length }} variante(s)</p>
+      </div>
+    </div>
+    <span class="text-xs font-bold text-blue-500 shrink-0">Seleccionar →</span>
+  </button>
+}
+                 @empty {
                   <div class="px-4 py-6 text-center text-sm text-slate-400 italic">
                     No se encontraron productos.
                   </div>
@@ -114,6 +129,18 @@
                     [class.opacity-40]="variant.stock === 0"
                     [class.cursor-not-allowed]="variant.stock === 0"
                     class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all text-left">
+
+                    <!-- <div class="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 flex items-center justify-center">
+                      <img *ngIf="product.images"
+                        [src]="product.images[0].url"
+                        [alt]="product.name"
+                        class="w-full h-full object-cover">
+                      <svg *ngIf="!product.images[0]"
+                        class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div> -->
+
                     <div class="w-9 h-9 rounded-xl border border-white shadow-sm shrink-0"
                       [style.backgroundColor]="variant.toneCode"></div>
                     <div class="flex-1 min-w-0">
@@ -192,11 +219,32 @@
 
         <div class="p-6 space-y-3">
           @for (item of cart(); track item.productVariantId) {
+            
             <div class="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+
+
+                                  <!-- <div class="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 flex items-center justify-center">
+                      <img *ngIf="item.url"
+                        [src]="item.url"
+                        [alt]="item.productName"
+                        class="w-full h-full object-cover">
+                      <svg *ngIf="!item.url"
+                        class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div> -->
+
               <div class="w-10 h-10 rounded-xl border border-white shadow-sm shrink-0"
                 [style.backgroundColor]="item.toneCode"></div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-slate-800 truncate">{{ item.productName }}</p>
+                <a 
+  [href]="'/products/' + item.productId"
+  target="_blank"
+  rel="noopener noreferrer"
+  class="text-sm font-bold text-slate-800 truncate hover:underline"
+>
+  {{ item.productName }}
+</a>
                 <p class="text-xs text-slate-400">{{ item.toneName }} · {{ item.price | currency }} c/u</p>
               </div>
 

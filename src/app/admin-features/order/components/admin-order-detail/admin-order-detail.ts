@@ -7,17 +7,28 @@ import { OrderResponse, OrderRequest } from '../../models/order.model';
 import { ProductService } from '../../../../features/product/services/product.service';
 import { Product } from '../../../../features/product/models/product.model';
 import { ProductVariant } from '../../../../features/product/models/product-variant.model';
-import { catchError, of } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { PdfGeneratorService } from '../../../../features/cart/services/pdf-generator.service';
 
 interface CartItem {
   productVariantId: number;
+  productId: number;
   quantity: number;
   toneName: string;
   toneCode: string;
   price: number;
   productName: string;
   stock: number;
+}
+
+export enum OrderStatus {
+  CREATED = 'CREATED',
+  CREADO = 'CREADO',
+  ACUMULANDO = 'ACUMULANDO',
+  PENDIENTE_PACKAGE = 'PENDIENTE_PACKAGE',
+  PENDIENTE_ENVIO = 'PENDIENTE_ENVIO',
+  ENVIADO = 'ENVIADO',
+  PAID = 'PAID'
 }
 
 @Component({
@@ -35,6 +46,7 @@ export class AdminOrderDetail implements OnInit {
   private pdfService = inject(PdfGeneratorService);
 
   order = signal<OrderResponse | null>(null);
+  currentStatus = signal<OrderStatus>(OrderStatus.CREATED);
   isLoading = signal(true);
 
   // Edit mode
@@ -125,10 +137,12 @@ export class AdminOrderDetail implements OnInit {
 
     this.customerName.set(order.customerName);
     this.customerAddress.set(order.customerAddress);
+    this.currentStatus.set(order.status as OrderStatus);
 
     // Map existing order items → cart
     this.cart.set(order.orderItems.map(item => ({
       productVariantId: item.productVariant.id,
+      productId: item.productVariant.productId,
       quantity: item.quantity,
       toneName: item.productVariant.toneName,
       toneCode: item.productVariant.toneCode,
@@ -207,12 +221,13 @@ export class AdminOrderDetail implements OnInit {
     } else {
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
+        productId: variant.productId,
         quantity: this.quantity(),
         toneName: variant.toneName,
         toneCode: variant.toneCode,
         price: variant.price,
         productName: product.name,
-        stock: variant.stock
+        stock: variant.stock,
       }]);
     }
 
@@ -245,7 +260,7 @@ export class AdminOrderDetail implements OnInit {
     const request: OrderRequest = {
       customerName: this.customerName(),
       customerAddress: this.customerAddress(),
-      status: order.status,
+      status: this.currentStatus(),
       total: this.cartTotal(),
       createdAt: order.createdAt,
       orderItems: this.cart().map(i => ({
@@ -265,5 +280,13 @@ export class AdminOrderDetail implements OnInit {
         this.isSaving.set(false);
       }
     });
+  }
+
+  orderStatusOptions = Object.values(OrderStatus);
+
+  getProductImage(productId: number): Observable<string | null> {
+    return this.productService.getProductById(productId).pipe(
+      map(product => product.images?.[0]?.url ?? null)
+    );
   }
 }

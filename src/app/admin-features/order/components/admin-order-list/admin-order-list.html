@@ -37,6 +37,7 @@
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Orden ID</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dirección</th>
+              <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell text-center">Fecha</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell text-center">Estado</th>
               <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right w-32">Acciones</th>
@@ -58,18 +59,15 @@
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
-                      {{ order.customerName }}
-                    </div>
-                    <div>
-                      <!-- <p class="text-sm font-medium text-slate-700">{{ order.user?.name || 'Sin nombre' }}</p> -->
-                      <!-- <p class="text-xs text-slate-400">{{ order.user?.email || '' }}</p> -->
-                    </div>
-                  </div>
+                  <span class="text-sm text-slate-600">{{ order.customerName }}</span>
+                </td>
+                <td class="px-6 py-4 max-w-[200px]">
+                  <span class="text-sm text-slate-600 truncate block">
+                    {{ order.customerAddress }}
+                  </span>
                 </td>
                 <td class="px-6 py-4">
-                  <span class="text-sm text-slate-600">{{ order.customerAddress }}</span>
+                  <span class="text-sm text-slate-600">S/. {{ order.total }}</span>
                 </td>
                 <td class="px-6 py-4 hidden md:table-cell text-center text-sm font-mono text-slate-400">
                   {{ order.createdAt | date:'dd/MM/yyyy' }}
@@ -77,10 +75,13 @@
                 <td class="px-6 py-4 hidden md:table-cell text-center">
                   <span class="px-2 py-1 text-[10px] font-black rounded-full uppercase tracking-wider"
                     [ngClass]="{
-                      'bg-emerald-50 text-emerald-600': order.status === 'COMPLETED',
-                      'bg-amber-50 text-amber-600': order.status === 'PENDING',
-                      'bg-blue-50 text-blue-600': order.status === 'CREATED',
-                      'bg-rose-50 text-rose-600': order.status === 'CANCELLED'
+      'text-emerald-600': order.status === 'CREATED',
+      'text-emerald-500': order.status === 'CREADO',
+      'text-violet-600': order.status === 'ACUMULANDO',
+      'text-amber-600': order.status === 'PENDIENTE_PACKAGE',
+      'text-amber-700': order.status === 'PENDIENTE_ENVIO',
+      'text-rose-600': order.status === 'ENVIADO',
+      'text-blue-600': order.status === 'PAID'
                     }">
                     {{ order.status }}
                   </span>

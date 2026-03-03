@@ -10,12 +10,23 @@ import { OrderItemRequest, OrderRequest } from '../../models/order.model';
 
 interface CartItem {
   productVariantId: number;
+  productId: number;
   quantity: number;
   toneName: string;
   toneCode: string;
   price: number;
   productName: string;
   stock: number;
+}
+
+export enum OrderStatus {
+  CREATED = 'CREATED',
+  CREADO = 'CREADO',
+  ACUMULANDO = 'ACUMULANDO',
+  PENDIENTE_PACKAGE = 'PENDIENTE_PACKAGE',
+  PENDIENTE_ENVIO = 'PENDIENTE_ENVIO',
+  ENVIADO = 'ENVIADO',
+  PAID = 'PAID'
 }
 
 @Component({
@@ -129,6 +140,7 @@ export class AdminOrderCreate implements OnInit {
     } else {
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
+        productId: variant.productId,
         quantity: this.quantity(),
         toneName: variant.toneName,
         toneCode: variant.toneCode,
@@ -167,7 +179,7 @@ export class AdminOrderCreate implements OnInit {
     const request: OrderRequest = {
       customerName: this.customerName(),
       customerAddress: this.customerAddress(),
-      status: 'CREATED',
+      status: OrderStatus.PENDIENTE_PACKAGE,
       total: this.total(),
       createdAt: new Date().toISOString(),
       orderItems: this.cart().map(i => ({

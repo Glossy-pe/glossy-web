@@ -1,6 +1,13 @@
 import { ProductVariant } from "../../../features/product/models/product-variant.model";
 
-export type OrderStatus = 'CREATED' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus =
+  | 'CREATED'
+  | 'CREADO'
+  | 'ACUMULANDO'
+  | 'PENDIENTE_PACKAGE'
+  | 'PENDIENTE_ENVIO'
+  | 'ENVIADO'
+  | 'PAID';
 
 export interface OrderUser {
   id: number;
@@ -10,6 +17,7 @@ export interface OrderUser {
 
 export interface OrderItem {
   id: number;
+  url: string;
   productVariant: ProductVariant;
   quantity: number;
 }
