@@ -10,10 +10,11 @@ import { ProductVariant } from '../../models/product-variant.model';
 import { ProductImage } from '../../models/product-image.model';
 import { CartService } from '../../../cart/services/cart.service';
 import { environment } from '../../../../../environments/environment';
+import { SortByPipe } from "../../../../shared/pipes/sort-by.pipe";
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule],
+  imports: [CommonModule, SortByPipe],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
