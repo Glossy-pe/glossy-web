@@ -79,7 +79,7 @@ export class AdminProductDetail implements OnInit {
 
   // Variant editing state
   editingVariantIndex = signal<number | null>(null);
-  editingVariant = signal<{ toneName: string; toneCode: string; price: number; stock: number } | null>(null);
+  editingVariant = signal<{id:number; toneName: string; toneCode: string; price: number; stock: number } | null>(null);
 
   newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
   selectedFile: File | null = null;
@@ -182,6 +182,7 @@ export class AdminProductDetail implements OnInit {
         mainImage: img.mainImage
       })),
       variants: currentProduct.variants.map(v => ({
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,
@@ -224,6 +225,7 @@ export class AdminProductDetail implements OnInit {
 
     const updatedVariants = [
       ...currentProduct.variants.map(v => ({
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,
@@ -276,6 +278,7 @@ export class AdminProductDetail implements OnInit {
     if (!variant) return;
     this.editingVariantIndex.set(index);
     this.editingVariant.set({
+      id: variant.id,
       toneName: variant.toneName,
       toneCode: variant.toneCode,
       price: variant.price,
@@ -292,6 +295,7 @@ export class AdminProductDetail implements OnInit {
 
   saveEditVariant(index: number) {
     const edited = this.editingVariant();
+    console.log(edited)
     if (!edited) return;
 
     if (!edited.toneName || !edited.price) {
@@ -307,6 +311,7 @@ export class AdminProductDetail implements OnInit {
     const updatedVariants = currentProduct.variants.map((v, i) => {
       if (i === index) {
         return {
+          id: edited.id,
           toneName: edited.toneName,
           toneCode: edited.toneCode,
           price: edited.price,
@@ -314,6 +319,7 @@ export class AdminProductDetail implements OnInit {
         };
       }
       return {
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,
@@ -332,6 +338,8 @@ export class AdminProductDetail implements OnInit {
       labelsIds: this.selectedLabels()
     };
 
+
+    console.log(updateRequest)
     this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
       .pipe(
         finalize(() => this.isSaving.set(false)),
@@ -362,6 +370,7 @@ export class AdminProductDetail implements OnInit {
     const updatedVariants = currentProduct.variants
       .filter((_, i) => i !== index)
       .map(v => ({
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,
@@ -441,6 +450,7 @@ export class AdminProductDetail implements OnInit {
           ...this.productForm.getRawValue(),
           images: updatedImages,
           variants: currentProduct.variants.map(v => ({
+            id: v.id,
             toneName: v.toneName,
             toneCode: v.toneCode,
             price: v.price,
@@ -484,6 +494,7 @@ export class AdminProductDetail implements OnInit {
       ...this.productForm.getRawValue(),
       images: updatedImages,
       variants: currentProduct.variants.map(v => ({
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,
@@ -525,6 +536,7 @@ export class AdminProductDetail implements OnInit {
       ...this.productForm.getRawValue(),
       images: updatedImages,
       variants: currentProduct.variants.map(v => ({
+        id: v.id,
         toneName: v.toneName,
         toneCode: v.toneCode,
         price: v.price,

@@ -26,7 +26,10 @@ export class AdminOrderList implements OnInit {
     return this.orders().filter(o =>
       o.id?.toString().includes(term) ||
       o.user?.name?.toLowerCase().includes(term) ||
-      o.user?.email?.toLowerCase().includes(term)
+      o.user?.email?.toLowerCase().includes(term) ||
+      o.customerName.toLowerCase().includes(term) ||
+      o.customerAddress.toLowerCase().includes(term) ||
+      o.status.toLowerCase().includes(term)
     );
   });
 
