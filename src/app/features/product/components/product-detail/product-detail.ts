@@ -22,7 +22,7 @@ export class ProductDetail implements OnInit, OnDestroy {
 
   private subscription?: Subscription;
   currentProduct?: Product;
-
+private toastTimeout: ReturnType<typeof setTimeout> | null = null;
   showToast = false;
 toastMessage = '';
   apiImageServer= environment.apiImageServer;
@@ -155,13 +155,25 @@ ngOnInit(): void {
     this.toastMessage = `${this.currentProduct.name} - ${this.selectedVariant.toneName} (x${this.quantity}) agregado al carrito`;
     this.showToast = true;
 
-    setTimeout(() => {
+    // Limpiar timeout previo si existía
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+
+    this.toastTimeout = setTimeout(() => {
       this.showToast = false;
+      this.toastTimeout = null;
     }, 2500);
 
     this.quantity = 1;
   }
 
+
+  dismissToast(): void {
+  if (this.toastTimeout) {
+    clearTimeout(this.toastTimeout);
+    this.toastTimeout = null;
+  }
+  this.showToast = false;
+}
 
   goBack(): void {
     this.router.navigate(['/products']);
