@@ -1,56 +1,145 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product.service';
-import { Observable, combineLatest, map, startWith } from 'rxjs';
-import { Product } from '../../models/product.model';
+import { Observable, Subject, debounceTime, distinctUntilChanged, startWith } from 'rxjs';
 import { ProductCard } from "../product-card/product-card";
-import { LabelService } from '../../../../admin-features/label/services/label-service';
-import { LabelResponse } from '../../../../admin-features/label/models/label.interface';
-import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Necesario para el buscador
-import { Category } from '../../../category/models/category.model';
 import { CategoryService } from '../../../category/services/category.service';
+import { Category } from '../../../category/models/category.model';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ProductResponseFull } from '../../models/product-response-full.model';
+
 @Component({
   selector: 'app-product-list',
-  imports: [CommonModule, ProductCard, ReactiveFormsModule], // Ya no necesitamos FormsModule
+  imports: [CommonModule, ProductCard, ReactiveFormsModule],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
-export class ProductList implements OnInit{
-products$!: Observable<Product[]>;
-  filteredProducts$!: Observable<Product[]>;
-  labels$!: Observable<LabelResponse[]>;
+export class ProductList implements OnInit {
+
   categories$!: Observable<Category[]>;
-  
+  categories: Category[] = [];
+
+  allProducts: ProductResponseFull[] = [];
+  filteredProducts: ProductResponseFull[] = [];
+
   searchControl = new FormControl('');
   showFilters = false;
+  isLoading = false;
 
-  constructor(private productService: ProductService, private labelService: LabelService, private categoryService: CategoryService){}
+  currentPage = 0;
+  pageSize = 12;
+  totalPages = 0;
+  totalElements = 0;
+
+  public selectedCategoryId = '';
+
+  constructor(
+    private productService: ProductService,
+    private categoryService: CategoryService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.labels$ = this.labelService.getAll();
     this.categories$ = this.categoryService.getCategories();
-    this.loadProducts(""); // Ahora el valor por defecto es vacío
+    this.categories$.subscribe(cats => this.categories = cats);
+
+    this.searchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      if (term && term.trim().length > 0) {
+        this.searchInBackend(term.trim());
+      } else {
+        this.allProducts = [];
+        this.loadProducts(0, false);
+      }
+    });
+
+    this.loadProducts(0, false);
   }
 
-  loadProducts(categoryId: string = ""){
-    this.products$ = this.productService.getProducts(categoryId);
-    
-    // Combinamos la búsqueda por nombre con los productos obtenidos
-    this.filteredProducts$ = combineLatest([
-      this.products$,
-      this.searchControl.valueChanges.pipe(startWith(''))
-    ]).pipe(
-      map(([products, searchTerm]) => {
-        const term = searchTerm?.toLowerCase() || '';
-        return products.filter(p => p.name.toLowerCase().includes(term));
-      })
-    );
-
-    if (window.innerWidth < 768) this.showFilters = false;
+  get activeCategoryName(): string {
+    if (!this.selectedCategoryId) return 'Todos los productos';
+    return this.categories.find(c => c.id.toString() === this.selectedCategoryId)?.name ?? '';
   }
 
-  toggleFilters() {
+  private searchInBackend(term: string): void {
+    this.isLoading = true;
+    this.cdr.markForCheck();
+
+    this.productService.searchProductsFull(term).subscribe({
+      next: (response) => {
+        this.allProducts = response.content;
+        this.filteredProducts = response.content;
+        this.totalElements = response.totalElements;
+        this.totalPages = 1;
+        this.currentPage = 0;
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error en búsqueda:', err);
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private loadProducts(page: number, accumulate: boolean): void {
+    this.isLoading = true;
+    this.cdr.markForCheck();
+
+    this.productService.getProducts(page, this.pageSize, this.selectedCategoryId).subscribe({
+      next: (response) => {
+        this.totalPages = response.totalPages;
+        this.totalElements = response.totalElements;
+        this.currentPage = response.number;
+
+        if (accumulate) {
+          this.allProducts = [...this.allProducts, ...response.content];
+        } else {
+          this.allProducts = [...response.content];
+        }
+
+        this.applySearch();
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error cargando productos:', err);
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private applySearch(): void {
+    const term = this.searchControl.value?.toLowerCase().trim() || '';
+    this.filteredProducts = term
+      ? this.allProducts.filter(p => p.name.toLowerCase().includes(term))
+      : [...this.allProducts];
+    this.cdr.markForCheck();
+  }
+
+  filterByCategory(categoryId: string): void {
+    this.selectedCategoryId = categoryId;
+    this.allProducts = [];
+    this.loadProducts(0, false);
+    this.showFilters = false;
+  }
+
+  loadMore(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.loadProducts(this.currentPage + 1, true);
+    }
+  }
+
+  toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
 
+  get hasMore(): boolean {
+    return this.currentPage < this.totalPages - 1;
+  }
 }

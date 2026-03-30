@@ -1,11 +1,9 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, map, of } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { forkJoin, Observable } from 'rxjs';
 import { CartStorage } from '../components/models/cart-storage.model';
 import { CartItem } from '../components/models/cart-item.model';
-import { Product } from '../../product/models/product.model';
+import { ProductResponseFull } from '../../product/models/product-response-full.model';
 import { ProductService } from '../../product/services/product.service';
 import { environment } from '../../../../environments/environment';
 
@@ -17,18 +15,14 @@ export class CartService {
   private platformId = inject(PLATFORM_ID);
   private productService = inject(ProductService);
 
-  // Solo IDs + cantidad en el signal
   private storedItems = signal<CartStorage[]>(this.loadFromStorage());
 
-  // Signal público de CartItems resueltos (async)
-  // Se usa en el componente con async pipe o toSignal
   resolvedItems = signal<CartItem[]>([]);
 
   readonly totalItems = computed(() =>
     this.storedItems().reduce((acc, i) => acc + i.quantity, 0)
   );
 
-  // subtotal y total dependen de resolvedItems
   readonly subtotal = computed(() =>
     this.resolvedItems().reduce(
       (acc, i) => acc + i.selectedVariant.price * i.quantity, 0
@@ -38,11 +32,9 @@ export class CartService {
   readonly total = computed(() => this.subtotal());
 
   constructor() {
-    // Resolver items al iniciar y cada vez que storedItems cambie
     this.refreshResolvedItems();
   }
 
-  // Llama a la API para resolver productos frescos desde los IDs guardados
   refreshResolvedItems(): void {
     const stored = this.storedItems();
     if (stored.length === 0) {
@@ -50,30 +42,26 @@ export class CartService {
       return;
     }
 
-    // Obtener IDs únicos de productos
     const uniqueProductIds = [...new Set(stored.map(i => i.productId))];
 
-    // Fetch paralelo de cada producto
-    const requests: Observable<Product>[] = uniqueProductIds.map(id =>
+    const requests: Observable<ProductResponseFull>[] = uniqueProductIds.map(id =>
       this.productService.getProductById(id)
     );
 
     forkJoin(requests).subscribe({
-      next: (products) => {
+      next: (products: ProductResponseFull[]) => {
         const resolved: CartItem[] = stored
-          .map(stored => {
-            const product = products.find(p => p.id === stored.productId);
-            const variant = product?.variants?.find(v => v.id === stored.variantId);
+          .map(s => {
+            const product = products.find(p => p.id === s.productId);
+            const variant = product?.variants?.find(v => v.id === s.variantId);
             if (!product || !variant) return null;
-            return { product, selectedVariant: variant, quantity: stored.quantity };
+            return { product, selectedVariant: variant, quantity: s.quantity };
           })
           .filter((item): item is CartItem => item !== null);
 
         this.resolvedItems.set(resolved);
       },
-      error: (err) => {
-        console.error('Error resolving cart items:', err);
-      }
+      error: (err) => console.error('Error resolving cart items:', err)
     });
   }
 
@@ -84,18 +72,15 @@ export class CartService {
     );
 
     if (existingIndex > -1) {
-      const updated = current.map((item, idx) =>
-        idx === existingIndex
-          ? { ...item, quantity: item.quantity + quantity }
-          : item
-      );
-      this.storedItems.set(updated);
+      this.storedItems.set(current.map((item, idx) =>
+        idx === existingIndex ? { ...item, quantity: item.quantity + quantity } : item
+      ));
     } else {
       this.storedItems.set([...current, { productId, variantId, quantity }]);
     }
 
     this.saveToStorage();
-    this.refreshResolvedItems(); // re-fetch para tener datos frescos
+    this.refreshResolvedItems();
   }
 
   updateQuantity(item: CartItem, change: number): void {
@@ -105,17 +90,14 @@ export class CartService {
     this.storedItems.update(items =>
       items.map(i =>
         i.productId === item.product.id && i.variantId === item.selectedVariant.id
-          ? { ...i, quantity: newQty }
-          : i
+          ? { ...i, quantity: newQty } : i
       )
     );
 
-    // Actualizar también resolvedItems localmente (sin re-fetch innecesario)
     this.resolvedItems.update(items =>
       items.map(i =>
         i.product.id === item.product.id && i.selectedVariant.id === item.selectedVariant.id
-          ? { ...i, quantity: newQty }
-          : i
+          ? { ...i, quantity: newQty } : i
       )
     );
 
@@ -150,19 +132,15 @@ export class CartService {
 
   private loadFromStorage(): CartStorage[] {
     if (!isPlatformBrowser(this.platformId)) return [];
-
     try {
       const currentVersion = localStorage.getItem(this.VERSION_KEY);
-
       if (currentVersion !== this.STORAGE_VERSION) {
         localStorage.removeItem(this.STORAGE_KEY);
         localStorage.setItem(this.VERSION_KEY, this.STORAGE_VERSION);
         return [];
       }
-
       const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-
     } catch {
       return [];
     }

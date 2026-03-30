@@ -1,171 +1,516 @@
 <div class="min-h-screen bg-[#FAFAF9] font-sans text-stone-800">
 
-  <header class="bg-white border-b border-stone-100 py-6 sticky top-0 z-10 shadow-sm/50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-      <h1 class="font-serif text-2xl tracking-widest uppercase">Tu Bolsa</h1>
-      <span class="text-sm text-stone-500">{{ totalItems() }} Artículos</span>
-    </div>
-  </header>
+<header class="bg-white border-b border-stone-100 py-4 sm:py-6 sticky top-0 z-10 shadow-sm/50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Volver + Título -->
+    <div class="flex items-center gap-3 sm:gap-4">
+      <a (click)="goBack()"
+        class="flex items-center justify-center w-8 h-8 text-stone-400 hover:text-stone-900 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+      </a>
+      <h1 class="font-serif text-xl sm:text-2xl tracking-widest uppercase">Tu Bolsa</h1>
+    </div>
+
+    <span class="text-xs sm:text-sm text-stone-500">{{ totalItems() }} Artículos</span>
+  </div>
+</header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
     <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-start">
 
-      <!-- COLUMNA IZQUIERDA -->
-      <section class="lg:col-span-8">
+    <!-- COLUMNA IZQUIERDA -->
+    <section class="lg:col-span-8">
 
-        @if (cartItems().length > 0) {
+      @if (cartItems().length > 0) {
 
-          <!-- Barra seleccionar todo -->
-          <div class="flex items-center gap-3 mb-5 px-1">
-            <input
-              type="checkbox"
-              id="select-all"
-              class="w-4 h-4 accent-stone-900 cursor-pointer"
-              [checked]="allAvailableSelected"
-              (change)="toggleAll()"
-            />
-            <label for="select-all" class="text-xs uppercase tracking-widest text-stone-500 cursor-pointer select-none">
-              Seleccionar todo ({{ availableItems().length }} disponibles)
-            </label>
-            <span class="ml-auto text-xs text-stone-400">
-              {{ selectedItems().length }} seleccionados
-            </span>
-          </div>
+        <!-- Barra seleccionar todo -->
+        <div class="flex items-center gap-3 mb-4 sm:mb-5 px-1">
+          <input type="checkbox" id="select-all"
+            class="w-4 h-4 accent-stone-900 cursor-pointer"
+            [checked]="allAvailableSelected"
+            (change)="toggleAll()"/>
+          <label for="select-all" class="text-[11px] sm:text-xs uppercase tracking-widest text-stone-500 cursor-pointer select-none">
+            Seleccionar todo ({{ availableItems().length }} disponibles)
+          </label>
+          <span class="ml-auto text-[11px] sm:text-xs text-stone-400 whitespace-nowrap">
+            {{ selectedItems().length }} seleccionados
+          </span>
+        </div>
 
-          <div class="space-y-4">
-            @for (item of cartItems(); track item.selectedVariant.id) {
+        <!-- Items del carrito -->
+        <div class="space-y-3 sm:space-y-4">
+          @for (item of cartItems(); track item.selectedVariant.id) {
+            <div class="bg-white p-4 sm:p-6 shadow-sm border transition-all hover:shadow-md flex gap-3 sm:gap-4"
+                [class.border-stone-900]="isSelected(item)"
+                [class.border-stone-100]="!isSelected(item)"
+                [class.opacity-60]="item.selectedVariant.stock === 0">
 
-              <div class="bg-white p-6 rounded-none shadow-sm border transition-all hover:shadow-md flex gap-4"
-                   [class.border-stone-900]="isSelected(item)"
-                   [class.border-stone-100]="!isSelected(item)"
-                   [class.opacity-60]="item.selectedVariant.stock === 0">
+              <div class="flex items-start pt-1 flex-shrink-0">
+                <input type="checkbox" class="w-4 h-4 accent-stone-900"
+                  [checked]="isSelected(item)"
+                  [disabled]="item.selectedVariant.stock === 0"
+                  [class.cursor-not-allowed]="item.selectedVariant.stock === 0"
+                  [class.cursor-pointer]="item.selectedVariant.stock > 0"
+                  (change)="toggleItem(item)"/>
+              </div>
 
-                <!-- Checkbox -->
-                <div class="flex items-start pt-1 flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    class="w-4 h-4 accent-stone-900"
-                    [checked]="isSelected(item)"
-                    [disabled]="item.selectedVariant.stock === 0"
-                    [class.cursor-not-allowed]="item.selectedVariant.stock === 0"
-                    [class.cursor-pointer]="item.selectedVariant.stock > 0"
-                    (change)="toggleItem(item)"
-                  />
-                </div>
+              <div class="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-stone-50 relative overflow-hidden group">
+                <img [src]="getItemImage(item)" [alt]="item.product.name"
+                    class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+                    [class.grayscale]="item.selectedVariant.stock === 0">
+                @if (item.selectedVariant.stock === 0) {
+                  <div class="absolute inset-0 bg-stone-900/40 flex items-center justify-center">
+                    <span class="bg-white text-stone-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 sm:px-3 sm:py-1 shadow-lg">
+                      Agotado
+                    </span>
+                  </div>
+                }
+              </div>
 
-                <!-- Imagen -->
-                <div class="w-28 h-28 flex-shrink-0 bg-stone-50 relative overflow-hidden group">
-                  <img [src]="item.product.images[0].url" [alt]="item.product.name"
-                       class="w-full h-full object-cover object-center mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
-                       [class.grayscale]="item.selectedVariant.stock === 0">
-                  @if (item.selectedVariant.stock === 0) {
-                    <div class="absolute inset-0 bg-stone-900/40 flex items-center justify-center">
-                      <span class="bg-white text-stone-900 text-[10px] font-bold uppercase tracking-widest px-3 py-1 shadow-lg">
-                        Agotado
+              <div class="flex-1 flex flex-col justify-between min-w-0">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="min-w-0 flex-1">
+                    <a [href]="'/products/' + item.product.id" class="hover:underline">
+                      <h3 class="font-serif text-base sm:text-lg truncate"
+                          [class.text-stone-900]="item.selectedVariant.stock > 0"
+                          [class.text-stone-400]="item.selectedVariant.stock === 0">
+                        {{ item.product.name }}
+                      </h3>
+                    </a>
+
+                    @if (item.selectedVariant.stock === 0) {
+                      <div class="mt-1 flex items-center gap-1.5 text-rose-600">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                        </span>
+                        <p class="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">No disponible</p>
+                      </div>
+                    }
+
+                    <p class="text-xs text-stone-500 mt-1 line-clamp-1 hidden sm:block">{{ item.product.description }}</p>
+
+                    <div class="flex items-center mt-2 sm:mt-3 gap-2 bg-stone-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full w-fit">
+                      <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-stone-200 shadow-sm flex-shrink-0"
+                            [style.background-color]="item.selectedVariant.toneCode"></span>
+                      <span class="text-[10px] sm:text-xs font-bold text-stone-700 uppercase tracking-wide">
+                        {{ item.selectedVariant.toneName }}
                       </span>
                     </div>
-                  }
-                </div>
-
-                <!-- Detalles -->
-                <div class="flex-1 flex flex-col justify-between min-w-0">
-                  <div class="flex justify-between items-start gap-2">
-                    <div class="min-w-0">
-                      <a [href]="'/products/' + item.product.id" class="hover:underline">
-                        <h3 class="font-serif text-lg truncate"
-                            [class.text-stone-900]="item.selectedVariant.stock > 0"
-                            [class.text-stone-400]="item.selectedVariant.stock === 0">
-                          {{ item.product.name }}
-                        </h3>
-                      </a>
-
-                      @if (item.selectedVariant.stock === 0) {
-                        <div class="mt-1 flex items-center gap-1.5 text-rose-600">
-                          <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                          </span>
-                          <p class="text-[11px] font-bold uppercase tracking-tight">No disponible</p>
-                        </div>
-                      }
-
-                      <p class="text-xs text-stone-500 mt-1 line-clamp-1">{{ item.product.description }}</p>
-
-                      <div class="flex items-center mt-3 gap-2 bg-stone-50 px-3 py-1.5 rounded-full w-fit">
-                        <span class="w-4 h-4 rounded-full border border-stone-200 shadow-sm"
-                              [style.background-color]="item.selectedVariant.toneCode"></span>
-                        <span class="text-xs font-bold text-stone-700 uppercase tracking-wide">
-                          {{ item.selectedVariant.toneName }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="text-right flex-shrink-0">
-                      <p class="font-medium text-lg"
-                         [class.text-stone-900]="item.selectedVariant.stock > 0"
-                         [class.text-stone-400]="item.selectedVariant.stock === 0">
-                        S/. {{ (item.selectedVariant.price * item.quantity).toFixed(2) }}
-                      </p>
-                      @if (item.quantity > 1) {
-                        <p class="text-xs text-stone-400 mt-1">S/. {{ item.selectedVariant.price }} c/u</p>
-                      }
-                    </div>
                   </div>
 
-                  <!-- Controles -->
-                  <div class="flex justify-between items-end mt-4 pt-4 border-t border-dashed border-stone-100">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center border border-stone-200 rounded-full px-2 py-1 bg-white"
-                           [class.opacity-40]="item.selectedVariant.stock === 0">
-                        <button (click)="updateQuantity(item, -1)"
-                                class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
-                                [disabled]="item.quantity <= 1 || item.selectedVariant.stock === 0">-</button>
-                        <span class="mx-2 text-sm font-medium w-4 text-center tabular-nums">
-                          {{ item.selectedVariant.stock === 0 ? 0 : item.quantity }}
-                        </span>
-                        <button (click)="updateQuantity(item, 1)"
-                                class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
-                                [disabled]="item.quantity >= item.selectedVariant.stock">+</button>
-                      </div>
-
-                      @if (item.selectedVariant.stock === 0) {
-                        <span class="text-[10px] text-rose-500 font-bold uppercase">Sin existencias</span>
-                      } @else if (item.quantity >= item.selectedVariant.stock) {
-                        <span class="text-[10px] text-orange-400 font-medium">Máx. stock</span>
-                      }
-                    </div>
-
-                    <button (click)="removeItem(item)"
-                            class="text-xs text-stone-400 hover:text-rose-500 uppercase tracking-wider underline decoration-stone-200 hover:decoration-rose-300 transition-all">
-                      Eliminar
-                    </button>
+                  <div class="text-right flex-shrink-0">
+                    <p class="font-medium text-base sm:text-lg"
+                      [class.text-stone-900]="item.selectedVariant.stock > 0"
+                      [class.text-stone-400]="item.selectedVariant.stock === 0">
+                      S/. {{ (item.selectedVariant.price * item.quantity).toFixed(2) }}
+                    </p>
+                    @if (item.quantity > 1) {
+                      <p class="text-[10px] sm:text-xs text-stone-400 mt-1">S/. {{ item.selectedVariant.price }} c/u</p>
+                    }
                   </div>
                 </div>
 
+                <div class="flex justify-between items-end mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-dashed border-stone-100">
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex items-center border border-stone-200 rounded-full px-1.5 sm:px-2 py-1 bg-white"
+                        [class.opacity-40]="item.selectedVariant.stock === 0">
+                      <button (click)="updateQuantity(item, -1)"
+                              class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                              [disabled]="item.quantity <= 1 || item.selectedVariant.stock === 0">-</button>
+                      <span class="mx-1.5 sm:mx-2 text-sm font-medium w-4 text-center tabular-nums">
+                        {{ item.selectedVariant.stock === 0 ? 0 : item.quantity }}
+                      </span>
+                      <button (click)="updateQuantity(item, 1)"
+                              class="text-stone-400 hover:text-rose-500 transition-colors w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                              [disabled]="item.quantity >= item.selectedVariant.stock">+</button>
+                    </div>
+                    @if (item.selectedVariant.stock === 0) {
+                      <span class="text-[10px] text-rose-500 font-bold uppercase hidden sm:inline">Sin existencias</span>
+                    } @else if (item.quantity >= item.selectedVariant.stock) {
+                      <span class="text-[10px] text-orange-400 font-medium hidden sm:inline">Máx. stock</span>
+                    }
+                  </div>
+                  <button (click)="removeItem(item)"
+                          class="text-[11px] sm:text-xs text-stone-400 hover:text-rose-500 uppercase tracking-wider underline decoration-stone-200 hover:decoration-rose-300 transition-all">
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            }
-          </div>
-
-        } @else {
-          <div class="text-center py-20 bg-white border border-stone-100 shadow-sm">
-            <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-              </svg>
             </div>
-            <p class="text-stone-400 font-serif italic text-xl">Tu bolsa de belleza está vacía.</p>
-            <button class="mt-4 text-rose-500 text-xs uppercase tracking-widest hover:underline font-bold">Descubrir Novedades</button>
+          }
+        </div>
+
+        <!-- ══ SECCIÓN REGALOS ══ debajo de los items -->
+        @if (cartItems().length > 0) {
+          <div class="mt-4 sm:mt-6">
+
+            <!-- Separador con título -->
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex-1 border-t border-dashed border-stone-200"></div>
+              <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-stone-100 shadow-sm">
+                <span class="text-sm">🎁</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Tus regalos</span>
+              </div>
+              <div class="flex-1 border-t border-dashed border-stone-200"></div>
+            </div>
+
+            <!-- Niveles de regalo -->
+            <div class="space-y-3">
+              <ng-container *ngTemplateOutlet="giftLevel; context: { tier: 'basic', label: 'Básico' }"></ng-container>
+              <ng-container *ngTemplateOutlet="giftLevel; context: { tier: 'medio', label: 'Medio' }"></ng-container>
+              <ng-container *ngTemplateOutlet="giftLevel; context: { tier: 'pro',   label: 'Pro' }"></ng-container>
+            </div>
+
           </div>
         }
 
-      </section>
+      } @else {
+        <div class="text-center py-16 sm:py-20 bg-white border border-stone-100 shadow-sm">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 sm:w-8 sm:h-8 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+          </div>
+          <p class="text-stone-400 font-serif italic text-lg sm:text-xl">Tu bolsa de belleza está vacía.</p>
+          <button class="mt-4 text-rose-500 text-xs uppercase tracking-widest hover:underline font-bold">Descubrir Novedades</button>
+        </div>
+      }
+
+    </section>
+
+
+    <!-- ══ TEMPLATE NIVEL DE REGALO ══ -->
+    <ng-template #giftLevel let-tier="tier" let-label="label">
+      @let unlocked  = isLevelUnlocked(tier);
+      @let products  = getGiftProducts(tier);
+      @let selected  = getSelectedGift(tier);
+
+      <!-- Mismo card shell que los items del carrito -->
+      <div class="bg-white border shadow-sm transition-all"
+        [class.border-stone-100]="!unlocked"
+        [class.border-stone-200]="unlocked && !selected"
+        [class.border-stone-900]="unlocked && !!selected"
+        [class.opacity-60]="!unlocked">
+
+        <div class="p-4 sm:p-5 flex gap-3 sm:gap-4">
+
+          <!-- Icono regalo (ocupa el lugar del checkbox + imagen) -->
+          <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <!-- Simula el checkbox area -->
+            <div class="w-4 h-4 mt-1 flex items-center justify-center">
+              @if (unlocked && selected) {
+                <svg class="w-4 h-4 text-stone-700" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              } @else {
+                <div class="w-4 h-4 border border-stone-200 rounded-sm"
+                  [class.border-dashed]="!unlocked"></div>
+              }
+            </div>
+
+            <!-- Imagen del regalo seleccionado o placeholder -->
+            <div class="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-stone-50 relative overflow-hidden border border-stone-100"
+              [class.border-dashed]="!unlocked || !selected">
+              @if (selected) {
+                <img [src]="getGiftImage(selected.product)" [alt]="selected.product.name"
+                  class="w-full h-full object-cover object-center mix-blend-multiply">
+              } @else {
+                <!-- Placeholder con lazo -->
+                <div class="w-full h-full flex flex-col items-center justify-center gap-1"
+                  [class.opacity-30]="!unlocked">
+                  <span class="text-2xl sm:text-3xl leading-none">🎁</span>
+                  <span class="text-[8px] text-stone-400 font-medium uppercase tracking-wide text-center px-1">
+                    {{ unlocked ? 'Elige' : 'Bloqueado' }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Info del nivel + productos -->
+          <div class="flex-1 flex flex-col justify-between min-w-0">
+
+            <!-- Cabecera: nombre nivel + estado -->
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-serif text-base sm:text-lg text-stone-900">
+                    Regalo {{ label }}
+                  </h3>
+                  @if (!unlocked) {
+                    <span class="text-[9px] text-stone-400 font-medium flex items-center gap-1 flex-shrink-0">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                      </svg>
+                      @if (tier === 'basic') { Agrega productos }
+                      @if (tier === 'medio') { Falta S/. {{ amountToUnlock('medio') }} }
+                      @if (tier === 'pro')   { Falta S/. {{ amountToUnlock('pro') }} }
+                    </span>
+                  }
+                </div>
+
+                @if (selected) {
+                  <!-- Nombre y tono del regalo elegido -->
+                  <p class="text-xs text-stone-500 mt-1 line-clamp-1">{{ selected.product.description }}</p>
+                  <div class="flex items-center mt-2 gap-2 bg-stone-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full w-fit">
+                    @let selVariant = getVariantById(selected.product, selected.variantId);
+                    <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-stone-200 shadow-sm flex-shrink-0"
+                          [style.background-color]="selVariant?.toneCode"></span>
+                    <span class="text-[10px] sm:text-xs font-bold text-stone-700 uppercase tracking-wide">
+                      {{ selVariant?.toneName }}
+                    </span>
+                  </div>
+                } @else if (unlocked) {
+                  <p class="text-xs text-stone-400 mt-1">Selecciona un regalo gratuito</p>
+                } @else {
+                  <p class="text-xs text-stone-300 mt-1 hidden sm:block">Desbloquea comprando más</p>
+                }
+              </div>
+
+              <!-- Precio "gratis" alineado a la derecha igual que el precio del item -->
+              @if (unlocked) {
+                <div class="text-right flex-shrink-0">
+                  <p class="font-medium text-base sm:text-lg text-stone-300 line-through text-[11px]">S/. —</p>
+                  <p class="text-xs font-bold text-stone-500 uppercase tracking-wide mt-0.5">Gratis 🎁</p>
+                </div>
+              }
+            </div>
+
+            <!-- Separador + grid de productos -->
+            <div class="pt-3 border-t border-dashed border-stone-100">
+
+              @if (!unlocked) {
+                <!-- Barra de progreso sutil -->
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-0.5 bg-stone-100 overflow-hidden">
+                    <div class="h-full bg-stone-300 transition-all duration-500"
+                      [style.width]="tier === 'medio'
+                        ? ((subtotal() / 30) * 100) + '%'
+                        : ((subtotal() / 50) * 100) + '%'">
+                    </div>
+                  </div>
+                  <span class="text-[9px] text-stone-400 whitespace-nowrap flex-shrink-0">
+                    @if (tier === 'basic') { S/. {{ subtotal().toFixed(2) }} / cualquier monto }
+                    @if (tier === 'medio') { S/. {{ subtotal().toFixed(2) }} / S/. 30.00 }
+                    @if (tier === 'pro')   { S/. {{ subtotal().toFixed(2) }} / S/. 50.00 }
+                  </span>
+                </div>
+              }
+
+              @if (unlocked) {
+                <!-- Scroll horizontal de productos (mismo feeling que miniaturas) -->
+                <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width: none;">
+                  @for (gift of products; track gift.id) {
+                    @let hasStock  = hasAnyStock(gift);
+                    @let isChosen  = isGiftSelected(tier, gift.id);
+
+                    <button
+                      (click)="hasStock ? openGiftModal(tier, gift) : null"
+                      class="group flex-shrink-0 flex flex-col border-2 transition-all duration-200 overflow-hidden w-16 sm:w-20"
+                      [class.border-stone-900]="isChosen"
+                      [class.border-transparent]="!isChosen"
+                      [class.opacity-40]="!hasStock"
+                      [class.cursor-not-allowed]="!hasStock"
+                      [class.cursor-pointer]="hasStock"
+                      [title]="gift.name">
+
+                      <div class="w-full aspect-square bg-stone-50 relative overflow-hidden">
+                        <img [src]="getGiftImage(gift)" [alt]="gift.name"
+                          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          [class.grayscale]="!hasStock">
+
+                        @if (!hasStock) {
+                          <div class="absolute inset-0 bg-stone-900/40 flex items-center justify-center">
+                            <span class="bg-white text-stone-900 text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 shadow">
+                              Agotado
+                            </span>
+                          </div>
+                        }
+
+                        @if (isChosen) {
+                          <div class="absolute top-0 right-0 w-4 h-4 bg-stone-900 flex items-center justify-center">
+                            <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                          </div>
+                        }
+
+                        @if (hasStock && (gift.variants?.length ?? 0) > 1) {
+                          <div class="absolute bottom-0 left-0 right-0 bg-black/40 text-[6px] text-white font-bold text-center py-0.5 tracking-wide">
+                            {{ gift.variants?.length }} tonos
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Nombre mini igual que miniaturas del detalle -->
+                      <div class="bg-white px-1 py-1 border-t border-stone-100"
+                        [class.bg-stone-50]="isChosen">
+                        <p class="text-[7px] sm:text-[8px] font-medium text-stone-500 line-clamp-1 text-center leading-tight">
+                          {{ gift.name }}
+                        </p>
+                      </div>
+                    </button>
+                  }
+
+                  @if (products.length === 0) {
+                    <p class="text-[10px] text-stone-400 italic py-2">Sin regalos disponibles</p>
+                  }
+                </div>
+
+                <!-- Acción -->
+                <div class="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-stone-100">
+                  @if (selected) {
+                    <button (click)="removeGift(tier)"
+                      class="text-[11px] sm:text-xs text-stone-400 hover:text-rose-500 uppercase tracking-wider underline decoration-stone-200 hover:decoration-rose-300 transition-all">
+                      Quitar regalo
+                    </button>
+                  } @else {
+                    <span class="text-[11px] text-stone-400 italic">Ninguno elegido aún</span>
+                  }
+                  <span class="text-[10px] text-stone-400 font-medium">{{ products.length }} disponibles</span>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+
+    <!-- ══════════════════════════════════
+        MODAL SELECTOR DE VARIANTE
+    ══════════════════════════════════ -->
+    @if (modal().open) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        (click)="closeModal()">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+
+        <div class="relative z-10 w-full max-w-xs sm:max-w-sm md:max-w-md bg-white shadow-xl overflow-hidden"
+          (click)="$event.stopPropagation()">
+
+          <!-- Imagen grande — mismo aspect que imagen principal del detalle de producto -->
+          <div class="relative overflow-hidden bg-stone-50" style="aspect-ratio: 4/5; max-height: 52vh;">
+            <img [src]="getModalPreviewImage()" [alt]="modal().product?.name"
+              class="w-full h-full object-cover transition-opacity duration-200">
+
+            <!-- Gratis badge -->
+            <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 shadow-sm border border-stone-100">
+              <span class="text-sm leading-none">🎁</span>
+              <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-600">Regalo Gratuito</span>
+            </div>
+
+            <button (click)="closeModal()"
+              class="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors shadow-sm border border-stone-100">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Info — mismo layout que columna derecha del detalle -->
+          <div class="p-5 sm:p-6 space-y-4 bg-white">
+
+            <!-- Título -->
+            <div>
+              <span class="text-xs font-bold text-stone-400 uppercase tracking-widest">
+                Regalo {{ modal().tier === 'basic' ? 'Básico' : modal().tier === 'medio' ? 'Medio' : 'Pro' }}
+              </span>
+              <h3 class="font-serif text-xl sm:text-2xl text-stone-900 mt-1 leading-tight">
+                {{ modal().product?.name }}
+              </h3>
+              @if (getModalPreviewVariant()) {
+                <p class="text-base font-light text-stone-500 mt-1">
+                  {{ getModalPreviewVariant()?.toneName }}
+                </p>
+              }
+            </div>
+
+            <!-- Selector de variantes — igual que el detalle de producto -->
+            @if ((modal().product?.variants?.length ?? 0) > 1) {
+              <div>
+                <div class="flex justify-between mb-3">
+                  <span class="text-xs font-bold uppercase tracking-widest text-stone-900">Tono</span>
+                  <span class="text-xs font-normal text-stone-500">
+                    {{ getModalPreviewVariant()?.toneName || 'Selecciona un tono' }}
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  @for (variant of modal().product?.variants; track variant.id) {
+                    @let available = variant.stock > 0;
+                    @let isActive  = modal().previewVariantId === variant.id;
+
+                    <button
+                      (click)="available ? setPreviewVariant(variant.id) : null"
+                      class="w-8 h-8 rounded-full border shadow-sm relative transition-all focus:outline-none"
+                      [class.ring-2]="isActive"
+                      [class.ring-offset-2]="isActive"
+                      [class.ring-gray-900]="isActive && available"
+                      [class.ring-red-400]="isActive && !available"
+                      [class.border-gray-200]="!isActive"
+                      [class.opacity-40]="!available && !isActive"
+                      [class.cursor-not-allowed]="!available"
+                      [style.background-color]="variant.toneCode || '#e5e7eb'"
+                      [title]="variant.toneName + (!available ? ' — Agotado' : '')">
+
+                      <!-- X agotado -->
+                      @if (!available) {
+                        <span class="absolute inset-0 flex items-center justify-center">
+                          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                          </svg>
+                        </span>
+                      }
+                      <!-- Check seleccionado -->
+                      @if (isActive && available) {
+                        <span class="absolute inset-0 flex items-center justify-center">
+                          <svg class="w-4 h-4 drop-shadow" viewBox="0 0 20 20" fill="white">
+                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                          </svg>
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+
+                <!-- Stock info igual que detalle producto -->
+                @if (getModalPreviewVariant()) {
+                  <p class="text-xs mt-2">
+                    @if ((getModalPreviewVariant()?.stock ?? 0) === 0) {
+                      <span class="text-red-500">Agotado</span>
+                    } @else if ((getModalPreviewVariant()?.stock ?? 0) <= 5) {
+                      <span class="text-orange-500">¡Solo quedan {{ getModalPreviewVariant()?.stock }} unidades!</span>
+                    } @else {
+                      <span class="text-green-600">Disponible ({{ getModalPreviewVariant()?.stock }} unidades)</span>
+                    }
+                  </p>
+                }
+              </div>
+            }
+
+            <!-- CTA — igual que "Añadir a la bolsa" -->
+            <button (click)="confirmGiftSelection()"
+              class="w-full bg-black text-white text-xs font-bold uppercase tracking-[0.15em] hover:bg-gray-800 transition-all py-3 min-h-[44px]">
+              Añadir como regalo
+            </button>
+
+          </div>
+        </div>
+      </div>
+    }
 
       <!-- COLUMNA DERECHA: RESUMEN -->
-      <section class="lg:col-span-4 mt-10 lg:mt-0">
-        <div class="bg-white p-8 border border-stone-100 sticky top-28 shadow-sm">
-          <h2 class="font-serif text-xl mb-6 border-b border-stone-100 pb-4">Resumen del Pedido</h2>
+      <!-- En mobile va debajo, en lg va sticky al lado -->
+      <section class="lg:col-span-4 mt-6 sm:mt-8 lg:mt-0">
+        <div class="bg-white p-5 sm:p-8 border border-stone-100 lg:sticky lg:top-28 shadow-sm">
+          <h2 class="font-serif text-lg sm:text-xl mb-4 sm:mb-6 border-b border-stone-100 pb-3 sm:pb-4">Resumen del Pedido</h2>
 
-          <div class="space-y-4 text-sm text-stone-600">
+          <div class="space-y-3 sm:space-y-4 text-sm text-stone-600">
             <div class="flex justify-between">
               <span>Subtotal
                 <span class="text-stone-400 text-xs">({{ selectedItems().length }} items)</span>
@@ -174,30 +519,33 @@
             </div>
           </div>
 
-          <div class="border-t border-stone-100 mt-6 pt-4 flex justify-between items-center">
-            <span class="font-serif text-lg text-stone-900">Total</span>
-            <span class="font-bold text-xl text-stone-900">S/. {{ total().toFixed(2) }}</span>
+          <div class="border-t border-stone-100 mt-4 sm:mt-6 pt-3 sm:pt-4 flex justify-between items-center">
+            <span class="font-serif text-base sm:text-lg text-stone-900">Total</span>
+            <span class="font-bold text-lg sm:text-xl text-stone-900">S/. {{ total().toFixed(2) }}</span>
           </div>
 
-          <button (click)="goToPay()"
-                  class="w-full mt-8 bg-stone-900 text-white py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-900"
-                  [disabled]="selectedItems().length === 0">
-            Ir a Pagar ({{ selectedItems().length }})
-          </button>
+          <!-- Botones CTA: en mobile lado a lado, en sm apilados -->
+          <div class="mt-5 sm:mt-8 flex flex-col gap-3">
+            <button (click)="goToPay()"
+                    class="w-full bg-stone-900 text-white py-3.5 sm:py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-rose-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-900 min-h-[44px]"
+                    [disabled]="selectedItems().length === 0">
+              Cotizar por Wsp ({{ selectedItems().length }})
+            </button>
 
-          <button (click)="generateProformaPDF()"
-                  class="w-full mt-4 bg-white border-2 border-stone-900 text-stone-900 py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-stone-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  [disabled]="selectedItems().length === 0">
-            📄 Prefactura ({{ selectedItems().length }})
-          </button>
+            <button (click)="generateProformaPDF()"
+                    class="w-full bg-white border-2 border-stone-900 text-stone-900 py-3.5 sm:py-4 px-6 text-xs uppercase tracking-[0.2em] hover:bg-stone-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                    [disabled]="selectedItems().length === 0">
+              📄 Descargar Proforma ({{ selectedItems().length }})
+            </button>
+          </div>
 
-          <div class="mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
-  <p class="text-xs text-amber-700 font-medium">
-    * Pedido mínimo: S/ 20.00
-  </p>
-</div>
+          <div class="mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+            <p class="text-xs text-amber-700 font-medium">
+              * Pedido mínimo: S/ 20.00
+            </p>
+          </div>
 
-          <div class="mt-6 flex justify-center gap-4 opacity-40 grayscale">
+          <div class="mt-5 sm:mt-6 flex justify-center gap-4 opacity-40 grayscale">
             <div class="h-6 w-10 bg-stone-200 rounded"></div>
             <div class="h-6 w-10 bg-stone-200 rounded"></div>
             <div class="h-6 w-10 bg-stone-200 rounded"></div>
@@ -207,95 +555,80 @@
 
     </div>
 
-<section class="mt-6 bg-pink-50 border border-pink-200 rounded-2xl p-5">
-  <h2 class="text-lg font-bold text-pink-700 mb-4">
-    💖 Preguntas Frecuentes
-  </h2>
+    <!-- FAQ -->
+    <section class="mt-6 bg-pink-50 border border-pink-200 rounded-2xl p-4 sm:p-5">
+      <h2 class="text-base sm:text-lg font-bold text-pink-700 mb-3 sm:mb-4">
+        💖 Preguntas Frecuentes
+      </h2>
 
-  <div class="space-y-3">
+      <div class="space-y-2 sm:space-y-3">
 
-    <!-- Pedido mínimo -->
-    <details class="group bg-white rounded-xl border border-pink-100 p-3">
-      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
-        🌸 ¿Cuál es el pedido mínimo?
-        <span class="transition-transform group-open:rotate-180">⌄</span>
-      </summary>
-      <p class="mt-2 text-sm text-slate-700">
-        Bella, el pedido mínimo es de <span class="font-semibold">S/ 20.00</span> 🤗
-      </p>
-    </details>
-
-    <!-- Pago en partes -->
-    <details class="group bg-white rounded-xl border border-pink-100 p-3">
-      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
-        💄 ¿Puedo pagar en partes para separar mis productos?
-        <span class="transition-transform group-open:rotate-180">⌄</span>
-      </summary>
-
-      <div class="mt-2 text-sm text-slate-700 space-y-2">
-        <p>¡Sí! Puedes pagar lo que vas agregando ✨</p>
-
-        <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100">
-          <p>Ejemplo:</p>
-          <p>• Corrector + Labiales + Uñas = <b>S/ 11.50</b></p>
-          <p>Pagas S/ 11.50 💕</p>
-
-          <p class="mt-1">Luego agregas:</p>
-          <p>• Delineador = <b>S/ 12.00</b></p>
-          <p>Pagas S/ 12.00 ✨</p>
-
-          <p class="mt-2 font-medium text-pink-600">
-            Total: S/ 23.50 ✅ Listo para enviar
+        <details class="group bg-white rounded-xl border border-pink-100 p-3">
+          <summary class="cursor-pointer font-semibold text-pink-600 text-sm list-none flex justify-between items-center gap-2">
+            🌸 ¿Cuál es el pedido mínimo?
+            <span class="transition-transform group-open:rotate-180 flex-shrink-0">⌄</span>
+          </summary>
+          <p class="mt-2 text-sm text-slate-700">
+            Bella, el pedido mínimo es de <span class="font-semibold">S/ 20.00</span> 🤗
           </p>
-          <p>Puedes seguir agregando más 🤗</p>
-        </div>
+        </details>
+
+        <details class="group bg-white rounded-xl border border-pink-100 p-3">
+          <summary class="cursor-pointer font-semibold text-pink-600 text-sm list-none flex justify-between items-center gap-2">
+            💄 ¿Puedo pagar en partes para separar mis productos?
+            <span class="transition-transform group-open:rotate-180 flex-shrink-0">⌄</span>
+          </summary>
+          <div class="mt-2 text-sm text-slate-700 space-y-2">
+            <p>¡Sí! Puedes pagar lo que vas agregando ✨</p>
+            <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100">
+              <p>Ejemplo:</p>
+              <p>• Corrector + Labiales + Uñas = <b>S/ 11.50</b></p>
+              <p>Pagas S/ 11.50 💕</p>
+              <p class="mt-1">Luego agregas:</p>
+              <p>• Delineador = <b>S/ 12.00</b></p>
+              <p>Pagas S/ 12.00 ✨</p>
+              <p class="mt-2 font-medium text-pink-600">Total: S/ 23.50 ✅ Listo para enviar</p>
+              <p>Puedes seguir agregando más 🤗</p>
+            </div>
+          </div>
+        </details>
+
+        <details class="group bg-white rounded-xl border border-pink-100 p-3">
+          <summary class="cursor-pointer font-semibold text-pink-600 text-sm list-none flex justify-between items-center gap-2">
+            🚚 ¿Cómo funcionan los envíos?
+            <span class="transition-transform group-open:rotate-180 flex-shrink-0">⌄</span>
+          </summary>
+          <div class="mt-2 text-sm text-slate-700 space-y-2">
+            <p>Enviamos por <span class="font-semibold">Shalom</span> a Lima y todo Perú 🇵🇪</p>
+            <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100 space-y-1">
+              <p><b>Costo desde S/ 8.00</b> (según tamaño del paquete):</p>
+              <p>• XXS: S/ 8</p>
+              <p>• XS: S/ 10</p>
+              <p>• S: S/ 12</p>
+              <p>• M: S/ 14</p>
+              <p class="mt-1">El costo aumenta según la cantidad de productos ✨</p>
+            </div>
+            <p>Con Shalom puedes rastrear tu pedido 📦</p>
+            <p>El envío se paga directamente en la agencia al recibir el producto.</p>
+            <p>Debe recibirlo una persona mayor de edad.</p>
+          </div>
+        </details>
+
+        <details class="group bg-white rounded-xl border border-pink-100 p-3">
+          <summary class="cursor-pointer font-semibold text-pink-600 text-sm list-none flex justify-between items-center gap-2">
+            💳 ¿Cómo realizo mi pago?
+            <span class="transition-transform group-open:rotate-180 flex-shrink-0">⌄</span>
+          </summary>
+          <div class="mt-2 text-sm text-slate-700 space-y-2">
+            <p>Todo pago se coordina por WhatsApp 🤍</p>
+            <p>Puedes pagar con <b>Yape</b> o <b>Plin</b>.</p>
+            <p>Envía la captura del pago para confirmar tu pedido ✨</p>
+          </div>
+        </details>
+
       </div>
-    </details>
+    </section>
 
-    <!-- Envíos -->
-    <details class="group bg-white rounded-xl border border-pink-100 p-3">
-      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
-        🚚 ¿Cómo funcionan los envíos?
-        <span class="transition-transform group-open:rotate-180">⌄</span>
-      </summary>
-
-      <div class="mt-2 text-sm text-slate-700 space-y-2">
-        <p>Enviamos por <span class="font-semibold">Shalom</span> a Lima y todo Perú 🇵🇪</p>
-
-        <div class="bg-pink-50 rounded-lg p-3 text-xs border border-pink-100 space-y-1">
-          <p><b>Costo desde S/ 8.00</b> (según tamaño del paquete):</p>
-          <p>• XXS: S/ 8</p>
-          <p>• XS: S/ 10</p>
-          <p>• S: S/ 12</p>
-          <p>• M: S/ 14</p>
-          <p class="mt-1">El costo aumenta según la cantidad de productos ✨</p>
-        </div>
-
-        <p>Con Shalom puedes rastrear tu pedido 📦</p>
-        <p>El envío se paga directamente en la agencia al recibir el producto.</p>
-        <p>Debe recibirlo una persona mayor de edad.</p>
-      </div>
-    </details>
-
-    <!-- Pagos -->
-    <details class="group bg-white rounded-xl border border-pink-100 p-3">
-      <summary class="cursor-pointer font-semibold text-pink-600 list-none flex justify-between items-center">
-        💳 ¿Cómo realizo mi pago?
-        <span class="transition-transform group-open:rotate-180">⌄</span>
-      </summary>
-
-      <div class="mt-2 text-sm text-slate-700 space-y-2">
-        <p>Todo pago se coordina por WhatsApp 🤍</p>
-        <p>Puedes pagar con <b>Yape</b> o <b>Plin</b>.</p>
-        <p>Envía la captura del pago para confirmar tu pedido ✨</p>
-      </div>
-    </details>
-
-  </div>
-</section>
-
-    
   </main>
 
-  
 </div>

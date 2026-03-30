@@ -1,12 +1,15 @@
 import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product.service';
-import { Product } from '../../models/product.model';
 import { Router } from '@angular/router';
 import { map, Observable, startWith, Subscription } from 'rxjs';
-import { ProductImage } from '../../models/product-image.model';
 import { environment } from '../../../../../environments/environment';
-import {ProductCard} from '../product-card/product-card';
+import { ProductCard } from '../product-card/product-card';
+
+import { ProductResponseFull } from '../../models/product-response-full.model';
+import { VariantImageResponse } from '../../models/variant-image.model';
+import { PageResponse } from '../../../../shared/models/page-response.model';
+import { VariantResponseFull } from '../../models/variant-response-full.model';
 
 @Component({
   selector: 'app-product-carrusel',
@@ -14,20 +17,19 @@ import {ProductCard} from '../product-card/product-card';
   templateUrl: './product-carrusel.html',
   styleUrl: './product-carrusel.scss',
 })
-export class ProductCarrusel  implements OnInit, OnDestroy {
+export class ProductCarrusel implements OnInit, OnDestroy {
+
   @Input() labelId?: string = "1";
   @Input() labelName?: string = "Productos";
 
-  // Referencia al contenedor del slider para hacer scroll
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   private subscription?: Subscription;
   apiImageServer = environment.apiImageServer;
 
-  products$!: Observable<Product[]>;
+  products$!: Observable<PageResponse<ProductResponseFull>>;
   isLoading$!: Observable<boolean>;
 
-  // Estado para controlar índice de imagen y hover
   currentImageIndex: Record<number, number> = {};
   hoveringControls: Record<number, boolean> = {};
   errorMessage = '';
@@ -35,7 +37,7 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
   constructor(
     private productService: ProductService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.resetState();
@@ -43,9 +45,7 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscription?.unsubscribe();
   }
 
   resetState(): void {
@@ -55,61 +55,64 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
   }
 
   loadProducts(): void {
-    const products$ = this.productService.getProductsByLabel(this.labelId); // Mantenemos tu lógica original
+    const products$ = this.productService.getProducts(0, 10);
     this.products$ = products$;
+
     this.isLoading$ = products$.pipe(
       map(() => false),
       startWith(true)
     );
   }
 
-  // --- Lógica del Scroll Horizontal (Slider) ---
+  // --- SCROLL ---
   scrollLeft(): void {
-    if (this.scrollContainer) {
-      this.scrollContainer.nativeElement.scrollBy({ left: -340, behavior: 'smooth' });
-    }
+    this.scrollContainer?.nativeElement.scrollBy({ left: -340, behavior: 'smooth' });
   }
 
   scrollRight(): void {
-    if (this.scrollContainer) {
-      this.scrollContainer.nativeElement.scrollBy({ left: 340, behavior: 'smooth' });
-    }
+    this.scrollContainer?.nativeElement.scrollBy({ left: 340, behavior: 'smooth' });
   }
 
-  // --- Manejo de Imágenes ---
+  // --- IMÁGENES (desde variants) ---
+  getProductImages(product: ProductResponseFull): VariantImageResponse[] {
+    const images = product.variants?.flatMap(
+      (v: VariantResponseFull) => v.images || []
+    ) || [];
+
+    if (images.length > 0) return images;
+
+    return [{
+      id: 0,
+      variantId: 0,
+      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image',
+      position: 0,
+      mainImage: true
+    }];
+  }
+
   handleImageError(event: any) {
     event.target.src = 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image';
   }
 
-  getProductImages(product: Product): ProductImage[] {
-    if (product.images && product.images.length > 0) {
-      return product.images;
-    }
-    return [{
-      id: 0,
-      mainImage: true,
-      productId: 0,
-      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
-    }];
-  }
-
-  // --- Lógica del Carrusel Interno de la Card ---
-  nextImage(event: Event, product: Product) {
-    event.stopPropagation(); // Importante: evita que el click dispare viewProductDetail
-    event.preventDefault();
-
-    const images = this.getProductImages(product);
-    const currentIndex = this.currentImageIndex[product.id] || 0;
-    this.currentImageIndex[product.id] = (currentIndex + 1) % images.length;
-  }
-
-  prevImage(event: Event, product: Product) {
+  // --- CAROUSEL INTERNO ---
+  nextImage(event: Event, product: ProductResponseFull) {
     event.stopPropagation();
     event.preventDefault();
 
     const images = this.getProductImages(product);
-    const currentIndex = this.currentImageIndex[product.id] || 0;
-    this.currentImageIndex[product.id] = (currentIndex - 1 + images.length) % images.length;
+    const index = this.currentImageIndex[product.id] || 0;
+
+    this.currentImageIndex[product.id] = (index + 1) % images.length;
+  }
+
+  prevImage(event: Event, product: ProductResponseFull) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const images = this.getProductImages(product);
+    const index = this.currentImageIndex[product.id] || 0;
+
+    this.currentImageIndex[product.id] = (index - 1 + images.length) % images.length;
   }
 
   setHoverControl(productId: number, isHovering: boolean) {
@@ -120,36 +123,39 @@ export class ProductCarrusel  implements OnInit, OnDestroy {
     return !!this.hoveringControls[productId];
   }
 
-  viewProductDetail(product: Product) {
+  viewProductDetail(product: ProductResponseFull) {
     this.router.navigate(['/products', product.id]);
   }
 
-  // --- Helpers de Precios y Stock ---
-  getProductPriceRange(product: Product): string {
-    if (!product.variants || product.variants.length === 0) {
-      return product.basePrice ? `S/. ${product.basePrice.toFixed(2)}` : 'N/A';
-    }
-    const prices = product.variants.map(v => v.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+  // --- PRECIO (desde variantes) ---
+  getProductPrice(product: ProductResponseFull): string {
+    const variants = product.variants || [];
 
-    if (minPrice === maxPrice) {
-      return `S/. ${minPrice.toFixed(2)}`;
-    }
-    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
+    if (variants.length === 0) return 'N/A';
+
+    const min = Math.min(
+      ...variants.map((v: VariantResponseFull) => v.price)
+    );
+
+    return `S/. ${min.toFixed(2)}`;
   }
 
-  getTotalStock(product: Product): number {
-    if (!product.variants || product.variants.length === 0) return 0;
-    return product.variants.reduce((sum, v) => sum + v.stock, 0);
+  // --- STOCK ---
+  getTotalStock(product: ProductResponseFull): number {
+  const variants = product.variants || [];
+
+    return variants.reduce(
+      (sum: number, v: VariantResponseFull) => sum + v.stock,
+      0
+    );
   }
 
-  hasLowStock(product: Product): boolean {
+  hasLowStock(product: ProductResponseFull): boolean {
     const total = this.getTotalStock(product);
     return total > 0 && total < 10;
   }
 
-  isOutOfStock(product: Product): boolean {
+  isOutOfStock(product: ProductResponseFull): boolean {
     return this.getTotalStock(product) === 0;
   }
 }

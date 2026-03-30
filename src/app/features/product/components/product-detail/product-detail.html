@@ -1,226 +1,210 @@
 <div class="bg-white text-gray-800 font-sans selection:bg-gray-100 min-h-screen flex flex-col">
+  <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow">
 
-    <div class="container mx-auto px-6 py-10 flex-grow">
+    <!-- Vista detalle -->
+    <div class="animate-fade-in pb-8 sm:pb-12" *ngIf="product$ | async as product">
+      <div *ngIf="!(isLoading$ | async) && !errorMessage">
 
-        <!-- ================= CÓDIGO VISTA DETALLE ================= -->
-        <div class="animate-fade-in pb-12" *ngIf="product$ | async as product">
-            <!-- Ahora 'product' está disponible en todo este bloque -->
-            
-            <div *ngIf="!(isLoading$ | async) && !errorMessage">
-                <!-- Solo muestra el contenido si no está cargando y no hay error -->
+        <!-- Botón Volver -->
+        <button (click)="goBack()"
+          class="mb-5 sm:mb-8 flex items-center gap-2 text-xs font-light uppercase tracking-widest text-gray-500 hover:text-black transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Volver al catálogo
+        </button>
 
-                <!-- Botón Volver -->
-                <button (click)="goBack()"
-                    class="mb-8 flex items-center gap-2 text-xs font-light uppercase tracking-widest text-gray-500 hover:text-black transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 lg:gap-20">
+
+          <!-- COLUMNA IZQUIERDA: GALERÍA -->
+          <div class="flex flex-col gap-3 sm:gap-4">
+
+            <!-- Imagen Principal -->
+            <div class="aspect-[3/4] sm:aspect-[4/5] bg-gray-50 overflow-hidden relative">
+              <img
+                [src]="getActiveImages()[activeImageIndex].url"
+                class="w-full h-full object-cover animate-fade-in"
+                [alt]="product.name">
+            </div>
+
+            <!-- Miniaturas -->
+            <div class="flex gap-2 sm:gap-4 overflow-x-auto pb-1 sm:pb-2" *ngIf="getActiveImages().length > 1">
+              <button
+                *ngFor="let img of getActiveImages(); let i = index"
+                (click)="activeImageIndex = i"
+                class="w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 border transition-all duration-300"
+                [class.border-black]="activeImageIndex === i"
+                [class.border-transparent]="activeImageIndex !== i"
+                [class.opacity-50]="activeImageIndex !== i">
+                <img [src]="img.url" class="w-full h-full object-cover" [alt]="product.name + ' ' + (i + 1)">
+              </button>
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: INFORMACIÓN -->
+          <div class="flex flex-col justify-center gap-4 sm:gap-0">
+
+            <!-- Categoría -->
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest sm:mb-2">
+              <ng-container *ngIf="categories$ | async as categories">
+                {{ getCategoryName(product.categoryId, categories) }}
+              </ng-container>
+            </span>
+
+            <!-- Título -->
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 sm:mb-4 tracking-wide uppercase leading-tight">
+              {{ product.name }}
+            </h2>
+
+            <!-- Precio -->
+            <p class="text-lg sm:text-xl font-normal text-gray-900 sm:mb-6">
+              <ng-container *ngIf="selectedVariant; else noVariantPrice">
+                S/. {{ selectedVariant.price.toFixed(2) }}
+                <span class="text-sm text-gray-500 font-light ml-2">{{ selectedVariant.toneCode }}</span>
+              </ng-container>
+              <ng-template #noVariantPrice>
+                <span class="text-gray-400 text-sm">Selecciona un tono</span>
+              </ng-template>
+            </p>
+
+            <!-- Descripción -->
+            <div class="text-sm font-light text-gray-600 leading-relaxed sm:mb-8">
+              <p>{{ product.fullDescription || product.description || 'Sin descripción disponible.' }}</p>
+            </div>
+
+            <!-- Selector de Variantes -->
+            <div *ngIf="product.variants?.length" class="sm:mb-8">
+              <div class="flex justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-widest text-gray-900">Tono</span>
+                <span class="text-xs font-normal text-gray-500">
+                  {{ selectedVariant?.toneName || 'Selecciona un tono' }}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2 sm:gap-3">
+                <button
+                  *ngFor="let variant of product.variants | sortBy:'position'"
+                  (click)="selectVariant(variant)"
+                  class="w-9 h-9 sm:w-8 sm:h-8 rounded-full border shadow-sm relative transition-all focus:outline-none cursor-pointer"
+                  [class.border-gray-200]="!isVariantSelected(variant)"
+                  [class.ring-2]="isVariantSelected(variant)"
+                  [class.ring-offset-2]="isVariantSelected(variant)"
+                  [class.ring-red-400]="isVariantSelected(variant) && variant.stock === 0"
+                  [class.ring-gray-900]="isVariantSelected(variant) && variant.stock > 0"
+                  [class.opacity-40]="variant.stock === 0 && !isVariantSelected(variant)"
+                  [style.background-color]="variant.toneCode || '#e5e7eb'"
+                  [title]="variant.toneName + ' (' + variant.toneCode + ') — ' + (variant.stock > 0 ? 'Stock: ' + variant.stock : 'Agotado')">
+
+                  <!-- Check: variante seleccionada con stock -->
+                  <span *ngIf="isVariantSelected(variant) && variant.stock > 0"
+                    class="absolute inset-0 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white" class="w-4 h-4 drop-shadow">
+                      <path fill-rule="evenodd"
+                        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                        clip-rule="evenodd" />
                     </svg>
-                    Volver al catálogo
+                  </span>
+
+                  <!-- X: agotado -->
+                  <span *ngIf="variant.stock === 0"
+                    class="absolute inset-0 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                      class="w-4 h-4 text-gray-400">
+                      <path
+                        d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                    </svg>
+                  </span>
                 </button>
+              </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-
-                    <!-- 1. COLUMNA IZQUIERDA: GALERÍA -->
-                    <div class="flex flex-col gap-4">
-                        <!-- Imagen Principal -->
-                        <div class="aspect-[4/5] bg-gray-50 overflow-hidden relative">
-                            <img [src]="getProductImages(product)[activeImageIndex].url" 
-                                 class="w-full h-full object-cover animate-fade-in"
-                                 [alt]="product.name">
-                        </div>
-
-                        <!-- Miniaturas (Thumbnails) -->
-                        <div class="flex gap-4 overflow-x-auto pb-2" *ngIf="getProductImages(product).length > 1">
-                            <button *ngFor="let img of getProductImages(product); let i = index" 
-                                    (click)="activeImageIndex = i"
-                                    class="w-20 h-24 flex-shrink-0 border transition-all duration-300"
-                                    [class.border-black]="activeImageIndex === i"
-                                    [class.border-transparent]="activeImageIndex !== i"
-                                    [class.opacity-50]="activeImageIndex !== i">
-                                <img [src]="img.url" class="w-full h-full object-cover" [alt]="product.name">
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 2. COLUMNA DERECHA: INFORMACIÓN -->
-                    <div class="flex flex-col justify-center">
-
-                        <!-- Categoría -->
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-                            <ng-container *ngIf="categories$ | async as categories">
-                                {{ getCategoryName(product.categoryId, categories) }}
-                            </ng-container>
-                        </span>
-
-                        <!-- Título -->
-                        <h2 class="text-3xl md:text-4xl font-light text-gray-900 mb-4 tracking-wide uppercase">
-                            {{ product.name }}
-                        </h2>
-
-                        <!-- Precio (de la variante seleccionada o basePrice) -->
-                        <p class="text-xl font-normal text-gray-900 mb-6">
-                            <ng-container *ngIf="selectedVariant">
-                                S/. {{ selectedVariant.price.toFixed(2) }}
-                                <span class="text-sm text-gray-500 font-light ml-2">{{ selectedVariant.toneCode }}</span>
-                            </ng-container>
-                            <ng-container *ngIf="!selectedVariant && product.basePrice">
-                                S/. {{ product.basePrice.toFixed(2) }}
-                            </ng-container>
-                        </p>
-
-                        <!-- Descripción Larga -->
-                        <div class="text-sm font-light text-gray-600 leading-relaxed mb-8">
-                            <p>{{ product.fullDescription || product.description || 'Sin descripción disponible.' }}</p>
-                        </div>
-
-                        <!-- Selector de Variantes (Tonos) -->
-                        <div *ngIf="product.variants && product.variants.length > 0" class="mb-8">
-                            <div class="flex justify-between mb-3">
-                                <span class="text-xs font-bold uppercase tracking-widest text-gray-900">Tono</span>
-                                <span class="text-xs font-normal text-gray-500">
-                                    {{ selectedVariant?.toneName || 'Selecciona un tono' }}
-                                </span>
-                            </div>
-
-                            <div class="flex flex-wrap gap-3">
-                                <button *ngFor="let variant of product.variants | sortBy:'position'" 
-                                        (click)="selectVariant(variant)"
-                                        class="w-8 h-8 rounded-full border shadow-sm relative transition-all focus:outline-none"
-                                        [class.border-gray-200]="!isVariantSelected(variant)"
-                                        [class.hover:scale-110]="variant.stock > 0"
-                                        [class.ring-2]="isVariantSelected(variant) && variant.stock > 0" 
-                                        [class.ring-offset-2]="isVariantSelected(variant) && variant.stock > 0"
-                                        [class.ring-gray-900]="isVariantSelected(variant) && variant.stock > 0"
-                                        [class.opacity-40]="variant.stock === 0"
-                                        [class.cursor-not-allowed]="variant.stock === 0"
-                                        [class.cursor-pointer]="variant.stock > 0"
-                                        [style.background-color]="variant.toneCode || '#e5e7eb'"
-                                        [title]="variant.toneName + ' (' + variant.toneCode + ')' + ' - ' + (variant.stock > 0 ? 'Stock: ' + variant.stock : 'Agotado')">
-                                    
-                                    <!-- Checkmark para variante seleccionada -->
-                                    <span *ngIf="isVariantSelected(variant) && variant.stock > 0"
-                                          class="absolute inset-0 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white" class="w-4 h-4 drop-shadow">
-                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-
-                                    <!-- X para variantes agotadas -->
-                                    <span *ngIf="variant.stock === 0"
-                                          class="absolute inset-0 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
-                                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                                        </svg>
-                                    </span>
-                                </button>
-                            </div>
-
-                            <!-- Mensaje de stock -->
-                            <p class="text-xs text-gray-500 mt-2" *ngIf="selectedVariant">
-                                <span *ngIf="selectedVariant.stock === 0" class="text-red-500">Agotado</span>
-                                <span *ngIf="selectedVariant.stock > 0 && selectedVariant.stock <= 5" class="text-orange-500">
-                                    ¡Solo quedan {{ selectedVariant.stock }} unidades!
-                                </span>
-                                <span *ngIf="selectedVariant.stock > 5" class="text-green-600">
-                                    Disponible ({{ selectedVariant.stock }} unidades)
-                                </span>
-                            </p>
-                        </div>
-
-                        <!-- Selector de Cantidad y Botón de Compra -->
-                        <div class="flex gap-4 mb-6">
-                            <!-- Input Cantidad -->
-                            <div class="flex items-center border border-gray-200 w-32">
-                                <button class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
-                                        (click)="decreaseQuantity()">-</button>
-                                <span class="flex-grow text-center text-sm font-medium">{{ quantity }}</span>
-                                <button class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
-                                        (click)="increaseQuantity()"
-                                        [disabled]="selectedVariant && quantity >= selectedVariant.stock"
-                                        [class.opacity-30]="selectedVariant && quantity >= selectedVariant.stock"
-                                        [class.cursor-not-allowed]="selectedVariant && quantity >= selectedVariant.stock">+</button>
-                            </div>
-
-                            <!-- Botón CTA -->
-                            <button (click)="addToCart()"
-                                class="flex-grow bg-black text-white text-xs font-bold uppercase tracking-[0.15em] hover:bg-gray-800 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed py-3"
-                                [disabled]="!canAddToCart()">
-                                {{ !canAddToCart() ? 'No disponible' : 'Añadir a la bolsa' }}
-                            </button>
-                        </div>
-
-                        <!-- Información Extra (Iconos) -->
-                        <div class="border-t border-gray-100 pt-6 space-y-3">
-                            <div class="flex items-center gap-3 text-xs text-gray-500 uppercase tracking-wider">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                    stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                                </svg>
-                                Envíos a todo el perú
-                            </div>
-                            <div class="flex items-center gap-3 text-xs text-gray-500 uppercase tracking-wider">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                    stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 12.75L11.25 15 15 9.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
-                                </svg>
-                                Stock Actualizado
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ================= FIN CÓDIGO VISTA DETALLE ================= -->
-
-        <!-- Loading State -->
-        <div *ngIf="isLoading$ | async" class="text-center py-20">
-            <p class="text-gray-400 uppercase tracking-widest text-sm">Cargando producto...</p>
-        </div>
-
-        <!-- Error State -->
-        <div *ngIf="errorMessage && !(isLoading$ | async)" class="text-center py-20">
-            <p class="text-red-500 uppercase tracking-widest text-sm mb-4">{{ errorMessage }}</p>
-            <button (click)="retryLoad()" 
-                    class="text-xs underline text-gray-500 hover:text-black mr-4">
-                Reintentar
-            </button>
-            <button (click)="goBack()" 
-                    class="text-xs underline text-gray-500 hover:text-black">
-                Volver al catálogo
-            </button>
-        </div>
-
-        <div
-        *ngIf="showToast"
-        class="fixed top-6 right-6 z-50 flex items-center gap-3 
-                bg-white/90 backdrop-blur-md border border-green-200
-                text-green-700 px-5 py-4 rounded-xl shadow-xl text-sm
-                animate-fade-in"
-        >
-            <div class="w-8 h-8 flex items-center justify-center rounded-full bg-green-100">
-                ✓
+              <!-- Mensaje de stock -->
+              <p class="text-xs mt-2" *ngIf="selectedVariant">
+                <span *ngIf="selectedVariant.stock === 0" class="text-red-500">Agotado</span>
+                <span *ngIf="selectedVariant.stock > 0 && selectedVariant.stock <= 5" class="text-orange-500">
+                  ¡Solo quedan {{ selectedVariant.stock }} unidades!
+                </span>
+                <span *ngIf="selectedVariant.stock > 5" class="text-green-600">
+                  Disponible ({{ selectedVariant.stock }} unidades)
+                </span>
+              </p>
             </div>
 
-            <div>
-                <p class="font-semibold">Agregado al carrito</p>
-                <p class="text-xs text-gray-500">
-                    {{ this.currentProduct?.name }} · {{ selectedVariant?.toneName }} (x{{ quantity }})
-                </p>
+            <!-- Cantidad + CTA -->
+            <div class="flex gap-3 sm:gap-4 sm:mb-6">
+              <div class="flex items-center border border-gray-200 w-28 sm:w-32 flex-shrink-0">
+                <button
+                  (click)="decreaseQuantity()"
+                  class="w-9 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                  [class.opacity-30]="quantity <= 1"
+                  [disabled]="quantity <= 1">−</button>
+                <span class="flex-grow text-center text-sm font-medium">{{ quantity }}</span>
+                <button
+                  (click)="increaseQuantity()"
+                  class="w-9 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                  [disabled]="selectedVariant ? quantity >= selectedVariant.stock : false"
+                  [class.opacity-30]="selectedVariant ? quantity >= selectedVariant.stock : false"
+                  [class.cursor-not-allowed]="selectedVariant ? quantity >= selectedVariant.stock : false">+</button>
+              </div>
+
+              <button
+                (click)="addToCart()"
+                class="flex-grow bg-black text-white text-xs font-bold uppercase tracking-[0.15em] hover:bg-gray-800 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed py-3 min-h-[44px]"
+                [disabled]="!canAddToCart()">
+                {{ canAddToCart() ? 'Añadir a la bolsa' : 'No disponible' }}
+              </button>
             </div>
 
-            <!-- Botón de cierre -->
-            <button
-                (click)="dismissToast()"
-                class="ml-2 text-gray-400 hover:text-gray-600 transition-colors leading-none"
-                aria-label="Cerrar"
-            >
-                ✕
-            </button>
+            <!-- Info extra -->
+            <div class="border-t border-gray-100 pt-4 sm:pt-6 space-y-3">
+              <div class="flex items-center gap-3 text-xs text-gray-500 uppercase tracking-wider">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                </svg>
+                Envíos a todo el Perú
+              </div>
+              <div class="flex items-center gap-3 text-xs text-gray-500 uppercase tracking-wider">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+                </svg>
+                Stock Actualizado
+              </div>
+            </div>
+          </div>
         </div>
-
+      </div>
     </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading$ | async" class="text-center py-16 sm:py-20">
+      <p class="text-gray-400 uppercase tracking-widest text-sm">Cargando producto...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage && !(isLoading$ | async)" class="text-center py-16 sm:py-20">
+      <p class="text-red-500 uppercase tracking-widest text-sm mb-4">{{ errorMessage }}</p>
+      <button (click)="retryLoad()" class="text-xs underline text-gray-500 hover:text-black mr-4">Reintentar</button>
+      <button (click)="goBack()" class="text-xs underline text-gray-500 hover:text-black">Volver al catálogo</button>
+    </div>
+
+    <!-- Toast -->
+    <div *ngIf="showToast"
+      class="fixed bottom-4 left-4 right-4 sm:top-6 sm:right-6 sm:left-auto sm:bottom-auto z-50 flex items-center gap-3 bg-white/90 backdrop-blur-md border border-green-200 text-green-700 px-4 sm:px-5 py-3 sm:py-4 rounded-xl shadow-xl text-sm animate-fade-in">
+      <div class="w-8 h-8 flex items-center justify-center rounded-full bg-green-100 font-bold flex-shrink-0">✓</div>
+      <div class="flex-grow min-w-0">
+        <p class="font-semibold">Agregado al carrito</p>
+        <p class="text-xs text-gray-500 truncate">
+          {{ currentProduct?.name }} · {{ selectedVariant?.toneName }} (x{{ quantity }})
+        </p>
+      </div>
+      <button (click)="dismissToast()"
+        class="ml-1 text-gray-400 hover:text-gray-600 transition-colors leading-none flex-shrink-0 p-1"
+        aria-label="Cerrar">✕</button>
+    </div>
+
+  </div>
 </div>

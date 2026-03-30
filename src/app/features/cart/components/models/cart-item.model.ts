@@ -1,8 +1,8 @@
-import { ProductVariant } from "../../../product/models/product-variant.model";
-import { Product} from "../../../product/models/product.model";
+import { ProductResponseFull } from "../../../product/models/product-response-full.model";
+import { VariantResponseFull } from "../../../product/models/variant-response-full.model";
 
 export interface CartItem {
-  product: Product;
-  selectedVariant: ProductVariant;
+  product: ProductResponseFull;
+  selectedVariant: VariantResponseFull;
   quantity: number;
 }

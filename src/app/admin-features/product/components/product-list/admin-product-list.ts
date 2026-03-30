@@ -1,419 +1,197 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormsModule } from '@angular/forms';
-import { catchError, finalize, of, forkJoin, switchMap, map, Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
-interface ProductResponseV2 {
+interface VariantImageResponse {
+  id: number;
+  variantId: number;
+  url: string;
+  position: number;
+  mainImage: boolean;
+}
+
+interface VariantResponseFull {
+  id: number;
+  toneName: string;
+  toneCode: string;
+  cost: number;
+  price: number;
+  stock: number;
+  position: number;
+  active: boolean;
+  images: VariantImageResponse[];
+}
+
+interface ProductResponseFull {
   id: number;
   name: string;
   description: string;
   fullDescription: string;
-  images: ProductImageResponse[];
+  label: string;
   active: boolean;
   categoryId: number;
-  variants: ProductVariantResponse[];
-  labels: LabelResponse[];
+  variants: VariantResponseFull[];
 }
 
-interface ProductImageResponse {
-  id: number;
-  url: string;
-  position: number;
-  mainImage: boolean;
-  productId: number;
-}
-
-interface ProductVariantResponse {
-  id: number;
-  toneName: string;
-  toneCode: string;
-  price: number;
-  stock: number;
-}
-
-interface CategoryResponse {
-  id: number;
-  name: string;
-  image: string;
-}
-
-interface LabelResponse {
-  id: number;
-  name: string;
-}
-
-interface ImageUploadResponse {
-  id: number;
-  category: string;
+interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
 }
 
 @Component({
   selector: 'app-admin-product-list',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule],
-  providers: [CurrencyPipe],
+  imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './admin-product-list.html',
   styleUrl: './admin-product-list.scss'
 })
 export class AdminProductList implements OnInit {
-  private http = inject(HttpClient);
-  private fb = inject(FormBuilder);
+  private http   = inject(HttpClient);
   private router = inject(Router);
+  private cdr    = inject(ChangeDetectorRef);
 
-  private apiUrl = environment.apiUrl;
-  private imageApiBase = environment.apiImageServer;
+  private apiUrl = `${environment.apiUrl}/products`;
 
-  products = signal<ProductResponseV2[]>([]);
-  categories = signal<CategoryResponse[]>([]);
-  labels = signal<LabelResponse[]>([]);
-  labelFilter = signal<string>('');
-  showCreateForm = signal<boolean>(false);
-  isSaving = signal<boolean>(false);
-  isLoadingProducts = signal<boolean>(false);
-  isLoadingCategories = signal<boolean>(false);
-  isLoadingLabels = signal<boolean>(false);
-  isUploadingImage = signal<boolean>(false);
+  products:      ProductResponseFull[] = [];
+  isLoading      = false;
 
-  selectedFile: File | null = null;
-  selectedFileName = signal<string>('');
-  imagePreview = signal<string>('');
-  tempVariants = signal<any[]>([]);
-  tempImages = signal<any[]>([]);
-  selectedLabels = signal<number[]>([]);
+  // Paginación
+  currentPage    = 0;
+  pageSize       = 10;
+  totalPages     = 0;
+  totalElements  = 0;
 
-  // ── Variant inline editing ──────────────────────────────────────────────────
-  editingTempVariantIndex = signal<number | null>(null);
-  editingTempVariant = signal<{ toneName: string; toneCode: string; price: number; stock: number } | null>(null);
-  // ───────────────────────────────────────────────────────────────────────────
-
-  productForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required]],
-    description: [''],
-    fullDescription: [''],
-    active: [true],
-    categoryId: [null, [Validators.required]]
-  });
-
-  filteredProducts = computed(() => {
-    const f = this.labelFilter().toLowerCase();
-    const list = this.products();
-    if (!f) return list;
-    return list.filter(p =>
-      p.name.toLowerCase().includes(f) ||
-      p.labels?.some(l => l.name.toLowerCase().includes(f)) ||
-      this.getCategoryName(p.categoryId).toLowerCase().includes(f)
-    );
-  });
+  // Búsqueda
+  searchTerm     = '';
+  private search$ = new Subject<string>();
+  isSearchMode   = false;
 
   ngOnInit() {
-    this.loadProducts();
-    this.loadCategories();
-    this.loadLabels();
-  }
+    this.loadProducts(0);
 
-  private uploadFile(file: File): Observable<string> {
-    this.isUploadingImage.set(true);
-    const formData = new FormData();
-    formData.append('category', 'products');
-    formData.append('file', file);
-
-    return this.http.post<ImageUploadResponse>(`${this.imageApiBase}/images`, formData).pipe(
-      map(res => `${this.imageApiBase}/images/${res.id}/file`),
-      catchError(() => of("https://placehold.co/600x800?text=Sin+Imagen")),
-      finalize(() => this.isUploadingImage.set(false))
-    );
-  }
-
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      this.selectedFileName.set(file.name);
-
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.imagePreview.set(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  addImageToList() {
-    if (!this.selectedFile) return;
-
-    const preview = URL.createObjectURL(this.selectedFile);
-    const hasMain = this.tempImages().some(img => img.mainImage);
-
-    this.tempImages.update(imgs => [...imgs, {
-      file: this.selectedFile,
-      preview,
-      mainImage: !hasMain,
-      position: imgs.length + 1
-    }]);
-
-    this.selectedFile = null;
-    this.selectedFileName.set('');
-    this.imagePreview.set('');
-  }
-
-  removeImageFromList(idx: number) {
-    this.tempImages.update(imgs => {
-      const newList = imgs.filter((_, i) => i !== idx);
-      if (imgs[idx].mainImage && newList.length > 0) newList[0].mainImage = true;
-      return newList.map((img, i) => ({ ...img, position: i + 1 }));
-    });
-  }
-
-  setMainInTemp(idx: number) {
-    this.tempImages.update(imgs => imgs.map((img, i) => ({ ...img, mainImage: i === idx })));
-  }
-
-  toggleLabel(labelId: number) {
-    this.selectedLabels.update(labels => {
-      if (labels.includes(labelId)) {
-        return labels.filter(id => id !== labelId);
+    this.search$.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      this.currentPage = 0;
+      if (term.trim()) {
+        this.isSearchMode = true;
+        this.searchProducts(term.trim(), 0);
       } else {
-        return [...labels, labelId];
+        this.isSearchMode = false;
+        this.loadProducts(0);
       }
     });
   }
 
-  isLabelSelected(labelId: number): boolean {
-    return this.selectedLabels().includes(labelId);
+  loadProducts(page: number) {
+    this.isLoading = true;
+    this.cdr.markForCheck();
+
+    this.http.get<PageResponse<ProductResponseFull>>(
+      `${this.apiUrl}/full?page=${page}&size=${this.pageSize}`
+    ).subscribe({
+      next: (res) => {
+        this.products      = res.content;
+        this.totalPages    = res.totalPages;
+        this.totalElements = res.totalElements;
+        this.currentPage   = res.number;
+        this.isLoading     = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  // ── Variant list management ─────────────────────────────────────────────────
+  searchProducts(q: string, page: number) {
+    this.isLoading = true;
+    this.cdr.markForCheck();
 
-  addVariantToList(name: string, code: string, price: string, stock: string) {
-    if (!name || !price) {
-      alert('Nombre y precio son obligatorios');
-      return;
-    }
-    this.tempVariants.update(v => [...v, {
-      toneName: name,
-      toneCode: code || '#000000',
-      price: +price,
-      stock: +stock || 0
-    }]);
+    this.http.get<PageResponse<ProductResponseFull>>(
+      `${this.apiUrl}/full/search?q=${encodeURIComponent(q)}&page=${page}&size=${this.pageSize}`
+    ).subscribe({
+      next: (res) => {
+        this.products      = res.content;
+        this.totalPages    = res.totalPages;
+        this.totalElements = res.totalElements;
+        this.currentPage   = res.number;
+        this.isLoading     = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  removeVariantFromList(idx: number) {
-    // Cancel edit if deleting the variant being edited
-    if (this.editingTempVariantIndex() === idx) {
-      this.cancelEditTempVariant();
-    }
-    this.tempVariants.update(v => v.filter((_, i) => i !== idx));
-    // Adjust editing index if needed
-    const editIdx = this.editingTempVariantIndex();
-    if (editIdx !== null && idx < editIdx) {
-      this.editingTempVariantIndex.set(editIdx - 1);
-    }
+  onSearchInput(term: string) {
+    this.search$.next(term);
   }
 
-  startEditTempVariant(index: number) {
-    const variant = this.tempVariants()[index];
-    if (!variant) return;
-    this.editingTempVariantIndex.set(index);
-    this.editingTempVariant.set({ ...variant });
-  }
-
-  cancelEditTempVariant() {
-    this.editingTempVariantIndex.set(null);
-    this.editingTempVariant.set(null);
-  }
-
-  saveEditTempVariant(index: number) {
-    const edited = this.editingTempVariant();
-    if (!edited) return;
-    if (!edited.toneName || !edited.price) {
-      alert('Nombre y precio son obligatorios');
-      return;
-    }
-    this.tempVariants.update(variants =>
-      variants.map((v, i) => i === index ? { ...edited } : v)
-    );
-    this.cancelEditTempVariant();
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────
-
-  saveProduct() {
-    if (this.productForm.invalid) {
-      alert('Por favor completa los campos obligatorios: Nombre y Categoría');
-      return;
-    }
-
-    this.isSaving.set(true);
-    this.productForm.disable();
-
-    const imageUploadTasks = this.tempImages().map(ti => this.uploadFile(ti.file));
-
-    if (imageUploadTasks.length === 0) {
-      const productRequest = {
-        ...this.productForm.getRawValue(),
-        images: [],
-        variants: this.tempVariants().map(v => ({
-          toneName: v.toneName,
-          toneCode: v.toneCode,
-          price: v.price,
-          stock: v.stock
-        })),
-        labelsIds: this.selectedLabels()
-      };
-
-      this.http.post<ProductResponseV2>(`${this.apiUrl}/products`, productRequest).pipe(
-        finalize(() => {
-          this.isSaving.set(false);
-          this.productForm.enable();
-        }),
-        catchError(err => {
-          console.error('Error guardando producto:', err);
-          alert('Error al guardar el producto');
-          return of(null);
-        })
-      ).subscribe(res => {
-        if (res) {
-          this.loadProducts();
-          this.resetForm();
-          alert('Producto creado exitosamente');
-        }
-      });
+  goToPage(page: number) {
+    if (page < 0 || page >= this.totalPages) return;
+    if (this.isSearchMode) {
+      this.searchProducts(this.searchTerm, page);
     } else {
-      forkJoin(imageUploadTasks).pipe(
-        switchMap((uploadedUrls: string[]) => {
-          const productRequest = {
-            ...this.productForm.getRawValue(),
-            images: uploadedUrls.map((url, index) => ({
-              url: url,
-              position: this.tempImages()[index].position,
-              mainImage: this.tempImages()[index].mainImage
-            })),
-            variants: this.tempVariants().map(v => ({
-              toneName: v.toneName,
-              toneCode: v.toneCode,
-              price: v.price,
-              stock: v.stock
-            })),
-            labelsIds: this.selectedLabels()
-          };
-          return this.http.post<ProductResponseV2>(`${this.apiUrl}/products`, productRequest);
-        }),
-        finalize(() => {
-          this.isSaving.set(false);
-          this.productForm.enable();
-        }),
-        catchError(err => {
-          console.error('Error guardando producto:', err);
-          alert('Error al guardar el producto');
-          return of(null);
-        })
-      ).subscribe(res => {
-        if (res) {
-          this.loadProducts();
-          this.resetForm();
-          alert('Producto creado exitosamente');
-        }
-      });
+      this.loadProducts(page);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  deleteProduct(id: number) {
-    if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
+  goToDetail(product: ProductResponseFull) {
+    this.router.navigate([`/admin/products/${product.id}`]);
+  }
 
-    this.http.delete(`${this.apiUrl}/products/${id}`).pipe(
-      catchError(err => {
-        console.error('Error eliminando producto:', err);
-        alert('Error al eliminar el producto');
-        return of(null);
-      })
-    ).subscribe(res => {
-      if (res !== null) {
-        this.products.update(l => l.filter(p => p.id !== id));
-        alert('Producto eliminado exitosamente');
-      }
+  goToCreateNewProduct() {
+    this.router.navigate([`/admin/products/new`]);
+  }
+
+  deleteProduct(id: number, event: Event) {
+    event.stopPropagation();
+    if (!confirm('¿Eliminar este producto?')) return;
+    this.http.delete(`${this.apiUrl}/${id}`).subscribe({
+      next: () => {
+        if (this.isSearchMode) {
+          this.searchProducts(this.searchTerm, this.currentPage);
+        } else {
+          this.loadProducts(this.currentPage);
+        }
+      },
+      error: (err) => { console.error(err); alert('Error al eliminar'); }
     });
   }
 
-  loadProducts() {
-    this.isLoadingProducts.set(true);
-    this.http.get<ProductResponseV2[]>(`${this.apiUrl}/products`)
-      .pipe(
-        finalize(() => this.isLoadingProducts.set(false)),
-        catchError(err => {
-          console.error('Error cargando productos:', err);
-          return of([]);
-        })
-      )
-      .subscribe(data => this.products.set(data));
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  getMainImage(product: ProductResponseFull): string {
+    for (const v of product.variants || []) {
+      const main = v.images?.find(i => i.mainImage);
+      if (main) return main.url;
+    }
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23e2e8f0" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-family="sans-serif" font-size="12"%3ESin imagen%3C/text%3E%3C/svg%3E';
   }
 
-  loadCategories() {
-    this.isLoadingCategories.set(true);
-    this.http.get<CategoryResponse[]>(`${this.apiUrl}/categories`)
-      .pipe(
-        finalize(() => this.isLoadingCategories.set(false)),
-        catchError(err => {
-          console.error('Error cargando categorías:', err);
-          return of([]);
-        })
-      )
-      .subscribe(data => this.categories.set(data));
+  getTotalStock(p: ProductResponseFull)  { return p.variants?.reduce((a, v) => a + v.stock, 0) || 0; }
+  getMinPrice(p: ProductResponseFull)    { return Math.min(...(p.variants?.map(v => v.price) || [0])); }
+  getMaxPrice(p: ProductResponseFull)    { return Math.max(...(p.variants?.map(v => v.price) || [0])); }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
   }
 
-  loadLabels() {
-    this.isLoadingLabels.set(true);
-    this.http.get<LabelResponse[]>(`${this.apiUrl}/labels`)
-      .pipe(
-        finalize(() => this.isLoadingLabels.set(false)),
-        catchError(err => {
-          console.error('Error cargando labels:', err);
-          return of([]);
-        })
-      )
-      .subscribe(data => this.labels.set(data));
-  }
-
-  selectProduct(p: ProductResponseV2) {
-    this.router.navigate([`/admin/products/${p.id}`]);
-  }
-
-  toggleCreateForm() {
-    this.showCreateForm.update(v => !v);
-    if (!this.showCreateForm()) this.resetForm();
-  }
-
-  resetForm() {
-    this.showCreateForm.set(false);
-    this.productForm.reset({ active: true });
-    this.tempVariants.set([]);
-    this.tempImages.set([]);
-    this.selectedLabels.set([]);
-    this.selectedFile = null;
-    this.selectedFileName.set('');
-    this.imagePreview.set('');
-    this.cancelEditTempVariant();
-  }
-
-  updateFilter(e: Event) {
-    this.labelFilter.set((e.target as HTMLInputElement).value);
-  }
-
-  getMainImage(p: ProductResponseV2) {
-    return p.images.find(i => i.mainImage)?.url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23e2e8f0" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-family="sans-serif" font-size="14"%3ESin imagen%3C/text%3E%3C/svg%3E';
-  }
-
-  getTotalStock(p: ProductResponseV2) {
-    return p.variants?.reduce((a, v) => a + v.stock, 0) || 0;
-  }
-
-  getPrecio(p: ProductResponseV2) {
-    return p.variants?.at(0)?.price || 0;
-  }
-
-  getCategoryName(id: number) {
-    return this.categories().find(c => c.id === id)?.name || 'N/A';
+  get visiblePages(): number[] {
+    return this.pages.filter(p => p >= this.currentPage - 2 && p <= this.currentPage + 2);
   }
 }

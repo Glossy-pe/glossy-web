@@ -3,9 +3,11 @@ export interface ProductVariant {
   productId: number;
   productName: string;
   toneName: string;
-  toneCode: string;  // En tu API es el color hex
+  toneCode: string;
   price: number;
-  position: number;
+  cost: number;
   stock: number;
-  colorHex?: string; // Campo opcional si lo quieres mantener separado
+  position: number;
+  active: boolean;
+  mainImageUrl: string | null;
 }

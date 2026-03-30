@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { OrderRequest, OrderResponse } from '../models/order.model';
 import { environment } from '../../../../environments/environment';
+import { PageResponse } from '../../../shared/models/page-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
@@ -11,9 +12,16 @@ export class OrderService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/orders`;
 
-  getAll(): Observable<OrderResponse[]> {
-    return this.http.get<OrderResponse[]>(this.apiUrl);
-  }
+  getAll(page = 0, size = 10, q = '', status = ''): Observable<PageResponse<OrderResponse>> {
+  const params = new URLSearchParams();
+  params.set('page', page.toString());
+  params.set('size', size.toString());
+  if (q) params.set('q', q);
+  if (status) params.set('status', status);
+  return this.http.get<PageResponse<OrderResponse>>(
+    `${this.apiUrl}?${params.toString()}`  // 👈 sin /orders
+  );
+}
 
   getById(id: number): Observable<OrderResponse> {
     return this.http.get<OrderResponse>(`${this.apiUrl}/${id}`);

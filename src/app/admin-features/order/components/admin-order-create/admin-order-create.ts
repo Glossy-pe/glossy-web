@@ -1,12 +1,48 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { ProductService } from '../../../../features/product/services/product.service';
+import { debounceTime, distinctUntilChanged, of, Subject, switchMap, catchError } from 'rxjs';
 import { OrderService } from '../../services/order.service';
-import { Product } from '../../../../features/product/models/product.model';
-import { ProductVariant } from '../../../../features/product/models/product-variant.model';
 import { OrderItemRequest, OrderRequest } from '../../models/order.model';
+import { environment } from '../../../../../environments/environment';
+
+interface VariantImageResponse {
+  id: number;
+  variantId: number;
+  url: string;
+  position: number;
+  mainImage: boolean;
+}
+
+interface VariantResponseFull {
+  id: number;
+  toneName: string;
+  toneCode: string;
+  cost: number;
+  price: number;
+  stock: number;
+  position: number;
+  active: boolean;
+  images: VariantImageResponse[];
+}
+
+interface ProductResponseFull {
+  id: number;
+  name: string;
+  description: string;
+  active: boolean;
+  categoryId: number;
+  variants: VariantResponseFull[];
+}
+
+interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+}
 
 interface CartItem {
   productVariantId: number;
@@ -14,57 +50,58 @@ interface CartItem {
   quantity: number;
   toneName: string;
   toneCode: string;
+  cost: number;
   price: number;
   productName: string;
   stock: number;
+  imageUrl: string | null;
 }
 
 export enum OrderStatus {
-  CREATED = 'CREATED',
-  CREADO = 'CREADO',
-  ACUMULANDO = 'ACUMULANDO',
+  CREATED           = 'CREATED',
+  CREADO            = 'CREADO',
+  ACUMULANDO        = 'ACUMULANDO',
   PENDIENTE_PACKAGE = 'PENDIENTE_PACKAGE',
-  PENDIENTE_ENVIO = 'PENDIENTE_ENVIO',
-  ENVIADO = 'ENVIADO',
-  PAID = 'PAID'
+  PENDIENTE_ENVIO   = 'PENDIENTE_ENVIO',
+  ENVIADO           = 'ENVIADO',
+  PAID              = 'PAID'
 }
 
 @Component({
   selector: 'app-admin-order-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './admin-order-create.html',
 })
-export class AdminOrderCreate implements OnInit {
+export class AdminOrderCreate {
 
-  private productService = inject(ProductService);
+  private http         = inject(HttpClient);
   private orderService = inject(OrderService);
-  private router = inject(Router);
+  private router       = inject(Router);
 
-  products = signal<Product[]>([]);
+  private apiUrl   = `${environment.apiUrl}/products`;
+  private search$  = new Subject<string>();
+
+  // ── Búsqueda ─────────────────────────────────────────────────────────────────
+  searchTerm      = signal('');
+  searchResults   = signal<ProductResponseFull[]>([]);
+  isSearching     = signal(false);
+  selectedProduct = signal<ProductResponseFull | null>(null);
+  selectedVariant = signal<VariantResponseFull | null>(null);
+  quantity        = signal(1);
+  stockError      = signal('');
+
+  // ── Carrito ──────────────────────────────────────────────────────────────────
   cart = signal<CartItem[]>([]);
 
-  isLoadingProducts = signal(true);
-  isSaving = signal(false);
-
-  searchTerm = signal('');
-  selectedProduct = signal<Product | null>(null);
-  selectedVariant = signal<ProductVariant | null>(null);
-  quantity = signal(1);
-  stockError = signal('');
-  customerName = signal('');
+  // ── Cliente ──────────────────────────────────────────────────────────────────
+  customerName    = signal('');
   customerAddress = signal('');
 
-  // Productos filtrados por búsqueda
-  filteredProducts = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    if (!term) return this.products();
-    return this.products().filter(p =>
-      p.name.toLowerCase().includes(term)
-    );
-  });
+  // ── UI ───────────────────────────────────────────────────────────────────────
+  isSaving = signal(false);
 
-  // Stock disponible real (descontando lo que ya está en carrito)
+  // ── Computed ─────────────────────────────────────────────────────────────────
   availableStock = computed(() => {
     const variant = this.selectedVariant();
     if (!variant) return 0;
@@ -76,6 +113,10 @@ export class AdminOrderCreate implements OnInit {
     this.cart().reduce((acc, item) => acc + item.price * item.quantity, 0)
   );
 
+  costTotal = computed(() =>
+    this.cart().reduce((acc, item) => acc + item.cost * item.quantity, 0)
+  );
+
   canSave = computed(() =>
     this.cart().length > 0 &&
     this.customerName().trim().length > 0 &&
@@ -83,29 +124,63 @@ export class AdminOrderCreate implements OnInit {
     !this.isSaving()
   );
 
-  ngOnInit() {
-    this.productService.getProducts().subscribe({
-      next: (data) => {
-        this.products.set(data);
-        this.isLoadingProducts.set(false);
-      },
-      error: () => this.isLoadingProducts.set(false)
+  constructor() {
+    this.search$.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (!term.trim()) {
+          this.searchResults.set([]);
+          return of(null);
+        }
+        this.isSearching.set(true);
+        return this.http.get<PageResponse<ProductResponseFull>>(
+          `${this.apiUrl}/full/search?q=${encodeURIComponent(term)}&size=20`
+        ).pipe(catchError(() => of(null)));
+      })
+    ).subscribe(res => {
+      this.isSearching.set(false);
+      if (res) this.searchResults.set(res.content);
     });
   }
 
-  selectProduct(product: Product) {
+  // ── Búsqueda ─────────────────────────────────────────────────────────────────
+
+  onSearchInput(term: string) {
+    this.searchTerm.set(term);
+    this.search$.next(term);
+    if (!term.trim()) this.selectedProduct.set(null);
+  }
+
+  selectProduct(product: ProductResponseFull) {
     this.selectedProduct.set(product);
     this.selectedVariant.set(null);
     this.quantity.set(1);
     this.stockError.set('');
     this.searchTerm.set('');
+    this.searchResults.set([]);
   }
 
-  selectVariant(variant: ProductVariant) {
+  selectVariant(variant: VariantResponseFull) {
     this.selectedVariant.set(variant);
     this.quantity.set(1);
     this.stockError.set('');
   }
+
+  resetSearch() {
+    this.searchTerm.set('');
+    this.searchResults.set([]);
+    this.selectedProduct.set(null);
+    this.selectedVariant.set(null);
+    this.stockError.set('');
+    this.quantity.set(1);
+  }
+
+  getMainImageFromVariant(variant: VariantResponseFull): string | null {
+    return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
+  }
+
+  // ── Carrito ──────────────────────────────────────────────────────────────────
 
   setQuantity(value: number) {
     const max = this.availableStock();
@@ -125,11 +200,13 @@ export class AdminOrderCreate implements OnInit {
     if (!variant || !product) return;
 
     if (this.quantity() > this.availableStock()) {
-      this.stockError.set(`Stock insuficiente. Máximo disponible: ${this.availableStock()}`);
+      this.stockError.set(`Stock insuficiente. Máximo: ${this.availableStock()}`);
       return;
     }
 
+    const imageUrl = this.getMainImageFromVariant(variant);
     const existing = this.cart().find(i => i.productVariantId === variant.id);
+
     if (existing) {
       this.cart.update(items =>
         items.map(i => i.productVariantId === variant.id
@@ -140,29 +217,25 @@ export class AdminOrderCreate implements OnInit {
     } else {
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
-        productId: variant.productId,
-        quantity: this.quantity(),
-        toneName: variant.toneName,
-        toneCode: variant.toneCode,
-        price: variant.price,
-        productName: product.name,
-        stock: variant.stock
+        productId:        product.id,
+        quantity:         this.quantity(),
+        toneName:         variant.toneName,
+        toneCode:         variant.toneCode,
+        cost:             variant.cost,
+        price:            variant.price,
+        productName:      product.name,
+        stock:            variant.stock,
+        imageUrl
       }]);
     }
 
-    this.selectedProduct.set(null);
-    this.selectedVariant.set(null);
-    this.quantity.set(1);
-    this.stockError.set('');
+    this.resetSearch();
   }
 
   updateCartQuantity(variantId: number, qty: number) {
     const item = this.cart().find(i => i.productVariantId === variantId);
-    if (!item) return;
-    if (qty < 1) return;
-    if (qty > item.stock) {
-      qty = item.stock;
-    }
+    if (!item || qty < 1) return;
+    if (qty > item.stock) qty = item.stock;
     this.cart.update(items =>
       items.map(i => i.productVariantId === variantId ? { ...i, quantity: qty } : i)
     );
@@ -172,19 +245,22 @@ export class AdminOrderCreate implements OnInit {
     this.cart.update(items => items.filter(i => i.productVariantId !== variantId));
   }
 
+  // ── Guardar ──────────────────────────────────────────────────────────────────
+
   saveOrder() {
     if (!this.canSave()) return;
     this.isSaving.set(true);
 
     const request: OrderRequest = {
-      customerName: this.customerName(),
+      customerName:    this.customerName(),
       customerAddress: this.customerAddress(),
-      status: OrderStatus.PENDIENTE_PACKAGE,
-      total: this.total(),
-      createdAt: new Date().toISOString(),
-      orderItems: this.cart().map(i => ({
+      status:          OrderStatus.PENDIENTE_PACKAGE,
+      total:           this.total(),
+      costTotal:       this.costTotal(),
+      createdAt:       new Date().toISOString(),
+      orderItems:      this.cart().map(i => ({
         productVariantId: i.productVariantId,
-        quantity: i.quantity
+        quantity:         i.quantity
       }))
     };
 
@@ -197,7 +273,5 @@ export class AdminOrderCreate implements OnInit {
     });
   }
 
-  goBack() {
-    this.router.navigate(['/admin/orders']);
-  }
+  goBack() { this.router.navigate(['/admin/orders']); }
 }

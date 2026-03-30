@@ -37,10 +37,10 @@
     <div #scrollContainer
          class="flex gap-3 md:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 md:pb-10 hide-scrollbar scroll-pl-4 md:scroll-pl-0">
 
-      <div *ngFor="let product of products$ | async"
-           class="flex-none w-[180px] xs:w-[220px] md:w-[300px] snap-start first:pl-0">
-         <app-product-card [product]="product" class="h-full block"></app-product-card>
-      </div>
+    <div *ngFor="let product of (products$ | async)?.content"
+        class="flex-none w-[180px] xs:w-[220px] md:w-[300px] snap-start first:pl-0">
+      <app-product-card [productResponseFull]="product" class="h-full block"></app-product-card>
+    </div>
 
       <div class="w-4 md:w-8 flex-none"></div>
     </div>

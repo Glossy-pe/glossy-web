@@ -6,6 +6,9 @@ import { Router } from '@angular/router';
 import { map, Observable, startWith, Subscription } from 'rxjs';
 import { ProductImage } from '../../models/product-image.model';
 import { environment } from '../../../../../environments/environment';
+import { VariantImageResponse } from '../../models/variant-image-response.model';
+import { ProductResponseFull } from '../../models/product-response-full.model';
+
 @Component({
   selector: 'app-product-card',
   imports: [CommonModule],
@@ -13,7 +16,7 @@ import { environment } from '../../../../../environments/environment';
   styleUrl: './product-card.scss',
 })
 export class ProductCard implements OnInit, OnDestroy{
-  @Input() product?: Product;
+  @Input() productResponseFull?: ProductResponseFull;
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -50,63 +53,77 @@ export class ProductCard implements OnInit, OnDestroy{
     event.target.src = 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image';
   }
 
-  getProductImages(product: Product): ProductImage[] {
-    if (product.images && product.images.length > 0) {
-      return product.images;
-    }
-    return [{
+  // getProductImages(productResponse: ProductResponse): VariantImageResponse[] {
+  //   if (productResponse.images && productResponse.images.length > 0) {
+  //     return productResponse.images;
+  //   }
+  //   return [{
+  //     id: 0,
+  //     mainImage: true,
+  //     productId: 0,
+  //     url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
+  //   }];
+  // }
+
+  getMainImage(productResponseFull: ProductResponseFull): VariantImageResponse {
+    const image = productResponseFull.variants
+      ?.flatMap(v => v.images || [])
+      ?.find(img => img.mainImage);
+
+    return image ?? {
       id: 0,
-      mainImage: true,
-      productId: 0,
-      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
-    }];
+      variantId: 0,
+      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image',
+      position: 1,
+      mainImage: true
+    };
   }
 
-  viewProductDetail(product: Product) {
-    this.router.navigate(['/products', product.id]);
+  viewProductDetail(productResponseFull: ProductResponseFull) {
+    this.router.navigate(['/products', productResponseFull.id]);
   }
 
   // --- Helpers de Precios y Stock ---
-  getProductPriceRange(product: Product): string {
-    if (!product.variants || product.variants.length === 0) {
-      return product.basePrice ? `$${product.basePrice.toFixed(2)}` : 'N/A';
-    }
-    const prices = product.variants.map(v => v.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+  getProductPriceRange(productResponseFull: ProductResponseFull): string {
+    const variants = productResponseFull.variants || [];
 
-    if (minPrice === maxPrice) {
-      return `S/. ${minPrice.toFixed(2)}`;
-    }
-    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
+    if (variants.length === 0) return 'N/A';
+
+    const prices = variants.map(v => v.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+
+    return min === max
+      ? `S/. ${min.toFixed(2)}`
+      : `S/. ${min.toFixed(2)} - S/. ${max.toFixed(2)}`;
   }
 
-    getFirstProductPrice(product: Product): string {
-    if (!product.variants || product.variants.length === 0) {
-      return product.basePrice ? `S/. ${product.basePrice.toFixed(2)}` : 'N/A';
-    }
-    const prices = product.variants.map(v => v.price);
-    const minPrice = Math.min(...prices)*1.15;
-    const maxPrice = Math.max(...prices)*1.15;
+  getFirstProductPrice(productResponseFull: ProductResponseFull): string {
+    const variants = productResponseFull.variants || [];
 
-    if (minPrice === maxPrice) {
-      return `S/. ${minPrice.toFixed(2)}`;
-    }
-    return `S/. ${minPrice.toFixed(2)} - S/. ${maxPrice.toFixed(2)}`;
+    if (variants.length === 0) return 'N/A';
+
+    const minVariant = variants.reduce((prev, curr) =>
+      curr.price < prev.price ? curr : prev
+    );
+
+    const price = minVariant.price * 1.15; // tu margen
+
+    return `S/. ${price.toFixed(2)}`;
   }
 
-  getTotalStock(product: Product): number {
-    if (!product.variants || product.variants.length === 0) return 0;
-    return product.variants.reduce((sum, v) => sum + v.stock, 0);
+  getTotalStock(productResponseFull: ProductResponseFull): number {
+    if (!productResponseFull.variants || productResponseFull.variants.length === 0) return 0;
+    return productResponseFull.variants.reduce((sum, v) => sum + v.stock, 0);
   }
 
-  hasLowStock(product: Product): boolean {
-    const total = this.getTotalStock(product);
+  hasLowStock(productResponseFull: ProductResponseFull): boolean {
+    const total = this.getTotalStock(productResponseFull);
     return total > 0 && total < 10;
   }
 
-  hasNotStock(product: Product): boolean {
-    const total = this.getTotalStock(product);
+  hasNotStock(productResponseFull: ProductResponseFull): boolean {
+    const total = this.getTotalStock(productResponseFull);
     return total == 0;
   }
 

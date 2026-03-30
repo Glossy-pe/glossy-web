@@ -1,4 +1,4 @@
-import { ProductVariant } from "../../../features/product/models/product-variant.model";
+import { ProductVariant } from "../../../features/product/models/product-variant-response.model";
 
 export type OrderStatus =
   | 'CREATED'
@@ -30,6 +30,7 @@ export interface OrderResponse {
   customerAddress: string;
   orderCode: string;
   total: number;
+  costTotal: number;
   createdAt: string;
   orderItems: OrderItem[];
 }
@@ -44,6 +45,7 @@ export interface OrderRequest {
   customerAddress: string;
   status: OrderStatus;
   total: number;
+  costTotal: number;
   createdAt: string;
   orderItems: OrderItemRequest[];
 }

@@ -3,8 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Product } from '../models/product.model';
-import { ProductVariant } from '../models/product-variant.model';
+import { ProductVariant } from '../models/product-variant-response.model';
 import { ProductImage } from '../models/product-image.model';
+import { PageResponse } from '../../../shared/models/page-response.model';
+import { ProductResponseFull } from '../models/product-response-full.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,21 +14,27 @@ import { ProductImage } from '../models/product-image.model';
 export class ProductService {
   private apiUrl = `${environment.apiUrl}/products`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ==================== PRODUCTOS ====================
 
   /**
    * Obtiene todos los productos
    */
-  getProducts(categoryId?: string): Observable<Product[]> {
-    let url = this.apiUrl;
+  getProducts(page: number, size: number, categoryId = ''): Observable<PageResponse<ProductResponseFull>> {
+  const params = new URLSearchParams();
+  params.set('page', page.toString());
+  params.set('size', size.toString());
+  if (categoryId) params.set('categoryId', categoryId);
+  return this.http.get<PageResponse<ProductResponseFull>>(
+    `${this.apiUrl}/full?${params.toString()}`
+  );
+}
 
-    if (categoryId) {
-      url += `?categoryId=${categoryId}`;
-    }
-    console.log(categoryId);
-    return this.http.get<Product[]>(url);
+  searchProductsFull(q: string, page = 0, size = 200): Observable<PageResponse<ProductResponseFull>> {
+    return this.http.get<PageResponse<ProductResponseFull>>(
+      `${this.apiUrl}/full/search?q=${encodeURIComponent(q)}&page=${page}&size=${size}`
+    );
   }
 
   getProductsByLabel(label?: string): Observable<Product[]> {
@@ -42,8 +50,8 @@ export class ProductService {
   /**
    * Obtiene un producto por su ID
    */
-  getProductById(id: number): Observable<Product> {
-    return this.http.get<Product>(`${this.apiUrl}/${id}`);
+  getProductById(id: number): Observable<ProductResponseFull> {
+    return this.http.get<ProductResponseFull>(`${this.apiUrl}/full/${id}`);
   }
 
   /**

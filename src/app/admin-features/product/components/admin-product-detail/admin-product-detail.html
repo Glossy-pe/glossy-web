@@ -1,38 +1,37 @@
 <div class="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-700 p-4 md:p-8">
   <main class="max-w-[1500px] mx-auto">
 
+    <!-- Header -->
     <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
       <div class="flex items-center gap-5">
-        <button (click)="goBack()" 
+        <button (click)="goBack()"
           class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-slate-900 rounded-xl transition-all shadow-sm group">
           <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
         </button>
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Editor de Producto</h1>
-            <span [ngClass]="product()?.active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200'" 
-                  class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm">
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm"
+              [class.bg-emerald-50]="product()?.active" [class.text-emerald-600]="product()?.active" [class.border-emerald-100]="product()?.active"
+              [class.bg-slate-100]="!product()?.active" [class.text-slate-500]="!product()?.active" [class.border-slate-200]="!product()?.active">
               {{ product()?.active ? 'Activo' : 'Inactivo' }}
             </span>
           </div>
-          <p class="text-xs font-mono text-slate-400 uppercase tracking-tighter mt-0.5">Reference_ID: {{ productId() }}</p>
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-tighter mt-0.5">ID #{{ productId() }}</p>
         </div>
       </div>
-
-      <div class="flex items-center gap-3 w-full sm:w-auto">
-        <button (click)="deleteProduct()" 
-          [disabled]="isSaving()"
-          class="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-500 text-xs font-bold rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-all shadow-sm active:scale-95 uppercase tracking-widest disabled:opacity-50">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Eliminar Item
-        </button>
-      </div>
+      <button (click)="deleteProduct()" [disabled]="isSaving()"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-500 text-xs font-bold rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-all shadow-sm disabled:opacity-50 uppercase tracking-widest">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/>
+        </svg>
+        Eliminar Producto
+      </button>
     </header>
 
+    <!-- Loading -->
     <div *ngIf="isLoading()" class="flex flex-col items-center justify-center py-24 bg-white border border-slate-200 rounded-3xl">
       <svg class="animate-spin w-12 h-12 text-blue-600" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -41,324 +40,286 @@
       <p class="mt-4 text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Cargando producto...</p>
     </div>
 
-    <div *ngIf="!isLoading()" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      
-      <div class="lg:col-span-8 space-y-8">
-        
-        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Información del Producto</h2>
-            <button (click)="isEditingBasic.set(!isEditingBasic())" 
-                    [disabled]="isSaving()"
-                    class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-slate-200 rounded-lg hover:bg-white transition-all disabled:opacity-50"
-                    [class.bg-blue-50]="isEditingBasic()" [class.text-blue-600]="isEditingBasic()">
-              {{ isEditingBasic() ? 'Cancelar' : 'Editar' }}
-            </button>
-          </div>
+    <div *ngIf="!isLoading()" class="space-y-8">
 
-          <div class="p-8">
-            <form [formGroup]="productForm" (ngSubmit)="updateProduct()" class="space-y-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1.5">
-                  <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">
-                    Nombre <span class="text-red-500">*</span>
-                  </label>
-                  <input formControlName="name" [readOnly]="!isEditingBasic()"
-                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all"
-                         [class.opacity-60]="!isEditingBasic()">
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">
-                    Categoría <span class="text-red-500">*</span>
-                  </label>
-                  <select formControlName="categoryId" [attr.disabled]="isEditingBasic() ? null : true"
-                          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all"
-                          [class.opacity-60]="!isEditingBasic()">
-                    <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
-                  </select>
-                </div>
+      <!-- ═══ INFO BÁSICA ═══ -->
+      <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Información del Producto</h2>
+          <button (click)="isEditingBasic.set(!isEditingBasic())" [disabled]="isSaving()"
+            class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-slate-200 rounded-lg hover:bg-white transition-all disabled:opacity-50"
+            [class.bg-blue-50]="isEditingBasic()" [class.text-blue-600]="isEditingBasic()">
+            {{ isEditingBasic() ? 'Cancelar' : 'Editar' }}
+          </button>
+        </div>
+        <div class="p-8">
+          <form [formGroup]="productForm" (ngSubmit)="updateProduct()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Nombre <span class="text-red-500">*</span></label>
+                <input formControlName="name" [readOnly]="!isEditingBasic()"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all"
+                  [class.opacity-60]="!isEditingBasic()"/>
               </div>
-
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Categoría <span class="text-red-500">*</span></label>
+                <select formControlName="categoryId" [attr.disabled]="isEditingBasic() ? null : true"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all"
+                  [class.opacity-60]="!isEditingBasic()">
+                  <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+                </select>
+              </div>
               <div class="space-y-1.5">
                 <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción Corta</label>
-                <input formControlName="description" [readOnly]="!isEditingBasic()"
-                       class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all"
-                       [class.opacity-60]="!isEditingBasic()">
+                <textarea formControlName="description" [readOnly]="!isEditingBasic()" rows="2"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none resize-none transition-all"
+                  [class.opacity-60]="!isEditingBasic()"></textarea>
               </div>
-
               <div class="space-y-1.5">
                 <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Descripción Completa</label>
-                <textarea formControlName="fullDescription" [readOnly]="!isEditingBasic()" rows="3"
-                          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none transition-all resize-none"
-                          [class.opacity-60]="!isEditingBasic()"></textarea>
+                <textarea formControlName="fullDescription" [readOnly]="!isEditingBasic()" rows="2"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none resize-none transition-all"
+                  [class.opacity-60]="!isEditingBasic()"></textarea>
               </div>
+            </div>
 
-              <div class="p-5 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl">
-                <h3 class="text-[11px] font-bold text-slate-800 uppercase mb-4 tracking-wider">🏷️ Etiquetas</h3>
-                
-                <div class="flex flex-wrap gap-2">
-                  <button 
-                    *ngFor="let label of labels()" 
-                    type="button"
-                    (click)="isEditingBasic() ? toggleLabel(label.id) : null"
-                    [disabled]="!isEditingBasic()"
-                    [class]="isLabelSelected(label.id) 
-                      ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200' 
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-purple-300'"
-                    class="px-4 py-2 border text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                    {{ label.name }}
-                  </button>
-                </div>
-
-                <div *ngIf="labels().length === 0" class="text-center py-6 text-sm text-slate-400">
-                  No hay etiquetas disponibles
-                </div>
-              </div>
-
-              <div class="flex items-center pt-2">
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" formControlName="active" [attr.disabled]="isEditingBasic() ? null : true" class="sr-only peer">
-                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  <span class="ml-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Producto Activo</span>
-                </label>
-              </div>
-
-              <div *ngIf="isEditingBasic()" class="flex justify-end pt-4 border-t border-slate-50">
-                <button type="submit" [disabled]="isSaving()"
-                        class="px-8 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50 uppercase tracking-widest flex items-center gap-2">
-                  <svg *ngIf="isSaving()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {{ isSaving() ? 'Guardando...' : 'Guardar Cambios' }}
+            <!-- Labels -->
+            <div class="p-5 bg-purple-50 border border-purple-100 rounded-2xl">
+              <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-3">🏷️ Etiquetas</h3>
+              <div class="flex flex-wrap gap-2">
+                <button *ngFor="let label of labels()" type="button"
+                  (click)="isEditingBasic() && toggleLabel(label.id)"
+                  [disabled]="!isEditingBasic()"
+                  [class]="isLabelSelected(label.id) ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-slate-600 border-slate-200'"
+                  class="px-4 py-2 border text-xs font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ label.name }}
                 </button>
               </div>
-            </form>
-          </div>
-        </section>
+            </div>
 
-        <!-- ═══════════════════════════════════════════════════════════════ -->
-        <!--  VARIANTES Y STOCK                                             -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
-        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-cyan-50">
-            <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">🎨 Variantes y Stock</h2>
-            <button (click)="showVariantForm.set(!showVariantForm()); cancelEditVariant()" 
-                    [disabled]="isSaving()"
-                    class="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-blue-100 disabled:opacity-50">
-              {{ showVariantForm() ? 'Cancelar' : '+ Nueva Variante' }}
-            </button>
-          </div>
+            <!-- Activo toggle -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="active" [attr.disabled]="isEditingBasic() ? null : true" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <span class="ml-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Producto Activo</span>
+            </label>
 
-          <div class="p-8">
-
-            <!-- Formulario nueva variante -->
-            <div *ngIf="showVariantForm()" class="mb-8 p-6 bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-100 rounded-2xl animate-fadeIn">
-              <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Nueva Variante</p>
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-                <div class="space-y-1.5">
-                  <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Nombre</label>
-                  <input [(ngModel)]="newVariant.toneName" placeholder="Ej: Midnight" 
-                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Color</label>
-                  <input [(ngModel)]="newVariant.toneCode" type="color" 
-                         class="w-full h-[34px] rounded-lg border border-slate-200 cursor-pointer bg-white">
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Precio</label>
-                  <input [(ngModel)]="newVariant.price" type="number" placeholder="0.00" 
-                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Stock</label>
-                  <input [(ngModel)]="newVariant.stock" type="number" placeholder="0" 
-                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                </div>
-              </div>
-              <button (click)="saveVariant()" 
-                      [disabled]="isSaving()"
-                      class="w-full py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+            <div *ngIf="isEditingBasic()" class="flex justify-end pt-4 border-t border-slate-100">
+              <button type="submit" [disabled]="isSaving()"
+                class="px-8 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-black transition-all disabled:opacity-50 uppercase tracking-widest flex items-center gap-2">
                 <svg *ngIf="isSaving()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                {{ isSaving() ? 'Guardando...' : 'Agregar Variante' }}
+                {{ isSaving() ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
             </div>
+          </form>
+        </div>
+      </section>
 
-            <!-- Grid de variantes -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ng-container *ngFor="let v of product()?.variants; let i = index">
-
-                <!-- ── Modo edición inline ── -->
-                <div *ngIf="editingVariantIndex() === i"
-                     class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl animate-fadeIn">
-                  <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-3">Editando variante</p>
-                  <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="space-y-1">
-                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre</label>
-                      <input [(ngModel)]="editingVariant()!.toneName"
-                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Color</label>
-                      <input [(ngModel)]="editingVariant()!.toneCode" type="color"
-                             class="w-full h-[34px] rounded-lg border border-slate-200 cursor-pointer bg-white">
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio</label>
-                      <input [(ngModel)]="editingVariant()!.price" type="number"
-                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Stock</label>
-                      <input [(ngModel)]="editingVariant()!.stock" type="number"
-                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
-                    </div>
-                  </div>
-                  <div class="flex gap-2">
-                    <button (click)="saveEditVariant(i)"
-                            [disabled]="isSaving()"
-                            class="flex-1 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-1.5">
-                      <svg *ngIf="isSaving()" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <svg *ngIf="!isSaving()" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      {{ isSaving() ? 'Guardando...' : 'Guardar' }}
-                    </button>
-                    <button (click)="cancelEditVariant()"
-                            [disabled]="isSaving()"
-                            class="px-4 py-2 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all disabled:opacity-50">
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-
-                <!-- ── Modo visualización ── -->
-                <div *ngIf="editingVariantIndex() !== i"
-                     class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-blue-400 transition-all group animate-fadeIn">
-                  <div class="flex items-center gap-4">
-                    <div [style.background-color]="v.toneCode" class="w-10 h-10 rounded-xl border-2 border-white shadow-md"></div>
-                    <div>
-                      <p class="text-sm font-bold text-slate-800">{{ v.toneName }}</p>
-                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Stock: {{ v.stock }} unid.</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-blue-600 tracking-tight mr-2">{{ v.price | currency }}</span>
-                    <!-- Botón editar -->
-                    <button (click)="startEditVariant(i)"
-                            [disabled]="isSaving()"
-                            class="p-2 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-50"
-                            title="Editar variante">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <!-- Botón eliminar -->
-                    <button (click)="deleteVariant(i)" 
-                            [disabled]="isSaving()"
-                            class="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-50"
-                            title="Eliminar variante">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5"/></svg>
-                    </button>
-                  </div>
-                </div>
-
-              </ng-container>
-            </div>
-
-            <div *ngIf="!product()?.variants || product()?.variants!.length === 0" class="text-center py-12 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-              No hay variantes registradas
-            </div>
+      <!-- ═══ VARIANTES ═══ -->
+      <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-cyan-50">
+          <div>
+            <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">🎨 Variantes y Stock</h2>
+            <p class="text-[10px] text-slate-400 mt-0.5">{{ product()?.variants?.length || 0 }} variantes · cada una con sus imágenes</p>
           </div>
-        </section>
-      </div>
+          <button (click)="showVariantForm.set(!showVariantForm()); cancelEditVariant()" [disabled]="isSavingVariant()"
+            class="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50">
+            {{ showVariantForm() ? 'Cancelar' : '+ Nueva Variante' }}
+          </button>
+        </div>
 
-      <div class="lg:col-span-4 space-y-8">
-        
-        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <div class="px-8 py-5 border-b border-slate-50 bg-gradient-to-r from-green-50 to-emerald-50">
-            <h2 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">📸 Imágenes del Producto</h2>
-          </div>
+        <div class="p-8 space-y-6">
 
-          <div class="p-8">
-            <div class="relative mb-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center hover:bg-slate-50 hover:border-blue-400 transition-all cursor-pointer group overflow-hidden"
-                 [class.h-48]="!imagePreview()"
-                 [class.aspect-square]="imagePreview()">
-              <input type="file" accept="image/*" (change)="onFileSelected($event)" class="absolute inset-0 opacity-0 cursor-pointer z-20">
-              
-              <div *ngIf="!imagePreview()" class="text-center p-8">
-                <svg class="w-12 h-12 text-slate-300 group-hover:text-blue-500 mx-auto mb-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5"/>
-                </svg>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ selectedFileName() || 'Seleccionar imagen' }}</span>
-                <p class="text-[9px] text-slate-300 mt-2">JPG, PNG o WEBP</p>
+          <!-- Formulario nueva variante -->
+          <div *ngIf="showVariantForm()" class="p-6 bg-blue-50 border border-blue-100 rounded-2xl">
+            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Nueva Variante</p>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <div class="space-y-1.5 col-span-2 lg:col-span-1">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Nombre *</label>
+                <input [(ngModel)]="newVariant.toneName" placeholder="Ej: Rojo Carmín"
+                  class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"/>
               </div>
-
-              <div *ngIf="imagePreview()" class="w-full h-full animate-fadeIn">
-                <img [src]="imagePreview()" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                  <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5"/>
-                  </svg>
-                </div>
+              <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Color</label>
+                <input [(ngModel)]="newVariant.toneCode" type="color"
+                  class="w-full h-9 cursor-pointer rounded-lg border border-slate-200"/>
               </div>
-
-              <div *ngIf="isUploadingImage()" class="absolute inset-0 bg-white/90 flex items-center justify-center z-30">
-                <svg class="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+              <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Precio *</label>
+                <input [(ngModel)]="newVariant.price" type="number" placeholder="0.00"
+                  class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"/>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Costo</label>
+                <input [(ngModel)]="newVariant.cost" type="number" placeholder="0.00"
+                  class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"/>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Stock</label>
+                <input [(ngModel)]="newVariant.stock" type="number" placeholder="0"
+                  class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"/>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Posición</label>
+                <input [(ngModel)]="newVariant.position" type="number" placeholder="1"
+                  class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"/>
               </div>
             </div>
-
-            <button *ngIf="selectedFile" (click)="uploadImage()" 
-                    [disabled]="isUploadingImage()"
-                    class="w-full mb-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-              <svg *ngIf="isUploadingImage()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <button (click)="addVariant()" [disabled]="isSavingVariant()"
+              class="w-full py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              <svg *ngIf="isSavingVariant()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
-              {{ isUploadingImage() ? 'Subiendo...' : 'Confirmar y Subir' }}
+              {{ isSavingVariant() ? 'Guardando...' : 'Agregar Variante' }}
             </button>
+          </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div *ngFor="let img of product()?.images; let i = index" 
-                   class="relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group animate-fadeIn"
-                   [ngClass]="img.mainImage ? 'border-blue-500 ring-4 ring-blue-500/10' : 'border-slate-100 hover:border-slate-300'">
-                <img [src]="img.url" class="object-cover w-full h-full">
-                
-                <div *ngIf="img.mainImage" class="absolute top-2 left-2 px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black uppercase rounded shadow-sm">
-                  Principal
+          <!-- Sin variantes -->
+          <div *ngIf="!product()?.variants?.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl text-sm text-slate-400">
+            Sin variantes · agrega la primera con el botón de arriba
+          </div>
+
+          <!-- Lista de variantes -->
+          <div *ngFor="let variant of product()?.variants" class="border border-slate-200 rounded-2xl overflow-hidden">
+
+            <!-- Cabecera variante: visualización -->
+            <ng-container *ngIf="editingVariant()?.id !== variant.id">
+              <div class="flex items-center gap-4 px-5 py-4 bg-slate-50 border-b border-slate-100">
+                <div class="w-8 h-8 rounded-xl border-2 border-white shadow-md shrink-0"
+                     [style.background-color]="variant.toneCode"></div>
+                <div class="flex-grow">
+                  <p class="text-sm font-bold text-slate-800">{{ variant.toneName }}</p>
+                  <p class="text-[10px] text-slate-400 uppercase tracking-widest">
+                    Stock: {{ variant.stock }} · Precio: {{ variant.price | currency:'PEN':'S/ ' }} · Costo: {{ variant.cost | currency:'PEN':'S/ ' }}
+                  </p>
                 </div>
+                <button (click)="startEditVariant(variant)" [disabled]="isSavingVariant()"
+                  class="p-2 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50" title="Editar">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2"/>
+                  </svg>
+                </button>
+                <button (click)="deleteVariant(variant.id)" [disabled]="isSavingVariant()"
+                  class="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50" title="Eliminar">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/>
+                  </svg>
+                </button>
+              </div>
+            </ng-container>
 
-                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3 backdrop-blur-[2px]">
-                  <button *ngIf="!img.mainImage" (click)="setImageAsMain(i)" 
-                          [disabled]="isSaving()"
-                          class="w-full py-1.5 text-[9px] bg-white text-slate-900 font-black uppercase rounded-lg shadow-sm hover:bg-blue-50 disabled:opacity-50">
-                    Marcar como Principal
+            <!-- Cabecera variante: edición inline -->
+            <ng-container *ngIf="editingVariant()?.id === variant.id">
+              <div class="px-5 py-4 bg-amber-50 border-b border-amber-100">
+                <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-3">Editando variante</p>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                  <div class="col-span-2 lg:col-span-1">
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Nombre</label>
+                    <input [(ngModel)]="editingVariant()!.toneName"
+                      class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs outline-none focus:border-amber-400"/>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Color</label>
+                    <input [(ngModel)]="editingVariant()!.toneCode" type="color"
+                      class="w-full h-9 cursor-pointer rounded-lg border border-slate-200"/>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Precio</label>
+                    <input [(ngModel)]="editingVariant()!.price" type="number"
+                      class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs outline-none"/>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Costo</label>
+                    <input [(ngModel)]="editingVariant()!.cost" type="number"
+                      class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none"/>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Stock</label>
+                    <input [(ngModel)]="editingVariant()!.stock" type="number"
+                      class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none"/>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Posición</label>
+                    <input [(ngModel)]="editingVariant()!.position" type="number"
+                      class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none"/>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button (click)="saveEditVariant()" [disabled]="isSavingVariant()"
+                    class="flex-1 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-1.5">
+                    <svg *ngIf="isSavingVariant()" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    {{ isSavingVariant() ? 'Guardando...' : 'Guardar' }}
                   </button>
-                  <button (click)="deleteImage(i)" 
-                          [disabled]="isSaving()"
-                          class="w-full py-1.5 text-[9px] bg-rose-500 text-white font-black uppercase rounded-lg shadow-sm hover:bg-rose-600 disabled:opacity-50">
-                    Eliminar
+                  <button (click)="cancelEditVariant()" [disabled]="isSavingVariant()"
+                    class="px-4 py-2 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 disabled:opacity-50">
+                    Cancelar
                   </button>
                 </div>
               </div>
+            </ng-container>
+
+            <!-- Imágenes de la variante -->
+            <div class="p-5">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                Imágenes ({{ variant.images?.length || 0 }})
+              </p>
+              <div class="flex flex-wrap gap-3 items-start">
+
+                <!-- Imágenes existentes -->
+                <div *ngFor="let img of variant.images"
+                  class="relative w-24 h-24 rounded-xl overflow-hidden border-2 transition-all group/img"
+                  [class.border-yellow-400]="img.mainImage"
+                  [class.border-slate-200]="!img.mainImage">
+                  <img [src]="img.url" class="w-full h-full object-cover"/>
+                  <div *ngIf="img.mainImage"
+                    class="absolute top-1 left-1 px-1.5 py-0.5 bg-yellow-400 text-[8px] text-white font-black rounded">★</div>
+                  <div class="absolute inset-0 bg-black/0 group-hover/img:bg-black/50 transition-all flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover/img:opacity-100 p-2">
+                    <button *ngIf="!img.mainImage" (click)="setMainImage(variant.id, img)"
+                      class="w-full py-1 bg-yellow-400 text-white text-[8px] font-black rounded-lg">★ Principal</button>
+                    <button (click)="deleteVariantImage(variant.id, img.id)"
+                      class="w-full py-1 bg-rose-500 text-white text-[8px] font-black rounded-lg">Eliminar</button>
+                  </div>
+                </div>
+
+                <!-- Zona upload -->
+                <label class="w-24 h-24 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all relative"
+                  [class.border-blue-400]="selectedFiles[variant.id]"
+                  [class.border-slate-200]="!selectedFiles[variant.id]">
+                  <input type="file" accept="image/*" class="hidden"
+                    (change)="onFileSelected($event, variant.id)"/>
+                  <svg *ngIf="uploadingVariantId() !== variant.id" class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 4v16m8-8H4" stroke-width="2"/>
+                  </svg>
+                  <svg *ngIf="uploadingVariantId() === variant.id" class="animate-spin w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <span class="text-[8px] text-slate-400 mt-1 font-bold uppercase text-center px-1">
+                    {{ selectedFiles[variant.id] ? '✓ Listo' : 'Agregar' }}
+                  </span>
+                </label>
+
+                <!-- Botón subir -->
+                <button *ngIf="selectedFiles[variant.id]"
+                  (click)="uploadVariantImage(variant)"
+                  [disabled]="uploadingVariantId() === variant.id"
+                  class="self-center px-4 py-2.5 bg-blue-600 text-white text-[10px] font-bold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 shadow-md shadow-blue-100">
+                  ↑ Subir imagen
+                </button>
+
+              </div>
             </div>
 
-            <div *ngIf="!product()?.images || product()?.images!.length === 0" class="text-center py-12 text-sm text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-              No hay imágenes cargadas
-            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
     </div>
   </main>

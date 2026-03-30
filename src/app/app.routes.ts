@@ -16,7 +16,7 @@ export const routes: Routes = [
             { path: 'san-valentin', loadComponent: () => import('./features/valentin-day/components/valentine-day/valentine-day').then(m => m.ValentineDay) },
         ]
     },
-    
+
     // Rutas admin con layout admin
     {
         path: 'admin',
@@ -25,26 +25,31 @@ export const routes: Routes = [
         children: [
             { path: '', redirectTo: 'products', pathMatch: 'full' },
             { path: 'products', loadComponent: () => import('./admin-features/product/components/product-list/admin-product-list').then(m => m.AdminProductList) },
+            {
+                path: 'products/new',
+                loadComponent: () => import('./admin-features/product/components/admin-product-create/admin-product-create')
+                    .then(m => m.AdminProductCreate)
+            },
             { path: 'products/:id', loadComponent: () => import('./admin-features/product/components/admin-product-detail/admin-product-detail').then(m => m.AdminProductDetail) },
             { path: 'categories', loadComponent: () => import('./admin-features/category/components/category-list/admin-category-list').then(m => m.AdminCategoryList) },
             { path: 'images', loadComponent: () => import('./admin-features/images/components/images-list/admin-images-list').then(m => m.AdminImagesList) },
             { path: 'labels', loadComponent: () => import('./admin-features/label/components/label-list/label-list').then(m => m.LabelList) },
-{ path: 'orders', loadComponent: () => import('./admin-features/order/components/admin-order-list/admin-order-list').then(m => m.AdminOrderList) },
-{
-  path: 'orders/new',
-  loadComponent: () => import('./admin-features/order/components/admin-order-create/admin-order-create').then(m => m.AdminOrderCreate)
-},
-{ 
-    path: 'orders/:id', // ✅ Después la dinámica
-    loadComponent: () => import('./admin-features/order/components/admin-order-detail/admin-order-detail').then(m => m.AdminOrderDetail) 
-},
+            { path: 'orders', loadComponent: () => import('./admin-features/order/components/admin-order-list/admin-order-list').then(m => m.AdminOrderList) },
+            {
+                path: 'orders/new',
+                loadComponent: () => import('./admin-features/order/components/admin-order-create/admin-order-create').then(m => m.AdminOrderCreate)
+            },
+            {
+                path: 'orders/:id', // ✅ Después la dinámica
+                loadComponent: () => import('./admin-features/order/components/admin-order-detail/admin-order-detail').then(m => m.AdminOrderDetail)
+            },
         ]
     },
 
     // Login sin layout
-    { 
-        path: 'admin/login', 
-        loadComponent: () => import('./admin-features/authentication/components/login/login').then(m => m.Login) 
+    {
+        path: 'admin/login',
+        loadComponent: () => import('./admin-features/authentication/components/login/login').then(m => m.Login)
     },
 
     { path: '**', redirectTo: 'home' }

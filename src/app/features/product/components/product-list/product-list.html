@@ -1,64 +1,129 @@
-<div class="max-w-7xl mx-auto p-4 md:p-10 bg-[#FCFBF9] min-h-screen font-sans text-gray-800">
-  
-  <header class="mb-12 space-y-6">
-    <div class="flex justify-between items-end">
-      <div>
-        <h1 class="text-3xl md:text-5xl font-light uppercase tracking-tighter italic">Glossy</h1>
-        <p class="text-orange-300 font-bold tracking-[0.3em] uppercase text-[10px]">Beach Edition</p>
-      </div>
-      <button (click)="toggleFilters()" class="md:hidden border border-gray-200 px-4 py-2 text-xs uppercase tracking-widest bg-white">
-        Filtros
+<div class="max-w-7xl mx-auto bg-[#FCFBF9] min-h-screen font-sans text-gray-800">
+
+  <!-- DRAWER OVERLAY -->
+  <div *ngIf="showFilters"
+    class="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+    (click)="toggleFilters()">
+  </div>
+
+  <!-- DRAWER PANEL -->
+  <aside
+    class="fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out"
+    [class.-translate-x-full]="!showFilters"
+    [class.translate-x-0]="showFilters">
+
+    <!-- Drawer header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Categorías</span>
+      <button (click)="toggleFilters()"
+        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
 
-    <div class="relative w-full max-w-2xl ml-auto">
-      <input 
-        [formControl]="searchControl"
-        type="text" 
-        placeholder="Buscar producto..." 
-        class="w-full p-4 bg-white border border-gray-200 focus:outline-none focus:border-blue-200 text-sm uppercase tracking-wider transition-colors"
-      />
-      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">🔍</span>
+    <!-- Categorías -->
+    <div class="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+
+      <button (click)="filterByCategory('')"
+        class="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+        [ngClass]="selectedCategoryId === '' ? 'bg-black text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'">
+        ✦ Todos
+      </button>
+
+      <button *ngFor="let category of categories$ | async; let i = index"
+        (click)="filterByCategory(category.id.toString())"
+        class="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+        [ngClass]="{
+          'bg-blue-500 text-white': selectedCategoryId === category.id.toString() && i % 3 === 0,
+          'bg-pink-500 text-white': selectedCategoryId === category.id.toString() && i % 3 === 1,
+          'bg-teal-500 text-white': selectedCategoryId === category.id.toString() && i % 3 === 2,
+          'bg-blue-50 text-blue-500 hover:bg-blue-100': selectedCategoryId !== category.id.toString() && i % 3 === 0,
+          'bg-pink-50 text-pink-500 hover:bg-pink-100': selectedCategoryId !== category.id.toString() && i % 3 === 1,
+          'bg-teal-50 text-teal-500 hover:bg-teal-100': selectedCategoryId !== category.id.toString() && i % 3 === 2
+        }">
+        {{ category.name }}
+      </button>
+    </div>
+
+    <!-- Footer drawer: categoría activa -->
+    <div class="px-5 py-4 border-t border-gray-100 bg-gray-50">
+      <p class="text-[10px] text-gray-400 uppercase tracking-widest">Filtrando por</p>
+      <p class="text-xs font-bold text-gray-800 mt-1 uppercase">{{ activeCategoryName }}</p>
+    </div>
+  </aside>
+
+  <!-- HEADER -->
+  <header class="px-4 pt-5 pb-4 sm:px-6 sm:pt-8">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h1 class="text-3xl sm:text-5xl font-light uppercase tracking-tighter italic">Glossy</h1>
+        <p class="text-orange-300 font-bold tracking-[0.3em] uppercase text-[10px]">Korean Edition</p>
+      </div>
+
+      <!-- Botón filtros -->
+      <button (click)="toggleFilters()"
+        class="relative flex items-center gap-2 border border-gray-200 px-4 py-2.5 text-[11px] uppercase tracking-widest bg-white hover:bg-gray-50 transition-colors font-bold min-h-[44px]">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+        </svg>
+        Filtrar
+        <span *ngIf="selectedCategoryId !== ''"
+          class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-pink-500 rounded-full">
+        </span>
+      </button>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="relative w-full">
+      <input [formControl]="searchControl" type="text" placeholder="Buscar producto..."
+        class="w-full px-4 py-3 bg-white border border-gray-200 focus:outline-none focus:border-blue-200 text-sm uppercase tracking-wider transition-colors pr-10" />
+      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-base">🔍</span>
+    </div>
+
+    <!-- Chip filtro activo -->
+    <div *ngIf="selectedCategoryId !== ''" class="mt-3 flex items-center gap-2">
+      <span class="text-[10px] text-gray-400 uppercase tracking-widest">Mostrando:</span>
+      <span class="flex items-center gap-1.5 px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
+        {{ activeCategoryName }}
+        <button (click)="filterByCategory('')" class="ml-1 opacity-70 hover:opacity-100">✕</button>
+      </span>
     </div>
   </header>
 
-  <div class="flex flex-col md:flex-row gap-8">
-    
-    <aside [class.hidden]="!showFilters" class="w-full md:block md:w-56 flex-shrink-0">
-      <div class="sticky top-6 space-y-4">
-        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mb-6">Categorías</h3>
-        
-        <div class="flex flex-col gap-2">
-          <button (click)="loadProducts('')" 
-            class="w-full text-left p-4 text-xs font-bold uppercase tracking-widest border border-gray-100 bg-white hover:bg-gray-50 transition-colors">
-            Todos
-          </button>
+  <!-- MAIN CONTENT -->
+  <main class="px-4 sm:px-6 py-5">
 
-          <button *ngFor="let category of categories$ | async; let i = index"
-            (click)="loadProducts(category.id.toString())"
-            [ngClass]="{
-              'bg-blue-50 text-blue-500': i % 3 === 0,
-              'bg-pink-50 text-pink-500': i % 3 === 1,
-              'bg-teal-50 text-teal-500': i % 3 === 2
-            }"
-            class="w-full text-left p-4 text-xs font-bold uppercase tracking-widest border border-transparent hover:border-white transition-all">
-            {{ category.name }}
-          </button>
-        </div>
-      </div>
-    </aside>
+    <div *ngIf="isLoading && allProducts.length === 0" class="py-20 text-center">
+      <p class="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">Cargando...</p>
+    </div>
 
-    <main class="flex-grow">
-      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <div *ngFor="let product of filteredProducts$ | async" class="flex justify-center border border-gray-100 bg-white p-2">
-          <app-product-card [product]="product" class="w-full"></app-product-card>
+    <ng-container *ngIf="!isLoading || allProducts.length > 0">
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        <div *ngFor="let product of filteredProducts"
+          class="flex justify-center border border-gray-100 bg-white p-1.5 sm:p-2">
+          <app-product-card [productResponseFull]="product" class="w-full"></app-product-card>
         </div>
       </div>
 
-      <div *ngIf="(filteredProducts$ | async)?.length === 0" class="py-20 text-center border border-gray-100 mt-4 bg-white">
+      <div *ngIf="filteredProducts.length === 0 && !isLoading"
+        class="py-16 text-center border border-gray-100 mt-4 bg-white">
         <p class="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">Sin resultados</p>
       </div>
-    </main>
 
-  </div>
+      <div *ngIf="hasMore" class="mt-8 flex flex-col items-center gap-2">
+        <button (click)="loadMore()" [disabled]="isLoading"
+          class="w-full sm:w-auto px-10 py-4 text-xs font-bold uppercase tracking-[0.3em] bg-black text-white hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">
+          {{ isLoading ? 'Cargando...' : 'Ver más productos' }}
+        </button>
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest">
+          {{ filteredProducts.length }} de {{ totalElements }} productos
+        </p>
+      </div>
+
+    </ng-container>
+  </main>
+
 </div>

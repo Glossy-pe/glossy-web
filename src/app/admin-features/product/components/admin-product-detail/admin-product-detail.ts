@@ -1,97 +1,92 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, switchMap, map, forkJoin, of, catchError } from 'rxjs';
+import { finalize, switchMap, map, catchError, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
-interface ProductImage {
+interface VariantImageResponse {
   id: number;
+  variantId: number;
   url: string;
   position: number;
   mainImage: boolean;
 }
 
-interface ProductVariant {
+interface VariantResponseFull {
   id: number;
   toneName: string;
   toneCode: string;
+  cost: number;
   price: number;
   stock: number;
+  position: number;
+  active: boolean;
+  images: VariantImageResponse[];
 }
 
-interface LabelResponse {
-  id: number;
-  name: string;
-}
-
-interface ProductResponseV2 {
+interface ProductResponseFull {
   id: number;
   name: string;
   description: string;
   fullDescription: string;
-  images: ProductImage[];
+  label: string;
   active: boolean;
   categoryId: number;
-  variants: ProductVariant[];
-  labels: LabelResponse[];
+  variants: VariantResponseFull[];
+  labels: LabelResponse[]; // 👈 agrega
 }
 
-interface CategoryResponse {
-  id: number;
-  name: string;
-}
-
-interface ImageUploadResponse {
-  id: number;
-  category: string;
-}
+interface CategoryResponse { id: number; name: string; }
+interface LabelResponse    { id: number; name: string; }
+interface ImageUploadResponse { id: number; category: string; }
 
 @Component({
   selector: 'app-admin-product-detail',
   standalone: true,
   imports: [CommonModule, HttpClientModule, ReactiveFormsModule, FormsModule],
-  providers: [CurrencyPipe],
   templateUrl: './admin-product-detail.html',
   styleUrl: './admin-product-detail.scss',
 })
 export class AdminProductDetail implements OnInit {
-  private http = inject(HttpClient);
-  private fb = inject(FormBuilder);
-  private route = inject(ActivatedRoute);
+  private http   = inject(HttpClient);
+  private fb     = inject(FormBuilder);
+  private route  = inject(ActivatedRoute);
   private router = inject(Router);
 
-  private apiUrl = environment.apiUrl;
+  private apiUrl       = environment.apiUrl;
   private imageApiBase = environment.apiImageServer;
 
-  productId = signal<number | null>(null);
-  product = signal<ProductResponseV2 | null>(null);
-  categories = signal<CategoryResponse[]>([]);
-  labels = signal<LabelResponse[]>([]);
+  // ── Estado ───────────────────────────────────────────────────────────────────
+  productId      = signal<number | null>(null);
+  product        = signal<ProductResponseFull | null>(null);
+  categories     = signal<CategoryResponse[]>([]);
+  labels         = signal<LabelResponse[]>([]);
   selectedLabels = signal<number[]>([]);
-  isLoading = signal<boolean>(true);
-  isSaving = signal<boolean>(false);
-  isEditingBasic = signal<boolean>(false);
-  showVariantForm = signal<boolean>(false);
-  showImageForm = signal<boolean>(false);
-  isUploadingImage = signal<boolean>(false);
 
-  // Variant editing state
-  editingVariantIndex = signal<number | null>(null);
-  editingVariant = signal<{id:number; toneName: string; toneCode: string; price: number; stock: number } | null>(null);
+  isLoading      = signal(true);
+  isSaving       = signal(false);
+  isEditingBasic = signal(false);
 
-  newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
-  selectedFile: File | null = null;
-  selectedFileName = signal<string>('');
-  imagePreview = signal<string>('');
+  // ── Variantes ────────────────────────────────────────────────────────────────
+  showVariantForm  = signal(false);
+  isSavingVariant  = signal(false);
+  editingVariant   = signal<VariantResponseFull | null>(null);
 
+  newVariant = { toneName: '', toneCode: '#6366f1', cost: 0, price: 0, stock: 0, position: 1 };
+
+  // ── Imágenes por variante ────────────────────────────────────────────────────
+  uploadingVariantId  = signal<number | null>(null);
+  selectedFiles: { [variantId: number]: File } = {};
+
+  // ── Formulario producto ──────────────────────────────────────────────────────
   productForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required]],
-    description: [''],
+    name:            ['', Validators.required],
+    description:     [''],
     fullDescription: [''],
-    active: [true],
-    categoryId: [null, [Validators.required]]
+    active:          [true],
+    categoryId:      [null, Validators.required]
   });
 
   ngOnInit() {
@@ -101,485 +96,234 @@ export class AdminProductDetail implements OnInit {
       const id = Number(params.get('id'));
       if (id) {
         this.productId.set(id);
-        this.loadProductData(id);
+        this.loadProduct(id);
       }
     });
   }
 
-  loadProductData(id: number) {
-    this.isLoading.set(true);
-    this.http.get<ProductResponseV2>(`${this.apiUrl}/products/${id}`)
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        catchError(err => {
-          console.error('Error cargando producto:', err);
-          alert('Error al cargar el producto');
-          return of(null);
-        })
-      )
-      .subscribe(data => {
-        if (data) {
-          this.product.set(data);
-          this.productForm.patchValue(data);
-          this.selectedLabels.set(data.labels?.map(l => l.id) || []);
-        }
-      });
-  }
+  // ── Carga ────────────────────────────────────────────────────────────────────
+
+  loadProduct(id: number) {
+  this.isLoading.set(true);
+  this.http.get<ProductResponseFull>(`${this.apiUrl}/products/full/${id}`).pipe(
+    finalize(() => this.isLoading.set(false)),
+    catchError(err => { console.error(err); alert('Error al cargar el producto'); return of(null); })
+  ).subscribe(data => {
+    if (data) {
+      this.product.set(data);
+      this.productForm.patchValue(data);
+      this.selectedLabels.set(data.labels?.map(l => l.id) ?? []); // 👈 agrega
+    }
+  });
+}
 
   loadCategories() {
-    this.http.get<CategoryResponse[]>(`${this.apiUrl}/categories`)
-      .pipe(
-        catchError(err => {
-          console.error('Error cargando categorías:', err);
-          return of([]);
-        })
-      )
-      .subscribe(data => this.categories.set(data));
+    this.http.get<CategoryResponse[]>(`${this.apiUrl}/categories`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.categories.set(data));
   }
 
   loadLabels() {
-    this.http.get<LabelResponse[]>(`${this.apiUrl}/labels`)
-      .pipe(
-        catchError(err => {
-          console.error('Error cargando labels:', err);
-          return of([]);
-        })
-      )
-      .subscribe(data => this.labels.set(data));
+    this.http.get<LabelResponse[]>(`${this.apiUrl}/labels`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => this.labels.set(data));
   }
 
-  toggleLabel(labelId: number) {
-    this.selectedLabels.update(labels => {
-      if (labels.includes(labelId)) {
-        return labels.filter(id => id !== labelId);
-      } else {
-        return [...labels, labelId];
-      }
-    });
-  }
-
-  isLabelSelected(labelId: number): boolean {
-    return this.selectedLabels().includes(labelId);
-  }
+  // ── Producto básico ──────────────────────────────────────────────────────────
 
   updateProduct() {
-    if (this.productForm.invalid) {
-      alert('Por favor completa los campos obligatorios');
-      return;
-    }
-
+    if (this.productForm.invalid) { alert('Completa los campos obligatorios'); return; }
     this.isSaving.set(true);
     this.productForm.disable();
 
-    const currentProduct = this.product();
-    if (!currentProduct) return;
+    const body = { ...this.productForm.getRawValue() };
 
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: currentProduct.images.map(img => ({
-        url: img.url,
-        position: img.position,
-        mainImage: img.mainImage
-      })),
-      variants: currentProduct.variants.map(v => ({
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      })),
-      labelsIds: this.selectedLabels()
-    };
-
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        finalize(() => {
-          this.isSaving.set(false);
-          this.productForm.enable();
-        }),
-        catchError(err => {
-          console.error('Error actualizando producto:', err);
-          alert('Error al actualizar el producto');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-          this.isEditingBasic.set(false);
-          alert('Producto actualizado exitosamente');
-        }
-      });
+    this.http.put<ProductResponseFull>(`${this.apiUrl}/products/${this.productId()}`, body).pipe(
+      finalize(() => { this.isSaving.set(false); this.productForm.enable(); }),
+      catchError(err => { console.error(err); alert('Error al actualizar'); return of(null); })
+    ).subscribe(res => {
+      if (res) {
+        // Mantener variantes del estado local (PUT básico no las devuelve)
+        this.product.update(p => ({ ...res, variants: p?.variants || [] }));
+        this.saveLabels();
+        this.isEditingBasic.set(false);
+      }
+    });
   }
 
-  saveVariant() {
+  saveLabels() {
+    const id = this.productId();
+    if (!id) return;
+    this.http.put(`${this.apiUrl}/products/${id}/labels`, this.selectedLabels()).pipe(
+      catchError(err => { console.error(err); alert('Error al guardar labels'); return of(null); })
+    ).subscribe();
+  }
+
+  deleteProduct() {
+    if (!confirm('¿Eliminar este producto de forma permanente?')) return;
+    this.http.delete(`${this.apiUrl}/products/${this.productId()}`).pipe(
+      catchError(err => { console.error(err); alert('Error al eliminar'); return of(null); })
+    ).subscribe(() => this.router.navigate(['/admin/products']));
+  }
+
+  // ── Variantes ────────────────────────────────────────────────────────────────
+
+  addVariant() {
     if (!this.newVariant.toneName || !this.newVariant.price) {
-      alert('Por favor completa el nombre y precio de la variante');
+      alert('Nombre y precio son obligatorios');
       return;
     }
+    this.isSavingVariant.set(true);
 
-    this.isSaving.set(true);
-    
-    const currentProduct = this.product();
-    if (!currentProduct) return;
+    const body = { ...this.newVariant, productId: this.productId() };
 
-    const updatedVariants = [
-      ...currentProduct.variants.map(v => ({
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      })),
-      {
-        toneName: this.newVariant.toneName,
-        toneCode: this.newVariant.toneCode,
-        price: this.newVariant.price,
-        stock: this.newVariant.stock
+    this.http.post<VariantResponseFull>(`${this.apiUrl}/variants`, body).pipe(
+      finalize(() => this.isSavingVariant.set(false)),
+      catchError(err => { console.error(err); alert('Error al crear variante'); return of(null); })
+    ).subscribe(variant => {
+      if (variant) {
+        this.product.update(p => p
+          ? { ...p, variants: [...p.variants, { ...variant, images: [] }] }
+          : p
+        );
+        this.newVariant = { toneName: '', toneCode: '#6366f1', cost: 0, price: 0, stock: 0, position: 1 };
+        this.showVariantForm.set(false);
       }
-    ];
-
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: currentProduct.images.map(img => ({
-        url: img.url,
-        position: img.position,
-        mainImage: img.mainImage
-      })),
-      variants: updatedVariants,
-      labelsIds: this.selectedLabels()
-    };
-
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        finalize(() => {
-          this.isSaving.set(false);
-          this.showVariantForm.set(false);
-        }),
-        catchError(err => {
-          console.error('Error guardando variante:', err);
-          alert('Error al guardar la variante');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-          this.newVariant = { toneName: '', toneCode: '#6366f1', price: 0, stock: 0 };
-          alert('Variante agregada exitosamente');
-        }
-      });
+    });
   }
 
-  // ── VARIANT EDITING ────────────────────────────────────────────────────────
-
-  startEditVariant(index: number) {
-    const variant = this.product()?.variants[index];
-    if (!variant) return;
-    this.editingVariantIndex.set(index);
-    this.editingVariant.set({
-      id: variant.id,
-      toneName: variant.toneName,
-      toneCode: variant.toneCode,
-      price: variant.price,
-      stock: variant.stock
-    });
-    // Close the "new variant" form to avoid conflicts
+  startEditVariant(variant: VariantResponseFull) {
+    this.editingVariant.set({ ...variant });
     this.showVariantForm.set(false);
   }
 
   cancelEditVariant() {
-    this.editingVariantIndex.set(null);
     this.editingVariant.set(null);
   }
 
-  saveEditVariant(index: number) {
-    const edited = this.editingVariant();
-    console.log(edited)
-    if (!edited) return;
+  saveEditVariant() {
+    const v = this.editingVariant();
+    if (!v) return;
+    if (!v.toneName || !v.price) { alert('Nombre y precio son obligatorios'); return; }
 
-    if (!edited.toneName || !edited.price) {
-      alert('Por favor completa el nombre y precio de la variante');
-      return;
-    }
+    this.isSavingVariant.set(true);
 
-    const currentProduct = this.product();
-    if (!currentProduct) return;
+    const body = {
+      productId: this.productId(),
+      toneName:  v.toneName,
+      toneCode:  v.toneCode,
+      price:     v.price,
+      cost:      v.cost,
+      stock:     v.stock,
+      position:  v.position,
+      active:    v.active
+    };
 
-    this.isSaving.set(true);
-
-    const updatedVariants = currentProduct.variants.map((v, i) => {
-      if (i === index) {
-        return {
-          id: edited.id,
-          toneName: edited.toneName,
-          toneCode: edited.toneCode,
-          price: edited.price,
-          stock: edited.stock
-        };
+    this.http.put<VariantResponseFull>(`${this.apiUrl}/variants/${v.id}`, body).pipe(
+      finalize(() => this.isSavingVariant.set(false)),
+      catchError(err => { console.error(err); alert('Error al actualizar variante'); return of(null); })
+    ).subscribe(updated => {
+      if (updated) {
+        this.product.update(p => p
+          ? { ...p, variants: p.variants.map(pv => pv.id === updated.id ? { ...updated, images: pv.images } : pv) }
+          : p
+        );
+        this.editingVariant.set(null);
       }
-      return {
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      };
     });
-
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: currentProduct.images.map(img => ({
-        url: img.url,
-        position: img.position,
-        mainImage: img.mainImage
-      })),
-      variants: updatedVariants,
-      labelsIds: this.selectedLabels()
-    };
-
-
-    console.log(updateRequest)
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        finalize(() => this.isSaving.set(false)),
-        catchError(err => {
-          console.error('Error editando variante:', err);
-          alert('Error al editar la variante');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-          this.editingVariantIndex.set(null);
-          this.editingVariant.set(null);
-          alert('Variante actualizada exitosamente');
-        }
-      });
   }
 
-  // ── END VARIANT EDITING ────────────────────────────────────────────────────
-
-  deleteVariant(index: number) {
+  deleteVariant(variantId: number) {
     if (!confirm('¿Eliminar esta variante?')) return;
-
-    const currentProduct = this.product();
-    if (!currentProduct) return;
-
-    const updatedVariants = currentProduct.variants
-      .filter((_, i) => i !== index)
-      .map(v => ({
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      }));
-
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: currentProduct.images.map(img => ({
-        url: img.url,
-        position: img.position,
-        mainImage: img.mainImage
-      })),
-      variants: updatedVariants,
-      labelsIds: this.selectedLabels()
-    };
-
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        catchError(err => {
-          console.error('Error eliminando variante:', err);
-          alert('Error al eliminar la variante');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-          alert('Variante eliminada exitosamente');
-        }
-      });
+    this.http.delete(`${this.apiUrl}/variants/${variantId}`).pipe(
+      catchError(err => { console.error(err); alert('Error al eliminar variante'); return of(null); })
+    ).subscribe(() => {
+      this.product.update(p => p
+        ? { ...p, variants: p.variants.filter(v => v.id !== variantId) }
+        : p
+      );
+    });
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      this.selectedFileName.set(file.name);
+  // ── Imágenes de variante ─────────────────────────────────────────────────────
 
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.imagePreview.set(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  onFileSelected(event: Event, variantId: number) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.selectedFiles[variantId] = file;
   }
 
-  uploadImage() {
-    if (!this.selectedFile) return;
-    
-    this.isUploadingImage.set(true);
-    
+  uploadVariantImage(variant: VariantResponseFull) {
+    const file = this.selectedFiles[variant.id];
+    if (!file) return;
+
+    this.uploadingVariantId.set(variant.id);
     const formData = new FormData();
     formData.append('category', 'products');
-    formData.append('file', this.selectedFile);
+    formData.append('file', file);
 
     this.http.post<ImageUploadResponse>(`${this.imageApiBase}/images`, formData).pipe(
-      map(res => `${this.imageApiBase}/images/${res.id}/file`),
-      switchMap(url => {
-        const currentProduct = this.product();
-        if (!currentProduct) return of(null);
-
-        const updatedImages = [
-          ...currentProduct.images.map(img => ({
-            url: img.url,
-            position: img.position,
-            mainImage: img.mainImage
-          })),
-          {
-            url: url,
-            position: currentProduct.images.length + 1,
-            mainImage: currentProduct.images.length === 0
-          }
-        ];
-
-        const updateRequest = {
-          ...this.productForm.getRawValue(),
-          images: updatedImages,
-          variants: currentProduct.variants.map(v => ({
-            id: v.id,
-            toneName: v.toneName,
-            toneCode: v.toneCode,
-            price: v.price,
-            stock: v.stock
-          })),
-          labelsIds: this.selectedLabels()
+      switchMap(res => {
+        const hasMain = variant.images?.some(i => i.mainImage);
+        const body = {
+          variantId: variant.id,
+          url:       `${this.imageApiBase}/images/${res.id}/file`,
+          position:  (variant.images?.length || 0) + 1,
+          mainImage: !hasMain
         };
-
-        return this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest);
+        return this.http.post<VariantImageResponse>(`${this.apiUrl}/variant-images`, body);
       }),
-      finalize(() => {
-        this.isUploadingImage.set(false);
-        this.selectedFile = null;
-        this.selectedFileName.set('');
-        this.imagePreview.set('');
-      }),
-      catchError(err => {
-        console.error('Error subiendo imagen:', err);
-        alert('Error al subir la imagen');
-        return of(null);
-      })
-    ).subscribe(res => {
-      if (res) {
-        this.product.set(res);
-        alert('Imagen agregada exitosamente');
+      finalize(() => this.uploadingVariantId.set(null)),
+      catchError(err => { console.error(err); alert('Error al subir imagen'); return of(null); })
+    ).subscribe(img => {
+      if (img) {
+        this.product.update(p => p ? {
+          ...p,
+          variants: p.variants.map(v =>
+            v.id === variant.id ? { ...v, images: [...(v.images || []), img] } : v
+          )
+        } : p);
+        delete this.selectedFiles[variant.id];
       }
     });
   }
 
-  setImageAsMain(index: number) {
-    const currentProduct = this.product();
-    if (!currentProduct) return;
-
-    const updatedImages = currentProduct.images.map((img, i) => ({
-      url: img.url,
-      position: img.position,
-      mainImage: i === index
-    }));
-
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: updatedImages,
-      variants: currentProduct.variants.map(v => ({
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      })),
-      labelsIds: this.selectedLabels()
-    };
-
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        catchError(err => {
-          console.error('Error actualizando imagen principal:', err);
-          alert('Error al actualizar la imagen principal');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-        }
-      });
+  setMainImage(variantId: number, image: VariantImageResponse) {
+    const body = { variantId, url: image.url, position: image.position, mainImage: true };
+    this.http.put<VariantImageResponse>(`${this.apiUrl}/variant-images/${image.id}`, body).pipe(
+      catchError(err => { console.error(err); return of(null); })
+    ).subscribe(updated => {
+      if (updated) {
+        this.product.update(p => p ? {
+          ...p,
+          variants: p.variants.map(v =>
+            v.id === variantId
+              ? { ...v, images: v.images.map(i => ({ ...i, mainImage: i.id === image.id })) }
+              : v
+          )
+        } : p);
+      }
+    });
   }
 
-  deleteImage(index: number) {
-    if (!confirm('¿Eliminar esta imagen?')) return;
-
-    const currentProduct = this.product();
-    if (!currentProduct) return;
-
-    const updatedImages = currentProduct.images
-      .filter((_, i) => i !== index)
-      .map((img, i) => ({
-        url: img.url,
-        position: i + 1,
-        mainImage: i === 0 && currentProduct.images[index].mainImage ? true : img.mainImage
-      }));
-
-    const updateRequest = {
-      ...this.productForm.getRawValue(),
-      images: updatedImages,
-      variants: currentProduct.variants.map(v => ({
-        id: v.id,
-        toneName: v.toneName,
-        toneCode: v.toneCode,
-        price: v.price,
-        stock: v.stock
-      })),
-      labelsIds: this.selectedLabels()
-    };
-
-    this.http.put<ProductResponseV2>(`${this.apiUrl}/products/${this.productId()}`, updateRequest)
-      .pipe(
-        catchError(err => {
-          console.error('Error eliminando imagen:', err);
-          alert('Error al eliminar la imagen');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res) {
-          this.product.set(res);
-          alert('Imagen eliminada exitosamente');
-        }
-      });
+  deleteVariantImage(variantId: number, imageId: number) {
+    if (!confirm('¿Eliminar imagen?')) return;
+    this.http.delete(`${this.apiUrl}/variant-images/${imageId}`).pipe(
+      catchError(err => { console.error(err); alert('Error al eliminar imagen'); return of(null); })
+    ).subscribe(() => {
+      this.product.update(p => p ? {
+        ...p,
+        variants: p.variants.map(v =>
+          v.id === variantId ? { ...v, images: v.images.filter(i => i.id !== imageId) } : v
+        )
+      } : p);
+    });
   }
 
-  deleteProduct() {
-    if (!confirm('¿Seguro que deseas eliminar este producto de forma permanente?')) return;
-    
-    this.http.delete(`${this.apiUrl}/products/${this.productId()}`)
-      .pipe(
-        catchError(err => {
-          console.error('Error eliminando producto:', err);
-          alert('Error al eliminar el producto');
-          return of(null);
-        })
-      )
-      .subscribe(res => {
-        if (res !== null) {
-          this.router.navigate(['/admin/products']);
-        }
-      });
-  }
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
-  goBack() {
-    this.router.navigate(['/admin/products']);
+  toggleLabel(id: number) {
+    this.selectedLabels.update(l => l.includes(id) ? l.filter(x => x !== id) : [...l, id]);
   }
+  isLabelSelected(id: number) { return this.selectedLabels().includes(id); }
+  goBack() { this.router.navigate(['/admin/products']); }
 }

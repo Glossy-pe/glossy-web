@@ -1,16 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Product } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { CategoryService } from '../../../category/services/category.service';
 import { Category } from '../../../category/models/category.model';
-import { ProductVariant } from '../../models/product-variant.model';
-import { ProductImage } from '../../models/product-image.model';
 import { CartService } from '../../../cart/services/cart.service';
 import { environment } from '../../../../../environments/environment';
 import { SortByPipe } from "../../../../shared/pipes/sort-by.pipe";
+import { ProductResponseFull } from '../../models/product-response-full.model';
+import { VariantResponseFull } from '../../models/variant-response-full.model';
+import { VariantImageResponse } from '../../models/variant-image-response.model';
 
 @Component({
   selector: 'app-product-detail',
@@ -21,48 +21,56 @@ import { SortByPipe } from "../../../../shared/pipes/sort-by.pipe";
 export class ProductDetail implements OnInit, OnDestroy {
 
   private subscription?: Subscription;
-  currentProduct?: Product;
-private toastTimeout: ReturnType<typeof setTimeout> | null = null;
+  private toastTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  currentProduct?: ProductResponseFull;
   showToast = false;
-toastMessage = '';
-  apiImageServer= environment.apiImageServer;
+  toastMessage = '';
+  apiImageServer = environment.apiImageServer;
 
   activeImageIndex = 0;
   quantity = 1;
-  selectedVariant: ProductVariant | null = null;
+  selectedVariant: VariantResponseFull | null = null;
 
-  product$!: Observable<Product>;
-  categories$!: Observable<Category[]>
+  product$!: Observable<ProductResponseFull>;
+  categories$!: Observable<Category[]>;
   isLoading$!: Observable<boolean>;
   errorMessage = '';
+
+  private readonly PLACEHOLDER_IMAGE: VariantImageResponse = {
+    id: 0,
+    variantId: 0,
+    url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image',
+    position: 0,
+    mainImage: true,
+  };
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
     private categoryService: CategoryService,
-    private cartService: CartService // ← Inyectar
+    private cartService: CartService
   ) { }
 
-ngOnInit(): void {
-  this.resetState();
-  this.categories$ = this.categoryService.getCategories();
+  ngOnInit(): void {
+    this.resetState();
+    this.categories$ = this.categoryService.getCategories();
 
-  this.route.paramMap.subscribe(params => {
-    const productId = params.get('id');
-    if (productId) {
-      this.resetState();
-      this.loadProduct(Number(productId));
-    } else {
-      this.errorMessage = 'ID de producto no válido';
-    }
-  });
-}
+    this.route.paramMap.subscribe(params => {
+      const productId = params.get('id');
+      if (productId) {
+        this.resetState();
+        this.loadProduct(Number(productId));
+      } else {
+        this.errorMessage = 'ID de producto no válido';
+      }
+    });
+  }
 
   ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscription?.unsubscribe();
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
   }
 
   resetState(): void {
@@ -77,8 +85,8 @@ ngOnInit(): void {
 
     const product$ = this.productService.getProductById(id).pipe(
       tap(product => {
+        this.currentProduct = product;
         this.initializeProduct(product);
-        this.currentProduct = product; // ← Guardar referencia
       }),
     );
 
@@ -90,39 +98,38 @@ ngOnInit(): void {
     );
   }
 
-  initializeProduct(product: Product): void {
-    if (product?.variants && product.variants.length > 0) {
-      const availableVariant = product.variants.find(v => v.stock > 0);
-      this.selectedVariant = availableVariant || product.variants[0];
+  initializeProduct(product: ProductResponseFull): void {
+    if (!product?.variants?.length) return;
+
+    // Ordenar por position (null va al final), elegir la de menor position con stock > 0
+    const sorted = [...product.variants].sort((a, b) => {
+      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+      return posA - posB;
+    });
+
+    this.selectedVariant = sorted.find(v => v.stock > 0) ?? sorted[0];
+    this.activeImageIndex = 0;
+  }
+
+  selectVariant(variant: VariantResponseFull): void {
+    this.selectedVariant = variant;
+    this.activeImageIndex = 0;
+    if (variant.stock > 0 && this.quantity > variant.stock) {
+      this.quantity = variant.stock;
     }
   }
 
-  selectVariant(variant: ProductVariant): void {
-    if (variant.stock > 0) {
-      this.selectedVariant = variant;
-      if (this.quantity > variant.stock) {
-        this.quantity = variant.stock;
-      }
+  getActiveImages(): VariantImageResponse[] {
+    const images = this.selectedVariant?.images;
+    if (images?.length) {
+      // Ordenar por position para mostrar en el orden correcto
+      return [...images].sort((a, b) => a.position - b.position);
     }
+    return [this.PLACEHOLDER_IMAGE];
   }
 
-  getProductImages(product: Product): ProductImage[] {
-    if (!product) return [];
-    if (product?.images && product?.images.length > 0) {
-      return product?.images;
-    }
-
-    const tempProductImage: ProductImage = {
-      id: 0,
-      mainImage: true,
-      productId: 0,
-      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image'
-    };
-
-    return [tempProductImage];
-  }
-
-  isVariantSelected(variant: ProductVariant): boolean {
+  isVariantSelected(variant: VariantResponseFull): boolean {
     return this.selectedVariant?.id === variant.id;
   }
 
@@ -130,21 +137,12 @@ ngOnInit(): void {
     return !!(this.selectedVariant && this.selectedVariant.stock > 0);
   }
 
-  getTotalStock(product: Product): number {
-    if (!product || !product?.variants) return 0;
-    return product?.variants.reduce((sum, v) => sum + v.stock, 0);
-  }
-
   getCategoryName(categoryId: number, categories: Category[]): string {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Sin categoría';
+    return categories.find(c => c.id === categoryId)?.name ?? 'Sin categoría';
   }
 
   addToCart(): void {
-    if (!this.canAddToCart() || !this.currentProduct || !this.selectedVariant) {
-      console.log('No se puede agregar - sin stock o sin variante seleccionada');
-      return;
-    }
+    if (!this.canAddToCart() || !this.currentProduct || !this.selectedVariant) return;
 
     this.cartService.addItem(
       this.currentProduct.id,
@@ -152,12 +150,8 @@ ngOnInit(): void {
       this.quantity
     );
 
-    this.toastMessage = `${this.currentProduct.name} - ${this.selectedVariant.toneName} (x${this.quantity}) agregado al carrito`;
     this.showToast = true;
-
-    // Limpiar timeout previo si existía
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
-
     this.toastTimeout = setTimeout(() => {
       this.showToast = false;
       this.toastTimeout = null;
@@ -166,31 +160,25 @@ ngOnInit(): void {
     this.quantity = 1;
   }
 
-
   dismissToast(): void {
-  if (this.toastTimeout) {
-    clearTimeout(this.toastTimeout);
-    this.toastTimeout = null;
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+      this.toastTimeout = null;
+    }
+    this.showToast = false;
   }
-  this.showToast = false;
-}
 
   goBack(): void {
     this.router.navigate(['/products']);
   }
 
   decreaseQuantity(): void {
-    if (this.quantity > 1) {
-      this.quantity--;
-    }
+    if (this.quantity > 1) this.quantity--;
   }
 
   increaseQuantity(): void {
-    if (this.selectedVariant && this.quantity < this.selectedVariant.stock) {
-      this.quantity++;
-    } else if (!this.selectedVariant && this.quantity < 99) {
-      this.quantity++;
-    }
+    const maxStock = this.selectedVariant?.stock ?? 99;
+    if (this.quantity < maxStock) this.quantity++;
   }
 
   retryLoad(): void {
