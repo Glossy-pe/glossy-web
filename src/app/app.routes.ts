@@ -14,6 +14,7 @@ export const routes: Routes = [
             { path: 'products/:id', loadComponent: () => import('./features/product/components/product-detail/product-detail').then(m => m.ProductDetail) },
             { path: 'cart', loadComponent: () => import('./features/cart/components/cart-list/cart-list').then(m => m.CartList) },
             { path: 'san-valentin', loadComponent: () => import('./features/valentin-day/components/valentine-day/valentine-day').then(m => m.ValentineDay) },
+            { path: 'tracking-agencies', loadComponent: () => import('./features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },
         ]
     },
 
