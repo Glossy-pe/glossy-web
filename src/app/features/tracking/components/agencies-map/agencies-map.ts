@@ -257,7 +257,22 @@ export class AgenciesMap implements OnDestroy {
   submitForm(): void {
     const { apPaterno, apMaterno, nombre, dni, celular } = this.form;
     if (!apPaterno || !apMaterno || !nombre || !dni || !celular) return;
-    console.log('Selección:', this.selected()?.nombre, this.form);
+
+    const agencia = this.selected()?.nombre ?? '';
+
+    const mensaje =
+      `📦 *NUEVA SELECCIÓN DE AGENCIA*\n\n` +
+      `🏢 *Agencia:* ${agencia}\n\n` +
+      `👤 *Datos del destinatario*\n` +
+      `• Apellido paterno: ${apPaterno}\n` +
+      `• Apellido materno: ${apMaterno}\n` +
+      `• Nombre: ${nombre}\n` +
+      `• DNI / CE: ${dni}\n` +
+      `• Celular: ${celular}`;
+
+    const url = `https://api.whatsapp.com/send?phone=51996629113&text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+
     this.formSubmitted.set(true);
   }
 
