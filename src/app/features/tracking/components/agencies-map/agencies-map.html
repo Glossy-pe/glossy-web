@@ -1,144 +1,195 @@
-<div class="root">
-
-  <!-- Mapa -->
-  <div #mapContainer class="canvas"></div>
-
-  <!-- Loader -->
-  @if (!ready()) {
-    <div class="loader"><div class="loader__ring"></div></div>
-  }
-
-  <!-- ── Barra de búsqueda siempre visible ──────────────────────────────── -->
-  <div class="searchbar" [class.searchbar--active]="showSearch()">
-    <svg class="searchbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+<!-- Buscador -->
+<div class="px-3 pt-3 pb-2">
+  <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 h-11 shadow-sm"
+       [class.border-blue-500]="showSearch()">
+    <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
-
     <input
-      class="searchbar__input"
+      class="flex-1 min-w-0 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
       type="text"
-      placeholder="Buscar agencia, zona, departamento…"
+      placeholder="Buscar zona, departamento…"
       autocomplete="off"
       [value]="searchQuery()"
       (focus)="showSearch.set(true)"
       (input)="onSearchInput($any($event.target).value)"
     />
-
     @if (searchQuery()) {
-      <button class="searchbar__clear" (click)="clearSearch()" aria-label="Limpiar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button class="shrink-0 w-5 h-5 flex items-center justify-center text-gray-400" (click)="clearSearch()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
           <path d="M18 6 6 18M6 6l12 12"/>
         </svg>
       </button>
     }
   </div>
+</div>
 
-  <!-- ── Resultados ────────────────────────────────────────────────────── -->
-  @if (showSearch() && searchQuery().length >= 2) {
-    <div class="results">
-      @if (searchResults().length === 0) {
-        <p class="results__empty">Sin resultados para "{{ searchQuery() }}"</p>
-      }
-      @for (pin of searchResults(); track pin.id) {
-        <button class="result-item" (click)="pickFromSearch(pin)">
-          <span class="result-item__name">{{ pin.nombre }}</span>
-          <span class="result-item__sub">{{ pin.departamento }} · {{ pin.provincia }}</span>
-        </button>
-      }
-    </div>
-  }
-
-  <!-- Overlay para cerrar búsqueda al tocar el mapa -->
-  @if (showSearch() && !searchQuery()) {
-    <div class="search-backdrop" (click)="closeSearch()"></div>
-  }
-
-  <!-- ── FAB GPS ─────────────────────────────────────────────────────────── -->
-  <button
-    class="fab"
-    [class.fab--up]="selected()"
-    (click)="goToMyLocation()"
-    aria-label="Mi ubicación"
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-    </svg>
-  </button>
-
-  <!-- ── Sheet agencia ───────────────────────────────────────────────────── -->
-  <div class="sheet" [class.sheet--open]="selected() && !showForm()">
-    @if (selected(); as pin) {
-      <button class="sheet__pill" (click)="deselect()" aria-label="Cerrar"></button>
-
-      <p class="sheet__status" [class.sheet__status--open]="pin.estadoAgencia.includes('ATENDIENDO')">
-        {{ pin.estadoAgencia.includes('ATENDIENDO') ? 'Abierto' : 'Cerrado' }}
-      </p>
-
-      <h2 class="sheet__name">{{ pin.nombre }}</h2>
-
-      <button class="btn-primary" (click)="openForm()">
-        Seleccionar agencia
+<!-- Resultados de búsqueda -->
+@if (showSearch() && searchQuery().length >= 2) {
+  <div class="mx-3 mb-2 bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden max-h-52 overflow-y-auto">
+    @if (searchResults().length === 0) {
+      <p class="text-center text-sm text-gray-400 py-5">Sin resultados</p>
+    }
+    @for (pin of searchResults(); track pin.id) {
+      <button
+        class="w-full text-left px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+        (click)="pickFromSearch(pin)"
+      >
+        <p class="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{{ pin.nombre }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">{{ pin.departamento }} · {{ pin.provincia }}</p>
       </button>
     }
   </div>
+}
 
-  <!-- ── Modal formulario ───────────────────────────────────────────────── -->
+<!-- Mapa: ocupa lo que queda entre buscador y footer -->
+<div class="relative mx-3 mb-3 rounded-xl overflow-hidden" style="height: clamp(300px, 55vh, 600px)">
+
+  <div #mapContainer class="absolute inset-0"></div>
+
+  <!-- Loader -->
+  @if (!ready()) {
+    <div class="absolute inset-0 bg-white flex items-center justify-center z-10">
+      <div class="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+    </div>
+  }
+
+  <!-- FAB -->
+  <button
+    class="absolute bottom-3 right-3 z-10 w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-blue-600 active:scale-90 transition-transform"
+    (click)="goToMyLocation()"
+    aria-label="Mi ubicación"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-5 h-5">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </svg>
+  </button>
+
+  <!-- Overlay + Modal agencia -->
+  @if (selected()) {
+    <div class="absolute inset-0 bg-black/40 z-20" (click)="deselect()"></div>
+
+    <div class="absolute z-30 left-3 right-3 top-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 shadow-2xl"
+         style="animation: popIn .2s ease">
+
+      <button class="absolute top-3 right-3 w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500"
+              (click)="deselect()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <p class="text-xs font-bold uppercase tracking-widest mb-1"
+         [class.text-green-600]="selected()!.estadoAgencia.includes('ATENDIENDO')"
+         [class.text-red-600]="!selected()!.estadoAgencia.includes('ATENDIENDO')">
+        {{ selected()!.estadoAgencia.includes('ATENDIENDO') ? 'Abierto' : 'Cerrado' }}
+      </p>
+      <h2 class="text-sm font-bold text-gray-900 leading-snug pr-6 mb-4 line-clamp-3">{{ selected()!.nombre }}</h2>
+
+      <button class="w-full h-11 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 active:scale-98 transition-all"
+              (click)="openForm()">
+        Seleccionar agencia
+      </button>
+    </div>
+  }
+
+  <!-- Overlay + Modal formulario -->
   @if (showForm()) {
-    <div class="modal-backdrop" (click)="closeForm()"></div>
-    <div class="modal">
-      <div class="modal__header">
-        <h3 class="modal__title">Datos del destinatario</h3>
-        <button class="modal__close" (click)="closeForm()" aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <div class="absolute inset-0 bg-black/40 z-20" (click)="closeForm()"></div>
+
+    <div class="absolute z-30 left-3 right-3 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl overflow-hidden"
+         style="animation: popIn .2s ease; max-height: calc(100% - 24px)">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Datos del destinatario</h3>
+        <button class="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500"
+                (click)="closeForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
             <path d="M18 6 6 18M6 6l12 12"/>
           </svg>
         </button>
       </div>
 
-      @if (!formSubmitted()) {
-        <div class="modal__body">
-          <div class="field field--readonly">
-            <label class="field__label">Agencia de entrega</label>
-            <p class="field__value">{{ selected()?.nombre }}</p>
+      <!-- Body con scroll propio si no cabe -->
+      <div class="overflow-y-auto p-4 flex flex-col gap-3" style="max-height: calc(100% - 52px)">
+
+        @if (!formSubmitted()) {
+
+          <!-- Agencia -->
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Agencia</p>
+            <p class="text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg px-3 py-2 leading-snug">{{ selected()?.nombre }}</p>
           </div>
-          <div class="field">
-            <label class="field__label">Apellido paterno</label>
-            <input class="field__input" type="text" [(ngModel)]="form.apPaterno" placeholder="García" autocomplete="family-name"/>
+
+          <!-- Apellido paterno + materno -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ap. paterno</label>
+              <input class="mt-1 w-full h-10 border border-gray-200 rounded-lg px-3 text-sm text-gray-800 outline-none focus:border-blue-500 bg-white"
+                     type="text" [(ngModel)]="form.apPaterno" placeholder="García" autocomplete="family-name"/>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ap. materno</label>
+              <input class="mt-1 w-full h-10 border border-gray-200 rounded-lg px-3 text-sm text-gray-800 outline-none focus:border-blue-500 bg-white"
+                     type="text" [(ngModel)]="form.apMaterno" placeholder="López"/>
+            </div>
           </div>
-          <div class="field">
-            <label class="field__label">Apellido materno</label>
-            <input class="field__input" type="text" [(ngModel)]="form.apMaterno" placeholder="López"/>
+
+          <!-- Nombre -->
+          <div>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nombre</label>
+            <input class="mt-1 w-full h-10 border border-gray-200 rounded-lg px-3 text-sm text-gray-800 outline-none focus:border-blue-500 bg-white"
+                   type="text" [(ngModel)]="form.nombre" placeholder="Carlos" autocomplete="given-name"/>
           </div>
-          <div class="field">
-            <label class="field__label">Nombre</label>
-            <input class="field__input" type="text" [(ngModel)]="form.nombre" placeholder="Carlos" autocomplete="given-name"/>
+
+          <!-- DNI + Celular -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">DNI / CE</label>
+              <input class="mt-1 w-full h-10 border border-gray-200 rounded-lg px-3 text-sm text-gray-800 outline-none focus:border-blue-500 bg-white"
+                     type="text" inputmode="numeric" [(ngModel)]="form.dni" placeholder="12345678" maxlength="12"/>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Celular</label>
+              <input class="mt-1 w-full h-10 border border-gray-200 rounded-lg px-3 text-sm text-gray-800 outline-none focus:border-blue-500 bg-white"
+                     type="tel" inputmode="tel" [(ngModel)]="form.celular" placeholder="987654321" maxlength="9"/>
+            </div>
           </div>
-          <div class="field">
-            <label class="field__label">DNI / CE</label>
-            <input class="field__input" type="text" inputmode="numeric" [(ngModel)]="form.dni" placeholder="12345678" maxlength="12"/>
-          </div>
-          <div class="field">
-            <label class="field__label">Nro. celular</label>
-            <input class="field__input" type="tel" inputmode="tel" [(ngModel)]="form.celular" placeholder="987654321" maxlength="9"/>
-          </div>
+
           <button
-            class="btn-primary btn-primary--full"
+            class="w-full h-11 bg-blue-600 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-40"
+            [class.hover:bg-blue-700]="form.apPaterno && form.apMaterno && form.nombre && form.dni && form.celular"
             (click)="submitForm()"
             [disabled]="!form.apPaterno || !form.apMaterno || !form.nombre || !form.dni || !form.celular"
           >
-            Confirmar selección
+            Confirmar
           </button>
-        </div>
-      } @else {
-        <div class="modal__success">
-          <div class="success-icon">✓</div>
-          <p class="success-msg">¡Agencia seleccionada!</p>
-          <p class="success-sub">{{ selected()?.nombre }}</p>
-          <button class="btn-primary btn-primary--full" (click)="closeForm()">Listo</button>
-        </div>
-      }
+
+        } @else {
+
+          <div class="flex flex-col items-center gap-2 py-4">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl">✓</div>
+            <p class="font-bold text-gray-900">¡Listo!</p>
+            <p class="text-xs text-gray-400 text-center leading-snug">{{ selected()?.nombre }}</p>
+            <button class="mt-2 w-full h-11 bg-blue-600 text-white text-sm font-bold rounded-xl" (click)="closeForm()">Cerrar</button>
+          </div>
+
+        }
+      </div>
     </div>
   }
 
 </div>
+
+<style>
+  @keyframes popIn {
+    from { opacity: 0; transform: translate(-50%, -48%) scale(.94); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  /* fix: translate-y ya está en clase de Tailwind, la animación usa solo escala+opacity */
+  @keyframes popIn {
+    from { opacity: 0; scale: .94; }
+    to   { opacity: 1; scale: 1; }
+  }
+</style>
