@@ -66,18 +66,32 @@ export class ProductCard implements OnInit, OnDestroy{
   // }
 
   getMainImage(productResponseFull: ProductResponseFull): VariantImageResponse {
-    const image = productResponseFull.variants
-      ?.flatMap(v => v.images || [])
-      ?.find(img => img.mainImage);
-
-    return image ?? {
-      id: 0,
+  // 1. Primero buscar en imágenes generales del producto
+  const productImages = productResponseFull.images ?? [];
+  if (productImages.length > 0) {
+    const mainProductImage = productImages.find(img => img.mainImage) ?? productImages[0];
+    return {
+      id: mainProductImage.id,
       variantId: 0,
-      url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image',
-      position: 1,
-      mainImage: true
+      url: mainProductImage.url,
+      position: mainProductImage.position ?? 0,
+      mainImage: mainProductImage.mainImage ?? true
     };
   }
+
+  // 2. Fallback: imagen principal de variante
+  const variantImage = productResponseFull.variants
+    ?.flatMap(v => v.images || [])
+    ?.find(img => img.mainImage);
+
+  return variantImage ?? {
+    id: 0,
+    variantId: 0,
+    url: 'https://placehold.co/400x500/F3F4F6/9CA3AF?text=No+Image',
+    position: 1,
+    mainImage: true
+  };
+}
 
   viewProductDetail(productResponseFull: ProductResponseFull) {
     this.router.navigate(['/products', productResponseFull.id]);

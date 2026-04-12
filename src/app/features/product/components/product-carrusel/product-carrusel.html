@@ -1,48 +1,54 @@
-<div class="w-full relative group/slider py-8 px-4 md:px-16 md:py-12 bg-white">
+<div class="w-full relative group/slider py-10 px-4 md:px-16 bg-[#FFFDF9] border-y-2 border-[#F0FAFF]">
 
-  <div class="flex flex-row justify-between items-end mb-4 md:mb-10 gap-2">
+  <div class="flex flex-row justify-between items-end mb-8 md:mb-12 gap-4">
 
     <div *ngIf="labelId" class="text-left relative z-10">
-      <h2 class="text-xl md:text-4xl font-serif font-light text-black tracking-tight leading-none mb-1 md:mb-3">
-        {{ labelName }}
-      </h2>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="h-6 w-2 bg-[#FF8DA1]"></div>
+        <h2 class="text-2xl md:text-5xl font-black text-gray-800 tracking-tighter italic leading-none">
+          {{ labelName }}
+        </h2>
+      </div>
       
-      <p class="text-stone-500 text-[10px] md:text-base font-light max-w-[220px] md:max-w-lg leading-tight md:leading-relaxed">
-        Selección exclusiva para tu brillo natural.
+      <p class="text-[#A7E9FF] text-[10px] md:text-sm font-black uppercase tracking-[0.3em] ml-5">
+        Summer Favorites 2026 ✨
       </p>
     </div>
 
-    <div class="flex gap-1 md:gap-2 shrink-0 mb-0.5">
+    <div class="flex gap-2 shrink-0 mb-1">
       <button (click)="scrollLeft()"
-              class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white border border-stone-200 text-black transition-all duration-300 hover:bg-lime-400 hover:border-black active:scale-95 disabled:opacity-30 rounded-full md:rounded-none">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5">
+              class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white border-2 border-[#FFDDE4] text-[#FF8DA1] transition-all hover:bg-[#FFDDE4] active:scale-95 disabled:opacity-20 shadow-[3px_3px_0px_#FFDDE4] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
       </button>
 
       <button (click)="scrollRight()"
-              class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white border border-stone-200 text-black transition-all duration-300 hover:bg-lime-400 hover:border-black active:scale-95 disabled:opacity-30 rounded-full md:rounded-none">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 md:w-5 md:h-5">
+              class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-[#FF8DA1] border-2 border-[#FF8DA1] text-white transition-all hover:bg-[#FFB5C2] active:scale-95 disabled:opacity-20 shadow-[3px_3px_0px_#FFDDE4] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </button>
     </div>
   </div>
 
-  <div *ngIf="isLoading$ | async" class="text-center py-12 md:py-24 border-t border-stone-100">
-    <p class="text-[9px] md:text-[10px] font-light tracking-[0.3em] text-stone-300 uppercase animate-pulse">Cargando...</p>
+  <div *ngIf="isLoading$ | async" class="py-20 text-center border-t-2 border-[#F0FAFF]">
+    <span class="inline-block w-2 h-2 bg-[#FF8DA1] animate-ping mr-2"></span>
+    <p class="text-[10px] font-black tracking-[0.4em] text-[#FFB5C2] uppercase inline">Picking the best for you...</p>
   </div>
 
   <div *ngIf="!(isLoading$ | async)" class="relative">
     <div #scrollContainer
-         class="flex gap-3 md:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 md:pb-10 hide-scrollbar scroll-pl-4 md:scroll-pl-0">
+         class="flex gap-4 md:gap-10 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-6 md:pb-14 hide-scrollbar">
 
-    <div *ngFor="let product of (products$ | async)?.content"
-        class="flex-none w-[180px] xs:w-[220px] md:w-[300px] snap-start first:pl-0">
-      <app-product-card [productResponseFull]="product" class="h-full block"></app-product-card>
-    </div>
+      <div *ngFor="let product of (products$ | async)?.content"
+          class="flex-none w-[200px] xs:w-[240px] md:w-[320px] snap-start border-b-4 border-transparent hover:border-[#A7E9FF] transition-all duration-500">
+        <app-product-card [productResponseFull]="product" class="h-full block"></app-product-card>
+      </div>
 
       <div class="w-4 md:w-8 flex-none"></div>
     </div>
   </div>
+
+  <div class="absolute bottom-0 left-0 w-full h-[2px] bg-[repeating-linear-gradient(90deg,#FFDDE4,#FFDDE4_10px,transparent_10px,transparent_20px)]"></div>
 </div>

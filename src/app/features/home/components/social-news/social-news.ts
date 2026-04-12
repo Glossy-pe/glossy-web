@@ -12,6 +12,29 @@ import {Observable} from 'rxjs';
 export class SocialNews implements OnInit {
 // TUS VIDEOS AQUÍ:
 
+videos = [
+    {
+      url: 'https://www.tiktok.com/@glossy.pe/video/7611005546996436244?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
+      image: 'https://glossy-image-server.mimarca.pe/images/629/file',
+      title: 'Acompañanme a preparar un envío para una clientita 📦🎀'
+    },
+    {
+      url: 'https://www.tiktok.com/@glossy.pe/video/7626911818232941842?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
+      image: 'https://glossy-image-server.mimarca.pe/images/628/file',
+      title: 'Una base con mucho amor 💝'
+    },
+    {
+      url: 'https://www.tiktok.com/@glossy.pe/video/7625104909142166804?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
+      image: 'https://glossy-image-server.mimarca.pe/images/630/file',
+      title: 'Llegaron los Dupes de Flower Knows 😍'
+    },
+    {
+      url: 'https://www.tiktok.com/@glossy.pe/video/7624673886214393109?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
+      image: 'https://glossy-image-server.mimarca.pe/images/631/file',
+      title: 'Llegaron los dupes A1 de Kiko Milano 🤭'
+    },
+  ];
+  
   videoUrls = [
     'https://www.tiktok.com/@glossy.pe/video/7611005546996436244?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484',
     'https://www.tiktok.com/@glossy.pe/video/7608412047348337941?is_from_webapp=1&sender_device=pc&web_id=7610210035554174484', // Ejemplo

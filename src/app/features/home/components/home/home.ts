@@ -5,6 +5,7 @@ import {Marquee} from '../../../../shared/components/marquee/marquee';
 import {HomeHero} from '../home-hero/home-hero';
 import {SocialNews} from '../social-news/social-news';
 import { ProductCarrusel } from "../../../product/components/product-carrusel/product-carrusel";
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -14,4 +15,6 @@ import { ProductCarrusel } from "../../../product/components/product-carrusel/pr
 })
 export class Home{
 
+  constructor(private router: Router,){}
+  goToProducts(): void { this.router.navigate(['/products']); }
 }

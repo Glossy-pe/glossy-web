@@ -60,13 +60,13 @@ interface CartItem {
 }
 
 export enum OrderStatus {
-  CREATED           = 'CREATED',
-  CREADO            = 'CREADO',
-  ACUMULANDO        = 'ACUMULANDO',
+  CREATED = 'CREATED',
+  CREADO = 'CREADO',
+  ACUMULANDO = 'ACUMULANDO',
   PENDIENTE_PACKAGE = 'PENDIENTE_PACKAGE',
-  PENDIENTE_ENVIO   = 'PENDIENTE_ENVIO',
-  ENVIADO           = 'ENVIADO',
-  PAID              = 'PAID'
+  PENDIENTE_ENVIO = 'PENDIENTE_ENVIO',
+  ENVIADO = 'ENVIADO',
+  PAID = 'PAID'
 }
 
 @Component({
@@ -77,62 +77,62 @@ export enum OrderStatus {
 })
 export class AdminOrderDetail implements OnInit {
 
-  private route        = inject(ActivatedRoute);
-  private router       = inject(Router);
-  private http         = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
   private orderService = inject(OrderService);
-  private pdfService   = inject(PdfGeneratorService);
+  private pdfService = inject(PdfGeneratorService);
 
   private apiUrl = `${environment.apiUrl}/products`;
   private search$ = new Subject<string>();
 
   // ── Estado principal ─────────────────────────────────────────────────────────
-  order         = signal<OrderResponse | null>(null);
+  order = signal<OrderResponse | null>(null);
   currentStatus = signal<OrderStatus>(OrderStatus.CREATED);
-  isLoading     = signal(true);
-  isEditing     = signal(false);
-  isSaving      = signal(false);
+  isLoading = signal(true);
+  isEditing = signal(false);
+  isSaving = signal(false);
 
   // ── Datos cliente ────────────────────────────────────────────────────────────
-  customerName    = signal('');
+  customerName = signal('');
   customerAddress = signal('');
 
   // ── Búsqueda de productos ────────────────────────────────────────────────────
-  searchTerm       = signal('');
-  searchResults    = signal<ProductResponseFull[]>([]);
-  isSearching      = signal(false);
-  selectedProduct  = signal<ProductResponseFull | null>(null);
-  selectedVariant  = signal<VariantResponseFull | null>(null);
-  quantity         = signal(1);
-  stockError       = signal('');
+  searchTerm = signal('');
+  searchResults = signal<ProductResponseFull[]>([]);
+  isSearching = signal(false);
+  selectedProduct = signal<ProductResponseFull | null>(null);
+  selectedVariant = signal<VariantResponseFull | null>(null);
+  quantity = signal(1);
+  stockError = signal('');
 
   // ── Carrito ──────────────────────────────────────────────────────────────────
   cart = signal<CartItem[]>([]);
 
   // ── Computed ─────────────────────────────────────────────────────────────────
   availableStock = computed(() => {
-  const variant = this.selectedVariant();
-  if (!variant) return 0;
+    const variant = this.selectedVariant();
+    if (!variant) return 0;
 
-  // Solo restar si el item fue AGREGADO NUEVO en esta edición
-  // no si ya existía en la orden original
-  const inCart = this.cart().find(i => i.productVariantId === variant.id);
-  const isOriginalItem = this.order()?.orderItems
-    .some(oi => oi.productVariant.id === variant.id) ?? false;
+    // Solo restar si el item fue AGREGADO NUEVO en esta edición
+    // no si ya existía en la orden original
+    const inCart = this.cart().find(i => i.productVariantId === variant.id);
+    const isOriginalItem = this.order()?.orderItems
+      .some(oi => oi.productVariant.id === variant.id) ?? false;
 
-  if (isOriginalItem) {
-    // Ya estaba en la orden: el stock del backend ya contempla esa reserva
-    // solo restamos si aumentamos la cantidad respecto a la original
-    const originalQty = this.order()?.orderItems
-      .find(oi => oi.productVariant.id === variant.id)?.quantity ?? 0;
-    const currentQty = inCart?.quantity ?? 0;
-    const extraQty = Math.max(0, currentQty - originalQty);
-    return variant.stock - extraQty;
-  }
+    if (isOriginalItem) {
+      // Ya estaba en la orden: el stock del backend ya contempla esa reserva
+      // solo restamos si aumentamos la cantidad respecto a la original
+      const originalQty = this.order()?.orderItems
+        .find(oi => oi.productVariant.id === variant.id)?.quantity ?? 0;
+      const currentQty = inCart?.quantity ?? 0;
+      const extraQty = Math.max(0, currentQty - originalQty);
+      return variant.stock - extraQty;
+    }
 
-  // Item nuevo: restar lo que hay en carrito normalmente
-  return variant.stock - (inCart?.quantity ?? 0);
-});
+    // Item nuevo: restar lo que hay en carrito normalmente
+    return variant.stock - (inCart?.quantity ?? 0);
+  });
 
   cartTotal = computed(() =>
     this.cart().reduce((acc, item) => acc + item.price * item.quantity, 0)
@@ -224,16 +224,16 @@ export class AdminOrderDetail implements OnInit {
     this.currentStatus.set(order.status as OrderStatus);
 
     this.cart.set(order.orderItems.map(item => ({
-  productVariantId: item.productVariant.id,
-  productId:        item.productVariant.productId,
-  quantity:         item.quantity,
-  toneName:         item.productVariant.toneName,
-  toneCode:         item.productVariant.toneCode,
-  cost:             item.productVariant.cost,
-  price:            item.productVariant.price,
-  productName:      item.productVariant.productName,
-  stock:            item.productVariant.stock,
-  imageUrl:         item.productVariant.mainImageUrl ?? null // 👈 ya viene del backend
+      productVariantId: item.productVariant.id,
+      productId: item.productVariant.productId,
+      quantity: item.quantity,
+      toneName: item.productVariant.toneName,
+      toneCode: item.productVariant.toneCode,
+      cost: item.productVariant.cost,
+      price: item.productVariant.price,
+      productName: item.productVariant.productName,
+      stock: item.productVariant.stock,
+      imageUrl: item.productVariant.mainImageUrl ?? null // 👈 ya viene del backend
     })));
 
     this.isEditing.set(true);
@@ -266,14 +266,14 @@ export class AdminOrderDetail implements OnInit {
     this.selectedVariant.set(null);
     this.quantity.set(1);
     this.stockError.set('');
-    this.searchTerm.set('');
-    this.searchResults.set([]);
+    // ❌ No limpiar searchTerm ni searchResults
   }
 
   selectVariant(variant: VariantResponseFull) {
     this.selectedVariant.set(variant);
     this.quantity.set(1);
     this.stockError.set('');
+    this.searchResults.set([]); // cerrar dropdown al elegir variante
   }
 
   setQuantity(value: number) {
@@ -289,42 +289,43 @@ export class AdminOrderDetail implements OnInit {
   }
 
   addToCart() {
-  const variant = this.selectedVariant();
-  const product = this.selectedProduct();
-  if (!variant || !product) return;
+    const variant = this.selectedVariant();
+    const product = this.selectedProduct();
+    if (!variant || !product) return;
 
-  if (this.quantity() > this.availableStock()) {
-    this.stockError.set(`Stock insuficiente. Máximo: ${this.availableStock()}`);
-    return;
+    if (this.quantity() > this.availableStock()) {
+      this.stockError.set(`Stock insuficiente. Máximo: ${this.availableStock()}`);
+      return;
+    }
+
+    const existing = this.cart().find(i => i.productVariantId === variant.id);
+    if (existing) {
+      this.cart.update(items =>
+        items.map(i => i.productVariantId === variant.id
+          ? { ...i, quantity: i.quantity + this.quantity() }
+          : i
+        )
+      );
+    } else {
+      this.cart.update(items => [...items, {
+        productVariantId: variant.id,
+        productId: product.id,
+        quantity: this.quantity(),
+        toneName: variant.toneName,
+        toneCode: variant.toneCode,
+        cost: variant.cost,
+        price: variant.price,
+        productName: product.name,
+        stock: variant.stock,
+        imageUrl: variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null
+      }]);
+    }
+
+    // Solo limpiar variante y cantidad — producto sigue visible
+    this.selectedVariant.set(null);
+    this.quantity.set(1);
+    this.stockError.set('');
   }
-
-  const existing = this.cart().find(i => i.productVariantId === variant.id);
-  if (existing) {
-    this.cart.update(items =>
-      items.map(i => i.productVariantId === variant.id
-        ? { ...i, quantity: i.quantity + this.quantity() }
-        : i
-      )
-    );
-  } else {
-    this.cart.update(items => [...items, {
-      productVariantId: variant.id,
-      productId:        product.id,
-      quantity:         this.quantity(),
-      toneName:         variant.toneName,
-      toneCode:         variant.toneCode,
-      cost:             variant.cost,
-      price:            variant.price,
-      productName:      product.name,
-      stock:            variant.stock,
-      imageUrl:         variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null
-    }]);
-  }
-
-  this.resetSearch();
-  this.selectedProduct.set(null);
-  this.selectedVariant.set(null);
-}
 
   updateCartQuantity(variantId: number, qty: number) {
     const item = this.cart().find(i => i.productVariantId === variantId);
@@ -342,37 +343,37 @@ export class AdminOrderDetail implements OnInit {
   // ── Guardar orden ────────────────────────────────────────────────────────────
 
   saveOrder() {
-  if (!this.canSave()) return;
-  const order = this.order();
-  if (!order) return;
+    if (!this.canSave()) return;
+    const order = this.order();
+    if (!order) return;
 
-  this.isSaving.set(true);
+    this.isSaving.set(true);
 
-  const request: OrderRequest = {
-    customerName:    this.customerName(),
-    customerAddress: this.customerAddress(),
-    status:          this.currentStatus(),
-    total:           this.cartTotal(),
-    costTotal:       this.cartCostTotal(),
-    createdAt:       order.createdAt,
-    orderItems:      this.cart().map(i => ({
-      productVariantId: i.productVariantId,
-      quantity:         i.quantity
-    }))
-  };
+    const request: OrderRequest = {
+      customerName: this.customerName(),
+      customerAddress: this.customerAddress(),
+      status: this.currentStatus(),
+      total: this.cartTotal(),
+      costTotal: this.cartCostTotal(),
+      createdAt: order.createdAt,
+      orderItems: this.cart().map(i => ({
+        productVariantId: i.productVariantId,
+        quantity: i.quantity
+      }))
+    };
 
-  this.orderService.update(order.id, request).subscribe({
-    next: (updated) => {
-  this.order.set(updated); // mainImageUrl ya viene en la respuesta
-  this.isEditing.set(false);
-  this.isSaving.set(false);
-},
-    error: () => {
-      alert('Error al actualizar la orden');
-      this.isSaving.set(false);
-    }
-  });
-}
+    this.orderService.update(order.id, request).subscribe({
+      next: (updated) => {
+        this.order.set(updated); // mainImageUrl ya viene en la respuesta
+        this.isEditing.set(false);
+        this.isSaving.set(false);
+      },
+      error: () => {
+        alert('Error al actualizar la orden');
+        this.isSaving.set(false);
+      }
+    });
+  }
 
   // ── Helper imagen variante ───────────────────────────────────────────────────
   getMainImageFromVariant(variant: VariantResponseFull): string | null {

@@ -1,30 +1,46 @@
-<section class="w-full py-10 bg-sky-100/50 border-y border-sky-200/30 overflow-hidden">
-
-  <div class="mb-8 text-center">
-    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-900/40 uppercase">
-      Nuestras Alianzas
+<section class="w-full py-12 bg-white border-y-4 border-[#F0FAFF] overflow-hidden relative">
+  
+  <div class="absolute top-4 left-4 z-10 hidden md:block">
+    <span class="bg-[#A7E9FF] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 shadow-[3px_3px_0px_#E5F9FF]">
+      Official Partners ✦
     </span>
   </div>
 
-  <div class="relative flex overflow-hidden mask-edges">
-    <div class="flex animate-marquee-linear gap-16 md:gap-24 items-center py-4">
+  <div class="mb-10 text-center">
+    <h2 class="text-xl md:text-3xl font-black text-gray-800 tracking-tighter italic uppercase leading-none">
+      Marcas <span class="text-[#FF8DA1]">Originales</span>
+    </h2>
+    <div class="h-1 w-20 bg-[#FFDDE4] mx-auto mt-3"></div>
+  </div>
+
+  <div class="relative flex overflow-hidden">
+    <div class="absolute inset-y-0 left-0 w-20 z-10 bg-gradient-to-r from-white to-transparent"></div>
+    <div class="absolute inset-y-0 right-0 w-20 z-10 bg-gradient-to-l from-white to-transparent"></div>
+
+    <div class="flex animate-marquee-linear gap-16 md:gap-32 items-center py-6">
 
       <ng-container *ngFor="let brand of brands">
-        <div class="flex-none">
+        <div class="flex-none group">
           <img [src]="brand"
-               class="h-8 md:h-12 w-auto object-contain transition-all duration-300"
+               class="h-8 md:h-14 w-auto object-contain transition-all duration-500 grayscale group-hover:grayscale-0 opacity-40 group-hover:opacity-100"
                alt="Brand Logo">
         </div>
       </ng-container>
 
       <ng-container *ngFor="let brand of brands">
-        <div class="flex-none">
+        <div class="flex-none group">
           <img [src]="brand"
-               class="h-8 md:h-12 w-auto object-contain  transition-all duration-300"
+               class="h-8 md:h-14 w-auto object-contain transition-all duration-500 grayscale group-hover:grayscale-0 opacity-40 group-hover:opacity-100"
                alt="Brand Logo">
         </div>
       </ng-container>
 
     </div>
+  </div>
+
+  <div class="mt-8 flex w-full h-1">
+    <div class="flex-1 bg-[#F0FAFF]"></div>
+    <div class="flex-1 bg-[#FFDDE4]"></div>
+    <div class="flex-1 bg-[#F0FAFF]"></div>
   </div>
 </section>

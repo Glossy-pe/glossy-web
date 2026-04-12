@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormsModule } from '@angular/forms';
@@ -12,6 +12,27 @@ interface VariantImageResponse {
   url: string;
   position: number;
   mainImage: boolean;
+}
+
+// Agregar interfaz
+interface ProductImageResponse {
+  id: number;
+  productId: number;
+  url: string;
+}
+
+// Actualizar ProductResponseFull
+interface ProductResponseFull {
+  id: number;
+  name: string;
+  description: string;
+  fullDescription: string;
+  label: string;
+  active: boolean;
+  categoryId: number;
+  variants: VariantResponseFull[];
+  labels: LabelResponse[];
+  images: ProductImageResponse[]; // 👈 agregar
 }
 
 interface VariantResponseFull {
@@ -54,6 +75,11 @@ export class AdminProductDetail implements OnInit {
   private fb     = inject(FormBuilder);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
+
+
+  uploadingProductImage = signal(false);
+  selectedProductFile   = signal<File | null>(null);
+  productImageInput: HTMLInputElement | null = null;
 
   private apiUrl       = environment.apiUrl;
   private imageApiBase = environment.apiImageServer;
@@ -326,4 +352,60 @@ export class AdminProductDetail implements OnInit {
   }
   isLabelSelected(id: number) { return this.selectedLabels().includes(id); }
   goBack() { this.router.navigate(['/admin/products']); }
+
+  sortedVariants = computed(() =>
+  [...(this.product()?.variants ?? [])].sort((a, b) => {
+    const posA = a.position ?? Infinity;
+    const posB = b.position ?? Infinity;
+    return posA - posB;
+  })
+);
+
+// ── Imágenes del producto ────────────────────────────────────────────────────
+
+onProductFileSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (file) this.selectedProductFile.set(file);
+}
+
+uploadProductImage() {
+  const file = this.selectedProductFile();
+  if (!file) return;
+
+  this.uploadingProductImage.set(true);
+  const formData = new FormData();
+  formData.append('category', 'products');
+  formData.append('file', file);
+
+  this.http.post<ImageUploadResponse>(`${this.imageApiBase}/images`, formData).pipe(
+    switchMap(res => {
+      const body = [{ url: `${this.imageApiBase}/images/${res.id}/file` }];
+      return this.http.post<ProductImageResponse[]>(
+        `${this.apiUrl}/products/${this.productId()}/images`, body
+      );
+    }),
+    finalize(() => this.uploadingProductImage.set(false)),
+    catchError(err => { console.error(err); alert('Error al subir imagen'); return of(null); })
+  ).subscribe(imgs => {
+    if (imgs) {
+      this.product.update(p => p
+        ? { ...p, images: [...(p.images || []), ...imgs] }
+        : p
+      );
+      this.selectedProductFile.set(null);
+    }
+  });
+}
+
+deleteProductImage(imageId: number) {
+  if (!confirm('¿Eliminar imagen del producto?')) return;
+  this.http.delete(`${this.apiUrl}/products/${this.productId()}/images/${imageId}`).pipe(
+    catchError(err => { console.error(err); alert('Error al eliminar imagen'); return of(null); })
+  ).subscribe(() => {
+    this.product.update(p => p
+      ? { ...p, images: p.images.filter(i => i.id !== imageId) }
+      : p
+    );
+  });
+}
 }

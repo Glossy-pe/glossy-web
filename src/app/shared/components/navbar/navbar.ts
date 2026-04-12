@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-// import { debounceTime, distinctUntilChanged, map, Subject, switchMap } from 'rxjs';
-// import { ProductService } from '../../../features/product/services/product.service';
-// import { ProductResponseFull } from '../../../features/product/models/product-response-full.model';
+import { debounceTime, distinctUntilChanged, Subject, switchMap, catchError, of } from 'rxjs';
+import { ProductService } from '../../../features/product/services/product.service';
+import { ProductResponseFull } from '../../../features/product/models/product-response-full.model';
 
 @Component({
   selector: 'app-navbar',
@@ -15,48 +15,50 @@ import { FormsModule } from '@angular/forms';
 })
 export class Navbar {
 
+  cartCount = signal(0);
+  searchTerm    = signal('');
+  searchResults = signal<ProductResponseFull[]>([]);
+  isSearching   = signal(false);
+  showDropdown  = signal(false);
+
+  private searchSubject = new Subject<string>();
+
   constructor(
     private router: Router,
-    // private productService: ProductService  // ← Descomentar al implementar búsqueda
+    private productService: ProductService
   ) {
-    // TODO: Búsqueda — descomentar cuando haya endpoint disponible
-    // this.searchSubject.pipe(
-    //   debounceTime(350),
-    //   distinctUntilChanged(),
-    //   switchMap(term => {
-    //     if (!term.trim()) {
-    //       this.searchResults.set([]);
-    //       this.isSearching.set(false);
-    //       return [];
-    //     }
-    //     this.isSearching.set(true);
-    //     return this.productService.searchByName(term); // GET /products/search?name=term
-    //   })
-    // ).subscribe({
-    //   next: results => {
-    //     this.searchResults.set(results);
-    //     this.isSearching.set(false);
-    //     this.showDropdown.set(true);
-    //   },
-    //   error: () => this.isSearching.set(false)
-    // });
+    this.searchSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (!term.trim()) {
+          this.searchResults.set([]);
+          this.showDropdown.set(false);
+          this.isSearching.set(false);
+          return of(null);
+        }
+        this.isSearching.set(true);
+        return this.productService.searchProductsFull(term).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe(response => {
+      this.isSearching.set(false);
+      if (response) {
+        this.searchResults.set(response.content);
+        this.showDropdown.set(true);
+      }
+    });
   }
-
-  cartCount = signal(0);
-
-  searchTerm = signal('');
-  searchResults = signal<any[]>([]);  // ← Tipará con ProductResponseFull al implementar
-  isSearching = signal(false);
-  showDropdown = signal(false);
-
-  // private searchSubject = new Subject<string>(); // ← Descomentar al implementar
 
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchTerm.set(value);
-    // TODO: Activar búsqueda
-    // if (!value.trim()) this.showDropdown.set(false);
-    // this.searchSubject.next(value);
+    if (!value.trim()) {
+      this.searchResults.set([]);
+      this.showDropdown.set(false);
+    }
+    this.searchSubject.next(value);
   }
 
   onSearchSubmit(): void {
@@ -79,4 +81,19 @@ export class Navbar {
   goToCart(): void { this.router.navigate(['/cart']); }
   goToHome(): void { this.router.navigate(['/home']); }
   goProducts(): void { this.router.navigate(['/products']); }
+
+  getProductImage(product: ProductResponseFull): string | null {
+  // Primero imágenes generales del producto
+  if (product.images?.length) return product.images[0].url;
+  // Fallback: imagen principal de variante
+  const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
+    ?? product.variants?.[0]?.images?.[0];
+  return img?.url ?? null;
+}
+
+getMinPrice(product: ProductResponseFull): string {
+  const prices = product.variants?.map(v => v.price).filter(p => p > 0) ?? [];
+  if (!prices.length) return '';
+  return `S/. ${Math.min(...prices).toFixed(2)}`;
+}
 }

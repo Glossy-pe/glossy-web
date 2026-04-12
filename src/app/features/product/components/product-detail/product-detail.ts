@@ -99,35 +99,57 @@ export class ProductDetail implements OnInit, OnDestroy {
   }
 
   initializeProduct(product: ProductResponseFull): void {
-    if (!product?.variants?.length) return;
+  if (!product?.variants?.length) return;
 
-    // Ordenar por position (null va al final), elegir la de menor position con stock > 0
-    const sorted = [...product.variants].sort((a, b) => {
-      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
-      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-      return posA - posB;
-    });
+  const sorted = [...product.variants].sort((a, b) => {
+    const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+    const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+    return posA - posB;
+  });
 
-    this.selectedVariant = sorted.find(v => v.stock > 0) ?? sorted[0];
-    this.activeImageIndex = 0;
-  }
+  this.selectedVariant = sorted.find(v => v.stock > 0) ?? sorted[0];
+  this.activeImageIndex = 0;
+}
 
   selectVariant(variant: VariantResponseFull): void {
-    this.selectedVariant = variant;
-    this.activeImageIndex = 0;
-    if (variant.stock > 0 && this.quantity > variant.stock) {
-      this.quantity = variant.stock;
-    }
-  }
+  this.selectedVariant = variant;
+  
+  // Saltar al inicio de las imágenes de la variante
+  // (después de las imágenes generales del producto)
+  const productImagesCount = this.currentProduct?.images?.length ?? 0;
+  this.activeImageIndex = productImagesCount;
 
-  getActiveImages(): VariantImageResponse[] {
-    const images = this.selectedVariant?.images;
-    if (images?.length) {
-      // Ordenar por position para mostrar en el orden correcto
-      return [...images].sort((a, b) => a.position - b.position);
-    }
-    return [this.PLACEHOLDER_IMAGE];
+  if (variant.stock > 0 && this.quantity > variant.stock) {
+    this.quantity = variant.stock;
   }
+}
+
+  getActiveImages(): (VariantImageResponse & { grayscale?: boolean })[] {
+  const result: (VariantImageResponse & { grayscale?: boolean })[] = [];
+
+  // 1. Imágenes generales del producto (nunca grayscale)
+  const productImages = this.currentProduct?.images ?? [];
+  productImages.forEach(img => {
+    result.push({
+      id: img.id,
+      variantId: 0,
+      url: img.url,
+      position: 0,
+      mainImage: false,
+      grayscale: false
+    });
+  });
+
+  // 2. Imágenes de la variante seleccionada
+  const variantImages = this.selectedVariant?.images ?? [];
+  const isOutOfStock = (this.selectedVariant?.stock ?? 0) === 0;
+
+  [...variantImages]
+    .sort((a, b) => a.position - b.position)
+    .forEach(img => result.push({ ...img, grayscale: isOutOfStock }));
+
+  return result.length ? result : [this.PLACEHOLDER_IMAGE];
+}
 
   isVariantSelected(variant: VariantResponseFull): boolean {
     return this.selectedVariant?.id === variant.id;

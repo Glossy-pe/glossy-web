@@ -58,13 +58,13 @@ interface CartItem {
 }
 
 export enum OrderStatus {
-  CREATED           = 'CREATED',
-  CREADO            = 'CREADO',
-  ACUMULANDO        = 'ACUMULANDO',
+  CREATED = 'CREATED',
+  CREADO = 'CREADO',
+  ACUMULANDO = 'ACUMULANDO',
   PENDIENTE_PACKAGE = 'PENDIENTE_PACKAGE',
-  PENDIENTE_ENVIO   = 'PENDIENTE_ENVIO',
-  ENVIADO           = 'ENVIADO',
-  PAID              = 'PAID'
+  PENDIENTE_ENVIO = 'PENDIENTE_ENVIO',
+  ENVIADO = 'ENVIADO',
+  PAID = 'PAID'
 }
 
 @Component({
@@ -75,27 +75,27 @@ export enum OrderStatus {
 })
 export class AdminOrderCreate {
 
-  private http         = inject(HttpClient);
+  private http = inject(HttpClient);
   private orderService = inject(OrderService);
-  private router       = inject(Router);
+  private router = inject(Router);
 
-  private apiUrl   = `${environment.apiUrl}/products`;
-  private search$  = new Subject<string>();
+  private apiUrl = `${environment.apiUrl}/products`;
+  private search$ = new Subject<string>();
 
   // ── Búsqueda ─────────────────────────────────────────────────────────────────
-  searchTerm      = signal('');
-  searchResults   = signal<ProductResponseFull[]>([]);
-  isSearching     = signal(false);
+  searchTerm = signal('');
+  searchResults = signal<ProductResponseFull[]>([]);
+  isSearching = signal(false);
   selectedProduct = signal<ProductResponseFull | null>(null);
   selectedVariant = signal<VariantResponseFull | null>(null);
-  quantity        = signal(1);
-  stockError      = signal('');
+  quantity = signal(1);
+  stockError = signal('');
 
   // ── Carrito ──────────────────────────────────────────────────────────────────
   cart = signal<CartItem[]>([]);
 
   // ── Cliente ──────────────────────────────────────────────────────────────────
-  customerName    = signal('');
+  customerName = signal('');
   customerAddress = signal('');
 
   // ── UI ───────────────────────────────────────────────────────────────────────
@@ -157,8 +157,7 @@ export class AdminOrderCreate {
     this.selectedVariant.set(null);
     this.quantity.set(1);
     this.stockError.set('');
-    this.searchTerm.set('');
-    this.searchResults.set([]);
+    // ✅ No limpiar searchTerm ni searchResults aquí
   }
 
   selectVariant(variant: VariantResponseFull) {
@@ -217,21 +216,23 @@ export class AdminOrderCreate {
     } else {
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
-        productId:        product.id,
-        quantity:         this.quantity(),
-        toneName:         variant.toneName,
-        toneCode:         variant.toneCode,
-        cost:             variant.cost,
-        price:            variant.price,
-        productName:      product.name,
-        stock:            variant.stock,
+        productId: product.id,
+        quantity: this.quantity(),
+        toneName: variant.toneName,
+        toneCode: variant.toneCode,
+        cost: variant.cost,
+        price: variant.price,
+        productName: product.name,
+        stock: variant.stock,
         imageUrl
       }]);
     }
 
-    this.resetSearch();
+    // Solo limpia variante y cantidad — producto sigue seleccionado
+    this.selectedVariant.set(null);
+    this.quantity.set(1);
+    this.stockError.set('');
   }
-
   updateCartQuantity(variantId: number, qty: number) {
     const item = this.cart().find(i => i.productVariantId === variantId);
     if (!item || qty < 1) return;
@@ -252,15 +253,15 @@ export class AdminOrderCreate {
     this.isSaving.set(true);
 
     const request: OrderRequest = {
-      customerName:    this.customerName(),
+      customerName: this.customerName(),
       customerAddress: this.customerAddress(),
-      status:          OrderStatus.PENDIENTE_PACKAGE,
-      total:           this.total(),
-      costTotal:       this.costTotal(),
-      createdAt:       new Date().toISOString(),
-      orderItems:      this.cart().map(i => ({
+      status: OrderStatus.PENDIENTE_PACKAGE,
+      total: this.total(),
+      costTotal: this.costTotal(),
+      createdAt: new Date().toISOString(),
+      orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
-        quantity:         i.quantity
+        quantity: i.quantity
       }))
     };
 

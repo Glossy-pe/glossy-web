@@ -1,62 +1,92 @@
-<div style="margin-top: -5vh;">
+<div class="bg-[#FFFDF9] min-h-screen">
 
-  <!-- Carrusel Delgado y Elegante -->
-  <app-home-hero></app-home-hero>
-<section class="w-full px-4 py-6 md:px-16 md:py-10 bg-white">
-  
-  <div class="mx-auto flex flex-row gap-3 md:gap-12 justify-center items-center">
-
-    <div class="relative w-1/2 aspect-[4/3] md:aspect-auto md:h-[300px] group overflow-hidden rounded-sm shadow-sm">
-      <img src="https://img.freepik.com/fotos-premium/suero-facial-colageno-antienvejecimiento-botella-vidrio-crema-facial-sobre-fondo-beige-espacio-copia-concepto-belleza-cosmetica-organica-natural_105596-5072.jpg"
-           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Solares">
-
-      <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
-
-      <div class="absolute inset-0 p-2 flex flex-col justify-center items-center text-center">
-        <h3 class="text-white text-base md:text-2xl font-serif font-bold italic drop-shadow-md">
-          Solares
-        </h3>
-        <p class="text-white/90 text-[10px] md:text-sm font-light leading-tight mt-1 drop-shadow-sm">
-          Protección esencial
-        </p>
-      </div>
-    </div>
-
-    <div class="relative w-1/2 aspect-[4/3] md:aspect-auto md:h-[300px] group overflow-hidden rounded-sm shadow-sm">
-      <img src="https://perilecosmetics.co.za/cdn/shop/articles/Perile_Styled_Low_Res_11.jpg?v=1723720037&width=2048"
-           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Skincare">
-
-      <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
-
-      <div class="absolute inset-0 p-2 flex flex-col justify-center items-center text-center">
-        <h3 class="text-white text-base md:text-2xl font-serif font-bold italic drop-shadow-md">
-          Skincare
-        </h3>
-        <p class="text-white/90 text-[10px] md:text-sm font-light leading-tight mt-1 drop-shadow-sm">
-          Rutina de noche
-        </p>
-      </div>
-    </div>
-
+  <div class="relative z-10">
+    <app-home-hero></app-home-hero>
   </div>
-</section>
 
-  <main class=" pt-12 pb-24">
+  <section class="w-full px-4 py-12 md:px-16">
+    <div class="flex justify-between items-end mb-8 border-b-2 border-[#FFDDE4] pb-4">
+      <div>
+        <h2 class="text-3xl md:text-5xl font-black text-[#FF8DA1] tracking-tighter italic">
+          Summer Look
+        </h2>
+        <p class="text-[#FFB5C2] font-bold text-xs md:text-sm uppercase tracking-[0.3em] mt-1">
+          Edición Maquillaje Coreano ✨
+        </p>
+      </div>
+      <div class="hidden md:block text-right">
+        <span class="text-[#FFB5C2] text-xs font-medium">SEOUL / 2026 COLLECTION</span>
+      </div>
+    </div>
 
-      <app-product-carrusel labelId="1" labelName="Nuevos Productos"></app-product-carrusel>
-
-      <app-category-list></app-category-list>
-
-        <div class="bg-[#FFFBF0] border-t border-[#F3EEE0]">
-          <app-product-carrusel labelId="2" labelName="Productos Virales"></app-product-carrusel>
+    <div class="mx-auto flex flex-row gap-3 md:gap-6 justify-center items-center max-w-7xl">
+      <div class="relative w-1/2 aspect-[3/4] md:h-[550px] bg-white border-2 border-[#FFDDE4] group overflow-hidden">
+        <div class="absolute top-0 right-0 z-10 bg-[#FF8DA1] text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+          Dewy Skin
         </div>
+        <img src="https://img.buzzfeed.com/buzzfeed-static/static/2025-01/15/22/asset/5ac6e4fcf0f4/sub-buzz-781-1736979944-1.jpg?downsize=900:*&output-format=auto&output-quality=auto"
+             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Rostro">
+        <div class="absolute inset-0 bg-[#FF8DA1]/10 group-hover:bg-transparent transition-colors"></div>
+        <div class="absolute bottom-4 left-4 right-4 bg-white border border-[#FFDDE4] p-4">
+          <h3 class="text-[#FF8DA1] text-xl md:text-3xl font-black uppercase leading-none">Rostro</h3>
+          <p class="text-gray-400 text-[10px] md:text-xs font-bold tracking-widest mt-1 uppercase">Bases & Cushions</p>
+          <div class="mt-3 h-1 w-full bg-[#FFEBF0]"></div>
+        </div>
+      </div>
 
-      <app-marquee></app-marquee>
+      <div class="relative w-1/2 aspect-[3/4] md:h-[550px] bg-white border-2 border-[#FFDDE4] group overflow-hidden">
+        <div class="absolute top-0 right-0 z-10 bg-[#A7E9FF] text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+          Fruit Tint
+        </div>
+        <img src="https://lamcy-kr.com/cdn/shop/collections/close-up-woman-green-eye-pink-flower-space_186202-3742.jpg?v=1736093572"
+             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Labios">
+        <div class="absolute inset-0 bg-[#A7E9FF]/10 group-hover:bg-transparent transition-colors"></div>
+        <div class="absolute bottom-4 left-4 right-4 bg-white border border-[#FFDDE4] p-4">
+          <h3 class="text-[#49B6D6] text-xl md:text-3xl font-black uppercase leading-none">Labios</h3>
+          <p class="text-gray-400 text-[10px] md:text-xs font-bold tracking-widest mt-1 uppercase">Tints & Gloss</p>
+          <div class="mt-3 h-1 w-full bg-[#E5F9FF]"></div>
+        </div>
+      </div>
+    </div>
 
+    <div class="mt-8 flex justify-center gap-2">
+      <div class="h-2 w-12 bg-[#FF8DA1]"></div>
+      <div class="h-2 w-12 bg-[#FFB5C2]"></div>
+      <div class="h-2 w-12 bg-[#A7E9FF]"></div>
+    </div>
+  </section>
+
+  <main class="space-y-16 pb-24">
+
+    <div class="px-4 md:px-16">
+      <div class="bg-white border-x-2 border-[#FFDDE4] py-8">
+        <app-product-carrusel labelId="1" labelName="✨ Fresh Drops ✨"></app-product-carrusel>
+      </div>
+    </div>
+
+    <div class="bg-[#F0FAFF] py-12 border-y-2 border-[#A7E9FF]">
+      <app-category-list></app-category-list>
+    </div>
+
+    <div class="px-4 md:px-16">
+      <div class="bg-[#FFF4F7] border-2 border-[#FFDDE4] p-2">
+        <div class="bg-white border border-[#FFDDE4] py-8">
+          <app-product-carrusel labelId="2" labelName="💖 Hot on Social 💖"></app-product-carrusel>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-[#FF8DA1] py-3 rotate-1 scale-105 shadow-lg overflow-hidden">
+      <app-marquee class="text-white font-black uppercase tracking-widest"></app-marquee>
+    </div>
+
+    <section class="px-4 md:px-16 pt-10">
+      <div class="border-t-4 border-[#FFDDE4] pt-8 text-center mb-10">
+        <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">K-Beauty Community</h2>
+      </div>
       <app-social-news></app-social-news>
+    </section>
 
   </main>
-
-
 
 </div>
