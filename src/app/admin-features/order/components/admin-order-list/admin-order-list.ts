@@ -6,13 +6,15 @@ import { OrderService } from '../../services/order.service';
 import { OrderResponse, OrderStatus } from '../../models/order.model';
 import { PageResponse } from '../../../../shared/models/page-response.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { RouterModule } from '@angular/router';
+
 
 const PENDING_STATUSES: OrderStatus[] = ['PENDIENTE_ENVIO', 'PENDIENTE_PACKAGE'];
 
 @Component({
   selector: 'app-admin-order-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './admin-order-list.html',
 })
 export class AdminOrderList implements OnInit {
@@ -154,4 +156,13 @@ export class AdminOrderList implements OnInit {
       error: () => alert('No se pudo eliminar la orden')
     });
   }
+
+  getSeparationStatus(order: OrderResponse): 'all' | 'partial' | 'none' {
+  const items = order.orderItems;
+  if (!items?.length) return 'none';
+  const separated = items.filter(i => i.separated === true).length;
+  if (separated === 0) return 'none';
+  if (separated === items.length) return 'all';
+  return 'partial';
+}
 }

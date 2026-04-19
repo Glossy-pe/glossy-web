@@ -26,6 +26,7 @@ interface VariantResponseFull {
   position: number;
   active: boolean;
   images: VariantImageResponse[];
+  separated: boolean;
 }
 
 interface ProductResponseFull {
@@ -55,6 +56,7 @@ interface CartItem {
   productName: string;
   stock: number;
   imageUrl: string | null;
+  separated: boolean;
 }
 
 export enum OrderStatus {
@@ -224,6 +226,7 @@ export class AdminOrderCreate {
         price: variant.price,
         productName: product.name,
         stock: variant.stock,
+        separated: variant.separated,
         imageUrl
       }]);
     }
@@ -261,7 +264,8 @@ export class AdminOrderCreate {
       createdAt: new Date().toISOString(),
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
-        quantity: i.quantity
+        quantity: i.quantity,
+        separated: i.separated
       }))
     };
 

@@ -20,6 +20,7 @@ export interface OrderItem {
   url: string;
   productVariant: ProductVariant;
   quantity: number;
+  separated: boolean;
 }
 
 export interface OrderResponse {
@@ -38,6 +39,8 @@ export interface OrderResponse {
 export interface OrderItemRequest {
   productVariantId: number;
   quantity: number;
+  separated: boolean;
+
 }
 
 export interface OrderRequest {
@@ -48,4 +51,5 @@ export interface OrderRequest {
   costTotal: number;
   createdAt: string;
   orderItems: OrderItemRequest[];
+  
 }

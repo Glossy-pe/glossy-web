@@ -27,6 +27,7 @@ interface VariantResponseFull {
   position: number;
   active: boolean;
   images: VariantImageResponse[];
+  separated: boolean;
 }
 
 interface ProductResponseFull {
@@ -57,6 +58,7 @@ interface CartItem {
   productName: string;
   stock: number;
   imageUrl: string | null;
+  separated: boolean;
 }
 
 export enum OrderStatus {
@@ -233,7 +235,8 @@ export class AdminOrderDetail implements OnInit {
       price: item.productVariant.price,
       productName: item.productVariant.productName,
       stock: item.productVariant.stock,
-      imageUrl: item.productVariant.mainImageUrl ?? null // 👈 ya viene del backend
+      imageUrl: item.productVariant.mainImageUrl ?? null,
+      separated: item.separated ?? false,
     })));
 
     this.isEditing.set(true);
@@ -317,7 +320,8 @@ export class AdminOrderDetail implements OnInit {
         price: variant.price,
         productName: product.name,
         stock: variant.stock,
-        imageUrl: variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null
+        imageUrl: variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null,
+        separated: variant.separated
       }]);
     }
 
@@ -358,7 +362,8 @@ export class AdminOrderDetail implements OnInit {
       createdAt: order.createdAt,
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
-        quantity: i.quantity
+        quantity: i.quantity,
+        separated: i.separated
       }))
     };
 
@@ -379,4 +384,36 @@ export class AdminOrderDetail implements OnInit {
   getMainImageFromVariant(variant: VariantResponseFull): string | null {
     return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
   }
+
+  separationStatus = computed(() => {
+  const items = this.order()?.orderItems;
+  if (!items || items.length === 0) return 'none';
+  const separated = items.filter(i => i.separated === true).length;
+  if (separated === 0) return 'none';
+  if (separated === items.length) return 'all';
+  return 'partial';
+});
+
+// Para el modo edición (carrito)
+cartSeparationStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const separated = items.filter(i => i.separated).length;
+  if (separated === 0) return 'none';
+  if (separated === items.length) return 'all';
+  return 'partial';
+});
+
+toggleSeparated(variantId: number) {
+  this.cart.update(items =>
+    items.map(i => i.productVariantId === variantId
+      ? { ...i, separated: !i.separated }
+      : i
+    )
+  );
+}
+
+markAllSeparated() {
+  this.cart.update(items => items.map(i => ({ ...i, separated: true })));
+}
 }
