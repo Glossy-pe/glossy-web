@@ -70,8 +70,9 @@ export class ProductList implements OnInit {
 
     this.productService.searchProductsFull(term).subscribe({
       next: (response) => {
-        this.allProducts = response.content;
-        this.filteredProducts = response.content;
+        const inStock = response.content.filter(p => p.active);
+        this.allProducts = inStock;
+        this.filteredProducts = inStock;
         this.totalElements = response.totalElements;
         this.totalPages = 1;
         this.currentPage = 0;
@@ -116,11 +117,13 @@ export class ProductList implements OnInit {
 
   private applySearch(): void {
     const term = this.searchControl.value?.toLowerCase().trim() || '';
+    const inStock = this.allProducts.filter(p => p.active);
     this.filteredProducts = term
-      ? this.allProducts.filter(p => p.name.toLowerCase().includes(term))
-      : [...this.allProducts];
+      ? inStock.filter(p => p.name.toLowerCase().includes(term))
+      : [...inStock];
     this.cdr.markForCheck();
-  }
+}
+
 
   filterByCategory(categoryId: string): void {
     this.selectedCategoryId = categoryId;

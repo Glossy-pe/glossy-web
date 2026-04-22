@@ -43,12 +43,13 @@ export class Navbar {
         );
       })
     ).subscribe(response => {
-      this.isSearching.set(false);
-      if (response) {
-        this.searchResults.set(response.content);
-        this.showDropdown.set(true);
-      }
-    });
+  this.isSearching.set(false);
+  if (response) {
+    const inStock = response.content.filter(p => p.active);
+    this.searchResults.set(inStock);
+    this.showDropdown.set(inStock.length > 0);
+  }
+});
   }
 
   onSearchInput(event: Event): void {
