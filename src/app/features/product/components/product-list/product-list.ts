@@ -93,14 +93,15 @@ export class ProductList implements OnInit {
 
     this.productService.getProducts(page, this.pageSize, this.selectedCategoryId).subscribe({
       next: (response) => {
+        const active = response.content.filter(p => p.active); // ← agregar
         this.totalPages = response.totalPages;
         this.totalElements = response.totalElements;
         this.currentPage = response.number;
 
         if (accumulate) {
-          this.allProducts = [...this.allProducts, ...response.content];
+          this.allProducts = [...this.allProducts, ...active];
         } else {
-          this.allProducts = [...response.content];
+          this.allProducts = [...active];
         }
 
         this.applySearch();
@@ -117,10 +118,10 @@ export class ProductList implements OnInit {
 
   private applySearch(): void {
     const term = this.searchControl.value?.toLowerCase().trim() || '';
-    const inStock = this.allProducts.filter(p => p.active);
+    const active = this.allProducts.filter(p => p.active); // ← agregar
     this.filteredProducts = term
-      ? inStock.filter(p => p.name.toLowerCase().includes(term))
-      : [...inStock];
+      ? active.filter(p => p.name.toLowerCase().includes(term))
+      : [...active];
     this.cdr.markForCheck();
 }
 
