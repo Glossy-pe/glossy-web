@@ -4,8 +4,10 @@ import { CartService } from '../../services/cart.service';
 import { PdfGeneratorService } from '../../services/pdf-generator.service';
 import { environment } from '../../../../../environments/environment';
 import { CartItem } from '../models/cart-item.model';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { ProductResponseFull } from '../../../product/models/product-response-full.model';
+import { VariantResponseFull } from '../../../product/models/variant-response-full.model';
 
 @Component({
   selector: 'app-cart-list',
@@ -14,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './cart-list.scss',
 })
 export class CartList implements OnInit {
+  
   numero = "51996629113";
   apiImageServer = environment.apiImageServer;
 
@@ -22,6 +25,7 @@ export class CartList implements OnInit {
     private pdfGenerator: PdfGeneratorService,
     private router: Router,
     private http: HttpClient,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {}
@@ -112,4 +116,10 @@ export class CartList implements OnInit {
   goBack(): void {
     this.router.navigate(['/products']);
   }
+
+  goToItem(item: CartItem): void {
+  this.router.navigate(['/products', item.product.slug], {
+    queryParams: { tono: encodeURIComponent(item.selectedVariant.toneName) }
+  });
+}
 }
