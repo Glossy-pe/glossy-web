@@ -69,11 +69,11 @@ export class Navbar {
     this.router.navigate(['/products'], { queryParams: { search: term } });
   }
 
-  goToProduct(productId: number): void {
-    this.showDropdown.set(false);
-    this.searchTerm.set('');
-    this.router.navigate(['/products', productId]);
-  }
+  goToProduct(product: ProductResponseFull): void {
+  this.showDropdown.set(false);
+  this.searchTerm.set('');
+  this.router.navigate(['/products', product.slug]); // 👈 antes era product.id
+}
 
   closeDropdown(): void {
     setTimeout(() => this.showDropdown.set(false), 200);

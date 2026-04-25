@@ -11,7 +11,7 @@ export const routes: Routes = [
             { path: 'home', loadComponent: () => import('./features/home/components/home/home').then(m => m.Home) },
             { path: 'categories', loadComponent: () => import('./features/category/components/category-list/category-list').then(m => m.CategoryList) },
             { path: 'products', loadComponent: () => import('./features/product/components/product-list/product-list').then(m => m.ProductList) },
-            { path: 'products/:id', loadComponent: () => import('./features/product/components/product-detail/product-detail').then(m => m.ProductDetail) },
+            { path: 'products/:slug', loadComponent: () => import('./features/product/components/product-detail/product-detail').then(m => m.ProductDetail) },
             { path: 'cart', loadComponent: () => import('./features/cart/components/cart-list/cart-list').then(m => m.CartList) },
             { path: 'san-valentin', loadComponent: () => import('./features/valentin-day/components/valentine-day/valentine-day').then(m => m.ValentineDay) },
             { path: 'tracking-agencies', loadComponent: () => import('./features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },

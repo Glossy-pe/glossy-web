@@ -94,7 +94,7 @@ export class ProductCard implements OnInit, OnDestroy{
 }
 
   viewProductDetail(productResponseFull: ProductResponseFull) {
-    this.router.navigate(['/products', productResponseFull.id]);
+    this.router.navigate(['/products', productResponseFull.slug]);
   }
 
   // --- Helpers de Precios y Stock ---

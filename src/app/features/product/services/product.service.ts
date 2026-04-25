@@ -160,4 +160,8 @@ export class ProductService {
   searchProducts(searchTerm: string): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.apiUrl}?search=${searchTerm}`);
   }
+
+  getProductBySlug(slug: string): Observable<ProductResponseFull> {
+  return this.http.get<ProductResponseFull>(`${environment.apiUrl}/public/products/${slug}`);
+}
 }

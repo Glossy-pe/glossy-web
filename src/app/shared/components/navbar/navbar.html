@@ -43,7 +43,7 @@
           @if (showDropdown()) {
             <div class="absolute top-[calc(100%+8px)] left-[-2px] right-[-2px] bg-white border-2 border-[#A7E9FF] z-50 shadow-xl">
               @for (product of searchResults().slice(0, 5); track product.id) {
-                <button (mousedown)="goToProduct(product.id)" class="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#F0FAFF] border-b border-[#F0FAFF] last:border-none transition-colors">
+                <button (mousedown)="goToProduct(product)" class="w-full flex items-center gap-4 px-4 py-3 hover:bg-[#F0FAFF] border-b border-[#F0FAFF] last:border-none transition-colors">
                   <div class="w-12 h-12 bg-gray-50 border border-gray-100 shrink-0">
                     <img [src]="getProductImage(product)" class="w-full h-full object-cover"/>
                   </div>

@@ -53,20 +53,18 @@ export class ProductDetail implements OnInit, OnDestroy {
     private cartService: CartService
   ) { }
 
-  ngOnInit(): void {
-    this.resetState();
-    this.categories$ = this.categoryService.getCategories();
+ ngOnInit(): void {
+  this.resetState();
+  this.categories$ = this.categoryService.getCategories();
 
-    this.route.paramMap.subscribe(params => {
-      const productId = params.get('id');
-      if (productId) {
-        this.resetState();
-        this.loadProduct(Number(productId));
-      } else {
-        this.errorMessage = 'ID de producto no válido';
-      }
-    });
-  }
+  this.route.paramMap.subscribe(params => {
+    const slug = params.get('slug');
+    if (slug) {
+      this.resetState();
+      this.loadProduct(slug);
+    }
+  });
+}
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
@@ -80,23 +78,22 @@ export class ProductDetail implements OnInit, OnDestroy {
     this.selectedVariant = null;
   }
 
-  loadProduct(id: number): void {
-    this.errorMessage = '';
+  loadProduct(slug: string): void { // 👈 cambia number por string
+  this.errorMessage = '';
 
-    const product$ = this.productService.getProductById(id).pipe(
-      tap(product => {
-        this.currentProduct = product;
-        this.initializeProduct(product);
-      }),
-    );
+  const product$ = this.productService.getProductBySlug(slug).pipe( // 👈
+    tap(product => {
+      this.currentProduct = product;
+      this.initializeProduct(product);
+    }),
+  );
 
-    this.product$ = product$;
-
-    this.isLoading$ = product$.pipe(
-      map(() => false),
-      startWith(true)
-    );
-  }
+  this.product$ = product$;
+  this.isLoading$ = product$.pipe(
+    map(() => false),
+    startWith(true)
+  );
+}
 
   initializeProduct(product: ProductResponseFull): void {
   if (!product?.variants?.length) return;
@@ -107,15 +104,32 @@ export class ProductDetail implements OnInit, OnDestroy {
     return posA - posB;
   });
 
-  this.selectedVariant = sorted.find(v => v.stock > 0) ?? sorted[0];
-  this.activeImageIndex = 0;
+  const tonoName = this.route.snapshot.queryParamMap.get('tono');
+  if (tonoName) {
+    const fromUrl = sorted.find(v =>
+      v.toneName?.toLowerCase() === decodeURIComponent(tonoName).toLowerCase()
+    );
+    this.selectedVariant = fromUrl ?? sorted.find(v => v.stock > 0) ?? sorted[0];
+  } else {
+    this.selectedVariant = sorted.find(v => v.stock > 0) ?? sorted[0];
+  }
+
+  // 👇 empieza en la primera imagen de la variante, no del producto
+  const productImagesCount = product.images?.length ?? 0;
+  this.activeImageIndex = productImagesCount;
 }
 
   selectVariant(variant: VariantResponseFull): void {
   this.selectedVariant = variant;
-  
-  // Saltar al inicio de las imágenes de la variante
-  // (después de las imágenes generales del producto)
+
+  // 👇 pone el nombre del tono en la URL
+  this.router.navigate([], {
+    relativeTo: this.route,
+    queryParams: { tono: encodeURIComponent(variant.toneName) },
+    queryParamsHandling: 'merge',
+    replaceUrl: true
+  });
+
   const productImagesCount = this.currentProduct?.images?.length ?? 0;
   this.activeImageIndex = productImagesCount;
 
@@ -204,10 +218,10 @@ export class ProductDetail implements OnInit, OnDestroy {
   }
 
   retryLoad(): void {
-    const productId = this.route.snapshot.paramMap.get('id');
-    if (productId) {
-      this.errorMessage = '';
-      this.loadProduct(Number(productId));
-    }
+  const slug = this.route.snapshot.paramMap.get('slug'); // 👈
+  if (slug) {
+    this.errorMessage = '';
+    this.loadProduct(slug); // 👈 ya no necesita Number()
   }
+}
 }

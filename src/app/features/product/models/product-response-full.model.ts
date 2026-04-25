@@ -14,6 +14,7 @@ export interface ProductResponseFull {
   description: string;
   fullDescription: string;
   label: string | null;
+  slug: string;
   active: boolean | null;
   categoryId: number;
   variants: VariantResponseFull[];
