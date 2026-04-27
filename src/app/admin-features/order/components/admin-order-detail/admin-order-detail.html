@@ -35,7 +35,8 @@
 
 
             <!-- Badge separación general -->
-            <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1.5"
+            <span
+              class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1.5"
               [ngClass]="{
                 'bg-emerald-50 text-emerald-600': separationStatus() === 'all',
                 'bg-amber-50 text-amber-600':    separationStatus() === 'partial',
@@ -43,16 +44,43 @@
               }">
               <!-- ícono check circle / half / empty según estado -->
               <svg *ngIf="separationStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd" />
               </svg>
-              <svg *ngIf="separationStatus() === 'partial'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round"/>
+              <svg *ngIf="separationStatus() === 'partial'" class="w-3 h-3" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
               </svg>
-              <svg *ngIf="separationStatus() === 'none'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round"/>
+              <svg *ngIf="separationStatus() === 'none'" class="w-3 h-3" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
               </svg>
-              {{ separationStatus() === 'all' ? 'Todo separado' : separationStatus() === 'partial' ? 'Parcialmente separado' : 'Sin separar' }}
+              {{ separationStatus() === 'all' ? 'Todo separado' : separationStatus() === 'partial' ? 'Parcialmente
+              separado' : 'Sin separar' }}
             </span>
+
+
+            <span
+                class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1.5"
+                [ngClass]="{
+                  'bg-blue-50 text-blue-600':   packingStatus() === 'all',
+                  'bg-amber-50 text-amber-600': packingStatus() === 'partial',
+                  'bg-slate-100 text-slate-400': packingStatus() === 'none'
+                }">
+                <svg *ngIf="packingStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd" />
+                </svg>
+                <svg *ngIf="packingStatus() === 'partial'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <svg *ngIf="packingStatus() === 'none'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                {{ packingStatus() === 'all' ? 'Todo empacado' : packingStatus() === 'partial' ? 'Parcialmente empacado' : 'Sin empacar' }}
+              </span>
 
           </div>
           <p class="text-sm text-slate-400 mt-0.5">{{ order.createdAt | date:'dd/MM/yyyy · HH:mm' }}</p>
@@ -172,21 +200,38 @@
               </div>
 
               <div class="text-center px-2 shrink-0">
-  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Separado</p>
-  <span *ngIf="item.separated; else notSeparated"
-    class="inline-flex items-center justify-center w-7 h-7 bg-emerald-100 rounded-full">
-    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>
-  </span>
-  <ng-template #notSeparated>
-    <span class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 rounded-full">
-      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </span>
-  </ng-template>
-</div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Separado</p>
+                <span *ngIf="item.separated; else notSeparated"
+                  class="inline-flex items-center justify-center w-7 h-7 bg-emerald-100 rounded-full">
+                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <ng-template #notSeparated>
+                  <span class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 rounded-full">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                </ng-template>
+              </div>
+
+              <div class="text-center px-2 shrink-0">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Empacado</p>
+                <span *ngIf="item.packed; else notPacked"
+                  class="inline-flex items-center justify-center w-7 h-7 bg-blue-100 rounded-full">
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <ng-template #notPacked>
+                  <span class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 rounded-full">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                </ng-template>
+              </div>
             </div>
             } @empty {
             <div class="py-12 text-center text-slate-400 italic text-sm">Esta orden no tiene productos.</div>
@@ -203,7 +248,7 @@
               <p class="text-2xl font-black text-slate-700">{{ order.total | currency }}</p>
             </div>
 
-            
+
           </div>
         </div>
 
@@ -219,6 +264,7 @@
           <select [ngModel]="currentStatus()" (ngModelChange)="currentStatus.set($event)"
             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
             [ngClass]="{
+              'text-emerald-450': currentStatus() === 'QUOTE',
               'text-emerald-600': currentStatus() === 'CREATED',
               'text-emerald-500': currentStatus() === 'CREADO',
               'text-violet-600':  currentStatus() === 'ACUMULANDO',
@@ -251,110 +297,129 @@
         </div>
 
         <!-- Buscador de productos -->
+        <!-- Buscador de productos -->
         <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
           <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Agregar Producto</h2>
 
-          <!-- Búsqueda - SIEMPRE visible -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-2">Buscar por nombre</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
+          <!-- Input de búsqueda estilo navbar -->
+          <div class="relative">
+            <div
+              class="flex items-center w-full bg-white border-2 border-slate-200 h-11 relative shadow-[3px_3px_0px_#e2e8f0] focus-within:border-slate-400 transition-all">
+              <span class="pl-4 text-slate-400 shrink-0">
                 <svg *ngIf="!isSearching()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5" stroke-linecap="round" />
                 </svg>
                 <svg *ngIf="isSearching()" class="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               </span>
-              <input type="text" placeholder="Escribe el nombre del producto..." [ngModel]="searchTerm()"
+              <input type="text" placeholder="BUSCAR PRODUCTO..." [ngModel]="searchTerm()"
                 (ngModelChange)="onSearchInput($event)"
-                class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all" />
-            </div>
-
-            <!-- Resultados -->
-            <div *ngIf="searchResults().length > 0"
-              class="mt-2 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              <button *ngFor="let product of searchResults()" type="button" (click)="selectProduct(product)"
-                class="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-slate-50 last:border-0">
-                <div>
-                  <p class="text-sm font-bold text-slate-700">{{ product.name }}</p>
-                  <p class="text-xs text-slate-400">{{ product.variants?.length || 0 }} variante(s)</p>
-                </div>
-                <span class="text-xs font-bold text-blue-500 shrink-0">Seleccionar →</span>
+                class="flex-1 h-full px-4 text-xs font-medium text-slate-600 placeholder-slate-300 focus:outline-none bg-transparent uppercase tracking-widest" />
+              <button *ngIf="searchTerm()" type="button" (click)="resetSearch()"
+                class="pr-4 text-slate-300 hover:text-slate-500 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
               </button>
             </div>
 
-            <div *ngIf="searchTerm().length > 1 && !isSearching() && searchResults().length === 0"
-              class="mt-2 px-4 py-6 text-center text-sm text-slate-400 border border-slate-200 rounded-xl italic">
-              No se encontraron productos
+            <!-- Dropdown resultados estilo navbar -->
+            <div *ngIf="searchResults().length > 0 && !selectedProduct()"
+              class="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border-2 border-slate-200 z-50 shadow-xl">
+              <button *ngFor="let product of searchResults().slice(0, 6)" type="button" (click)="selectProduct(product)"
+                class="w-full flex items-center gap-4 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors">
+                <div class="w-12 h-12 bg-gray-50 border border-gray-100 shrink-0 overflow-hidden">
+                  <img *ngIf="getProductImage(product); else dropdownTone" [src]="getProductImage(product)"
+                    class="w-full h-full object-cover" />
+                  <ng-template #dropdownTone>
+                    <div class="w-full h-full bg-slate-100 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"
+                          stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                    </div>
+                  </ng-template>
+                </div>
+                <div class="flex-1 text-left">
+                  <p class="text-xs font-black text-slate-800 uppercase tracking-tighter">{{ product.name }}</p>
+                  <p class="text-[10px] text-slate-400 font-bold">{{ product.variants?.length || 0 }} variante(s)</p>
+                </div>
+                <span class="text-xs font-bold text-slate-400 shrink-0">Seleccionar →</span>
+              </button>
             </div>
           </div>
 
-          <!-- Producto seleccionado - debajo del buscador -->
+          <!-- Producto seleccionado -->
           <div *ngIf="selectedProduct() as product" class="mt-5">
-            <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl mb-5">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
-                </svg>
-                <span class="text-sm font-bold text-blue-700">{{ product.name }}</span>
+            <div class="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 mb-5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-slate-700 shrink-0 overflow-hidden">
+                  <img *ngIf="getProductImage(product)" [src]="getProductImage(product)"
+                    class="w-full h-full object-cover" />
+                </div>
+                <span class="text-xs font-black text-white uppercase tracking-widest">{{ product.name }}</span>
               </div>
               <button type="button" (click)="resetSearch()"
-                class="text-xs text-blue-400 hover:text-blue-600 font-bold">Limpiar</button>
+                class="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+                Cambiar
+              </button>
             </div>
 
             <!-- Variantes -->
-            <label class="block text-xs font-bold text-slate-500 mb-3">Selecciona una variante</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Selecciona
+              variante</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button *ngFor="let variant of product.variants" type="button" (click)="selectVariant(variant)"
                 [disabled]="variant.stock === 0" [class.ring-2]="selectedVariant()?.id === variant.id"
-                [class.ring-blue-500]="selectedVariant()?.id === variant.id" [class.opacity-40]="variant.stock === 0"
+                [class.ring-slate-900]="selectedVariant()?.id === variant.id" [class.opacity-40]="variant.stock === 0"
                 [class.cursor-not-allowed]="variant.stock === 0"
-                class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all text-left">
-                <div class="w-10 h-10 rounded-xl border border-white shadow-sm shrink-0 overflow-hidden bg-slate-100">
-                  <img *ngIf="getMainImageFromVariant(variant); else variantToneBlock"
+                class="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 hover:border-slate-400 transition-all text-left">
+                <div class="w-9 h-9 shrink-0 overflow-hidden border border-white shadow-sm">
+                  <img *ngIf="getMainImageFromVariant(variant); else variantTone"
                     [src]="getMainImageFromVariant(variant)!" class="w-full h-full object-cover" />
-                  <ng-template #variantToneBlock>
+                  <ng-template #variantTone>
                     <div class="w-full h-full" [style.backgroundColor]="variant.toneCode"></div>
                   </ng-template>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-slate-700 truncate">{{ variant.toneName }}</p>
-                  <p class="text-xs text-slate-400">{{ variant.price | currency }}</p>
+                  <p class="text-[10px] font-black text-slate-700 truncate uppercase tracking-tight">{{ variant.toneName
+                    }}</p>
+                  <p class="text-[10px] text-slate-400">S/. {{ variant.price.toFixed(2) }}</p>
                 </div>
-                <span class="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
+                <span class="text-[9px] font-black px-1.5 py-0.5 shrink-0"
                   [ngClass]="variant.stock > 5 ? 'bg-emerald-50 text-emerald-600' : variant.stock > 0 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'">
-                  {{ variant.stock > 0 ? 'Stock: ' + variant.stock : 'Agotado' }}
+                  {{ variant.stock > 0 ? variant.stock : '✕' }}
                 </span>
               </button>
             </div>
 
             <!-- Cantidad -->
             <div *ngIf="selectedVariant()" class="mt-5 pt-5 border-t border-slate-100">
-              <label class="block text-xs font-bold text-slate-500 mb-3">
-                Cantidad
-                <span class="ml-2 font-normal text-slate-400">(Máx. disponible: {{ availableStock() }})</span>
-              </label>
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-slate-50 border rounded-xl px-3 py-2"
+              <div class="flex items-center justify-between mb-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cantidad</label>
+                <span class="text-[10px] font-black text-slate-400">Máx. {{ availableStock() }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center border-2 bg-slate-50"
                   [ngClass]="stockError() ? 'border-rose-300' : 'border-slate-200'">
                   <button type="button" (click)="setQuantity(quantity() - 1)" [disabled]="quantity() <= 1"
-                    class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold text-xl">−</button>
+                    class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">−</button>
                   <input type="number" [ngModel]="quantity()" (ngModelChange)="setQuantity($event)" min="1"
                     [max]="availableStock()"
-                    class="w-12 text-center text-sm font-bold text-slate-700 bg-transparent outline-none" />
+                    class="w-12 text-center text-sm font-black text-slate-700 bg-transparent outline-none" />
                   <button type="button" (click)="setQuantity(quantity() + 1)"
                     [disabled]="quantity() >= availableStock()"
-                    class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold text-xl">+</button>
+                    class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">+</button>
                 </div>
                 <button type="button" (click)="addToCart()"
-                  class="flex-1 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all active:scale-95">
-                  + Agregar al pedido
+                  class="flex-1 h-10 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">
+                  + Agregar
                 </button>
               </div>
-              <p *ngIf="stockError()" class="mt-2 text-xs font-bold text-rose-500 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <p *ngIf="stockError()" class="mt-2 text-[10px] font-black text-rose-500 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                     stroke-width="2" stroke-linecap="round" />
@@ -370,20 +435,34 @@
           <div class="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos en la orden</h2>
             <div class="flex items-center gap-3">
-  <span *ngIf="cartSeparationStatus() !== 'none'"
-    class="text-[10px] font-black px-2.5 py-1 rounded-full"
-    [ngClass]="{
-      'bg-emerald-50 text-emerald-600': cartSeparationStatus() === 'all',
-      'bg-amber-50 text-amber-600':    cartSeparationStatus() === 'partial'
-    }">
-    {{ cartSeparationStatus() === 'all' ? '✓ Todo separado' : 'Parcial' }}
-  </span>
-  <button type="button" (click)="markAllSeparated()"
-    [disabled]="cartSeparationStatus() === 'all'"
-    class="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
-    Marcar todo
-  </button>
-</div>
+              <span *ngIf="cartSeparationStatus() !== 'none'" class="text-[10px] font-black px-2.5 py-1 rounded-full"
+                [ngClass]="{
+                  'bg-emerald-50 text-emerald-600': cartSeparationStatus() === 'all',
+                  'bg-amber-50 text-amber-600':    cartSeparationStatus() === 'partial'
+                }">
+                {{ cartSeparationStatus() === 'all' ? '✓ Todo separado' : 'Parcial' }}
+              </span>
+
+
+              
+
+              <button type="button" (click)="markAllSeparated()" [disabled]="cartSeparationStatus() === 'all'"
+                class="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                Marcar todo
+              </button>
+
+              <span *ngIf="cartPackingStatus() !== 'none'" class="text-[10px] font-black px-2.5 py-1 rounded-full"
+  [ngClass]="{
+    'bg-blue-50 text-blue-600':   cartPackingStatus() === 'all',
+    'bg-amber-50 text-amber-600': cartPackingStatus() === 'partial'
+  }">
+  {{ cartPackingStatus() === 'all' ? '✓ Todo empacado' : 'Parcial emp.' }}
+</span>
+<button type="button" (click)="markAllPacked()" [disabled]="cartPackingStatus() === 'all'"
+  class="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+  Empacar todo
+</button>
+            </div>
             <span *ngIf="cart().length > 0"
               class="px-2.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
               {{ cart().length }}
@@ -410,7 +489,7 @@
               </div>
 
 
-              
+
 
               <!-- Cantidad -->
               <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2 py-1.5">
@@ -438,12 +517,12 @@
               <!-- Toggle separado -->
               <button type="button" (click)="toggleSeparated(item.productVariantId)"
                 class="flex flex-col items-center gap-1 px-2 shrink-0 group">
-                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
-                  [ngClass]="item.separated
+                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all" [ngClass]="item.separated
                     ? 'bg-emerald-500 border-emerald-500'
                     : 'bg-white border-slate-300 group-hover:border-emerald-300'">
-                  <svg *ngIf="item.separated" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round"/>
+                  <svg *ngIf="item.separated" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
                   </svg>
                 </div>
                 <span class="text-[9px] font-black uppercase tracking-wider"
@@ -451,6 +530,23 @@
                   Sep.
                 </span>
               </button>
+
+
+              <button type="button" (click)="togglePacked(item.productVariantId)"
+  class="flex flex-col items-center gap-1 px-2 shrink-0 group">
+  <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
+    [ngClass]="item.packed
+      ? 'bg-blue-500 border-blue-500'
+      : 'bg-white border-slate-300 group-hover:border-blue-300'">
+    <svg *ngIf="item.packed" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
+    </svg>
+  </div>
+  <span class="text-[9px] font-black uppercase tracking-wider"
+    [ngClass]="item.packed ? 'text-blue-500' : 'text-slate-300'">
+    Emp.
+  </span>
+</button>
             </div>
             } @empty {
             <div class="py-12 text-center text-slate-400 italic text-sm">No hay productos agregados.</div>

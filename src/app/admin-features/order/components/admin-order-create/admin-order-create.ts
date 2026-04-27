@@ -27,6 +27,7 @@ interface VariantResponseFull {
   active: boolean;
   images: VariantImageResponse[];
   separated: boolean;
+  packed: boolean;
 }
 
 interface ProductResponseFull {
@@ -57,9 +58,11 @@ interface CartItem {
   stock: number;
   imageUrl: string | null;
   separated: boolean;
+  packed: boolean;
 }
 
 export enum OrderStatus {
+  QUOTE = 'QUOTE',
   CREATED = 'CREATED',
   CREADO = 'CREADO',
   ACUMULANDO = 'ACUMULANDO',
@@ -177,9 +180,10 @@ export class AdminOrderCreate {
     this.quantity.set(1);
   }
 
-  getMainImageFromVariant(variant: VariantResponseFull): string | null {
-    return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
-  }
+  getMainImageFromVariant(variant: VariantResponseFull | undefined | null): string | null {
+  if (!variant) return null;
+  return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
+}
 
   // ── Carrito ──────────────────────────────────────────────────────────────────
 
@@ -227,6 +231,7 @@ export class AdminOrderCreate {
         productName: product.name,
         stock: variant.stock,
         separated: variant.separated,
+        packed: variant.packed,
         imageUrl
       }]);
     }
@@ -258,14 +263,15 @@ export class AdminOrderCreate {
     const request: OrderRequest = {
       customerName: this.customerName(),
       customerAddress: this.customerAddress(),
-      status: OrderStatus.PENDIENTE_PACKAGE,
+      status: OrderStatus.QUOTE,
       total: this.total(),
       costTotal: this.costTotal(),
       createdAt: new Date().toISOString(),
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
         quantity: i.quantity,
-        separated: i.separated
+        separated: i.separated,
+        packed: i.packed,
       }))
     };
 
@@ -279,4 +285,10 @@ export class AdminOrderCreate {
   }
 
   goBack() { this.router.navigate(['/admin/orders']); }
+
+  getProductImage(product: ProductResponseFull): string | null {
+  const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
+    ?? product.variants?.[0]?.images?.[0];
+  return img?.url ?? null;
+}
 }

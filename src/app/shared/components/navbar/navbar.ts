@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, catchError, of } from 'rxjs';
 import { ProductService } from '../../../features/product/services/product.service';
 import { ProductResponseFull } from '../../../features/product/models/product-response-full.model';
+import { Category } from '../../../features/category/models/category.model';
+import { CategoryService } from '../../../features/category/services/category.service';
 
 @Component({
   selector: 'app-navbar',
@@ -18,6 +20,7 @@ export class Navbar {
   cartCount = signal(0);
   searchTerm    = signal('');
   searchResults = signal<ProductResponseFull[]>([]);
+  categories = signal<Category[]>([]);
   isSearching   = signal(false);
   showDropdown  = signal(false);
 
@@ -25,8 +28,12 @@ export class Navbar {
 
   constructor(
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
+    private categoryService: CategoryService
   ) {
+
+    this.categoryService.getCategories().subscribe(cats => this.categories.set(cats));
+
     this.searchSubject.pipe(
       debounceTime(350),
       distinctUntilChanged(),
@@ -97,4 +104,9 @@ getMinPrice(product: ProductResponseFull): string {
   if (!prices.length) return '';
   return `S/. ${Math.min(...prices).toFixed(2)}`;
 }
+
+goToCategory(categoryId: number): void {
+  this.router.navigate(['/products'], { queryParams: { category: categoryId } });
+}
+
 }

@@ -24,7 +24,7 @@ export class CategoryList implements OnInit {
     this.categories$ = this.categoryService.getCategories();
   }
 
-  selectCategoryAndGoToProducts() {
-    this.router.navigate(['/products']);
-  }
+  selectCategoryAndGoToProducts(categoryId: number): void {
+  this.router.navigate(['/products'], { queryParams: { category: categoryId } });
+}
 }

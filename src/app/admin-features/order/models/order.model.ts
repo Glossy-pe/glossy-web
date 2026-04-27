@@ -1,6 +1,7 @@
   import { ProductVariant } from "../../../features/product/models/product-variant-response.model";
 
   export type OrderStatus =
+    | 'QUOTE'
     | 'CREATED'
     | 'CREADO'
     | 'ACUMULANDO'
@@ -21,6 +22,7 @@
     productVariant: ProductVariant;
     quantity: number;
     separated: boolean;
+    packed: boolean;
   }
 
   export interface OrderResponse {
@@ -40,7 +42,7 @@
     productVariantId: number;
     quantity: number;
     separated: boolean;
-
+    packed: boolean;
   }
 
   export interface OrderRequest {

@@ -4,10 +4,12 @@ export interface VariantResponseFull {
   id: number;
   toneName: string;
   toneCode: string;
-  cost: number | null;
+  cost: number;
   price: number;
   stock: number;
   position: number | null;
+  separated: boolean;
+  packed: boolean;
   active: boolean | null;
   images: VariantImageResponse[];
 }

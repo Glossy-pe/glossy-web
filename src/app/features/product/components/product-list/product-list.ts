@@ -5,12 +5,12 @@ import { Observable, Subject, debounceTime, distinctUntilChanged, startWith } fr
 import { ProductCard } from "../product-card/product-card";
 import { CategoryService } from '../../../category/services/category.service';
 import { Category } from '../../../category/models/category.model';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ProductResponseFull } from '../../models/product-response-full.model';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-product-list',
-  imports: [CommonModule, ProductCard, ReactiveFormsModule],
+  imports: [CommonModule, ProductCard],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
@@ -22,7 +22,6 @@ export class ProductList implements OnInit {
   allProducts: ProductResponseFull[] = [];
   filteredProducts: ProductResponseFull[] = [];
 
-  searchControl = new FormControl('');
   showFilters = false;
   isLoading = false;
 
@@ -36,28 +35,34 @@ export class ProductList implements OnInit {
   constructor(
     private productService: ProductService,
     private categoryService: CategoryService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.categories$ = this.categoryService.getCategories();
-    this.categories$.subscribe(cats => this.categories = cats);
+  this.categories$ = this.categoryService.getCategories();
+  this.categories$.subscribe(cats => this.categories = cats);
 
-    this.searchControl.valueChanges.pipe(
-      startWith(''),
-      debounceTime(400),
-      distinctUntilChanged()
-    ).subscribe(term => {
-      if (term && term.trim().length > 0) {
-        this.searchInBackend(term.trim());
-      } else {
-        this.allProducts = [];
-        this.loadProducts(0, false);
-      }
-    });
 
+  // 👇 queryParams al FINAL, y controla si cargar productos base o no
+  this.route.queryParams.subscribe(params => {
+  const searchFromUrl = params['search'] ?? '';
+  const categoryFromUrl = params['category'] ?? '';  // 👈 agregar
+
+  if (categoryFromUrl) {
+    this.selectedCategoryId = categoryFromUrl;  // 👈 agregar
+  }
+
+  if (searchFromUrl) {
+    this.searchInBackend(searchFromUrl);
+  } else {
     this.loadProducts(0, false);
   }
+});
+
+  // 👇 ELIMINAR esta línea, ahora queryParams la controla
+  // this.loadProducts(0, false);  ← borrar
+}
 
   get activeCategoryName(): string {
     if (!this.selectedCategoryId) return 'Todos los productos';
@@ -104,7 +109,7 @@ export class ProductList implements OnInit {
           this.allProducts = [...active];
         }
 
-        this.applySearch();
+        this.filteredProducts = [...this.allProducts];
         this.isLoading = false;
         this.cdr.markForCheck();
       },
@@ -115,15 +120,6 @@ export class ProductList implements OnInit {
       }
     });
   }
-
-  private applySearch(): void {
-    const term = this.searchControl.value?.toLowerCase().trim() || '';
-    const active = this.allProducts.filter(p => p.active); // ← agregar
-    this.filteredProducts = term
-      ? active.filter(p => p.name.toLowerCase().includes(term))
-      : [...active];
-    this.cdr.markForCheck();
-}
 
 
   filterByCategory(categoryId: string): void {
@@ -146,4 +142,5 @@ export class ProductList implements OnInit {
   get hasMore(): boolean {
     return this.currentPage < this.totalPages - 1;
   }
+
 }

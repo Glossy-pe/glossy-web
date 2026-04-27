@@ -38,53 +38,75 @@
       </div>
 
       <!-- Buscador de productos -->
-      <div>
-        <label class="block text-xs font-bold text-slate-500 mb-2">Buscar por nombre</label>
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Agregar Producto</h2>
+
         <div class="relative">
-          <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
-            <svg *ngIf="!isSearching()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />
-            </svg>
-            <svg *ngIf="isSearching()" class="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-          </span>
-          <input type="text" placeholder="Escribe el nombre del producto..." [ngModel]="searchTerm()"
-            (ngModelChange)="onSearchInput($event)"
-            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all" />
+          <div
+            class="flex items-center w-full bg-white border-2 border-slate-200 h-11 shadow-[3px_3px_0px_#e2e8f0] focus-within:border-slate-400 transition-all">
+            <span class="pl-4 text-slate-400 shrink-0">
+              <svg *ngIf="!isSearching()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+              <svg *ngIf="isSearching()" class="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </span>
+            <input type="text" placeholder="BUSCAR PRODUCTO..." [ngModel]="searchTerm()"
+              (ngModelChange)="onSearchInput($event)"
+              class="flex-1 h-full px-4 text-xs font-medium text-slate-600 placeholder-slate-300 focus:outline-none bg-transparent uppercase tracking-widest" />
+            <button *ngIf="searchTerm()" type="button" (click)="resetSearch()"
+              class="pr-4 text-slate-300 hover:text-slate-500 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Dropdown estilo navbar -->
+          <div *ngIf="searchResults().length > 0 && !selectedProduct()"
+            class="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border-2 border-slate-200 z-50 shadow-xl">
+            <button *ngFor="let product of searchResults().slice(0, 6)" type="button" (click)="selectProduct(product)"
+              class="w-full flex items-center gap-4 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors">
+              <div class="w-12 h-12 bg-gray-50 border border-gray-100 shrink-0 overflow-hidden">
+                <img *ngIf="getMainImageFromVariant(product.variants?.[0]); else noImg"
+                  [src]="getMainImageFromVariant(product.variants?.[0])" class="w-full h-full object-cover" />
+                <ng-template #noImg>
+                  <div class="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"
+                        stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                </ng-template>
+              </div>
+              <div class="flex-1 text-left">
+                <p class="text-xs font-black text-slate-800 uppercase tracking-tighter">{{ product.name }}</p>
+                <p class="text-[10px] text-slate-400 font-bold">{{ product.variants?.length || 0 }} variante(s)</p>
+              </div>
+              <span class="text-xs font-bold text-slate-400 shrink-0">Seleccionar →</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Resultados -->
-        <div *ngIf="searchResults().length > 0"
-          class="mt-2 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-          <button *ngFor="let product of searchResults()" type="button" (click)="selectProduct(product)"
-            class="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-slate-50 last:border-0">
-            <div>
-              <p class="text-sm font-bold text-slate-700">{{ product.name }}</p>
-              <p class="text-xs text-slate-400">{{ product.variants?.length || 0 }} variante(s)</p>
-            </div>
-            <span class="text-xs font-bold text-blue-500 shrink-0">Seleccionar →</span>
-          </button>
-        </div>
 
-        <div *ngIf="searchTerm().length > 1 && !isSearching() && searchResults().length === 0"
-          class="mt-2 px-4 py-6 text-center text-sm text-slate-400 border border-slate-200 rounded-xl italic">
-          No se encontraron productos
-        </div>
       </div>
 
       <!-- Producto seleccionado - debajo del buscador -->
       <div *ngIf="selectedProduct() as product" class="mt-5">
-        <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl mb-5">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-            <span class="text-sm font-bold text-blue-700">{{ product.name }}</span>
+        <div class="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-slate-700 shrink-0 overflow-hidden">
+              <img *ngIf="getMainImageFromVariant(product.variants?.[0])"
+                [src]="getMainImageFromVariant(product.variants?.[0])" class="w-full h-full object-cover" />
+            </div>
+            <span class="text-xs font-black text-white uppercase tracking-widest">{{ product.name }}</span>
           </div>
           <button type="button" (click)="resetSearch()"
-            class="text-xs text-blue-400 hover:text-blue-600 font-bold">Limpiar</button>
+            class="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+            Cambiar
+          </button>
         </div>
 
         <!-- Variantes -->

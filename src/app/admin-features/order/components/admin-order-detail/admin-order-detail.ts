@@ -8,44 +8,9 @@ import { OrderResponse, OrderRequest } from '../../models/order.model';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { PdfGeneratorService } from '../../../../features/cart/services/pdf-generator.service';
 import { environment } from '../../../../../environments/environment';
-
-interface VariantImageResponse {
-  id: number;
-  variantId: number;
-  url: string;
-  position: number;
-  mainImage: boolean;
-}
-
-interface VariantResponseFull {
-  id: number;
-  toneName: string;
-  toneCode: string;
-  cost: number;
-  price: number;
-  stock: number;
-  position: number;
-  active: boolean;
-  images: VariantImageResponse[];
-  separated: boolean;
-}
-
-interface ProductResponseFull {
-  id: number;
-  name: string;
-  description: string;
-  fullDescription: string;
-  active: boolean;
-  categoryId: number;
-  variants: VariantResponseFull[];
-}
-
-interface PageResponse<T> {
-  content: T[];
-  totalPages: number;
-  totalElements: number;
-  number: number;
-}
+import { ProductService } from '../../../../features/product/services/product.service';
+import { ProductResponseFull } from '../../../../features/product/models/product-response-full.model';
+import { VariantResponseFull } from '../../../../features/product/models/variant-response-full.model';
 
 interface CartItem {
   productVariantId: number;
@@ -59,9 +24,11 @@ interface CartItem {
   stock: number;
   imageUrl: string | null;
   separated: boolean;
+  packed: boolean;
 }
 
 export enum OrderStatus {
+  QUOTE = 'QUOTE',
   CREATED = 'CREATED',
   CREADO = 'CREADO',
   ACUMULANDO = 'ACUMULANDO',
@@ -81,12 +48,13 @@ export class AdminOrderDetail implements OnInit {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private http = inject(HttpClient);
+  // private http = inject(HttpClient);
   private orderService = inject(OrderService);
   private pdfService = inject(PdfGeneratorService);
 
-  private apiUrl = `${environment.apiUrl}/products`;
+  // private apiUrl = `${environment.apiUrl}/products`;
   private search$ = new Subject<string>();
+  private productService = inject(ProductService);
 
   // ── Estado principal ─────────────────────────────────────────────────────────
   order = signal<OrderResponse | null>(null);
@@ -167,13 +135,13 @@ export class AdminOrderDetail implements OnInit {
           return of(null);
         }
         this.isSearching.set(true);
-        return this.http.get<PageResponse<ProductResponseFull>>(
-          `${this.apiUrl}/full/search?q=${encodeURIComponent(term)}&size=20`
-        ).pipe(catchError(() => of(null)));
+        return this.productService.searchProductsFull(term).pipe(
+          catchError(() => of(null))
+        );
       })
     ).subscribe(res => {
       this.isSearching.set(false);
-      if (res) this.searchResults.set(res.content);
+      if (res) this.searchResults.set(res.content.filter(p => p.active));
     });
   }
 
@@ -237,6 +205,7 @@ export class AdminOrderDetail implements OnInit {
       stock: item.productVariant.stock,
       imageUrl: item.productVariant.mainImageUrl ?? null,
       separated: item.separated ?? false,
+      packed: item.packed ?? false,
     })));
 
     this.isEditing.set(true);
@@ -321,7 +290,8 @@ export class AdminOrderDetail implements OnInit {
         productName: product.name,
         stock: variant.stock,
         imageUrl: variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null,
-        separated: variant.separated
+        separated: variant.separated,
+        packed: variant.packed,
       }]);
     }
 
@@ -363,7 +333,8 @@ export class AdminOrderDetail implements OnInit {
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
         quantity: i.quantity,
-        separated: i.separated
+        separated: i.separated,
+        packed: i.packed,
       }))
     };
 
@@ -386,34 +357,81 @@ export class AdminOrderDetail implements OnInit {
   }
 
   separationStatus = computed(() => {
+    const items = this.order()?.orderItems;
+    if (!items || items.length === 0) return 'none';
+    const separated = items.filter(i => i.separated === true).length;
+    if (separated === 0) return 'none';
+    if (separated === items.length) return 'all';
+    return 'partial';
+  });
+
+  // Para el modo edición (carrito)
+  cartSeparationStatus = computed(() => {
+    const items = this.cart();
+    if (!items.length) return 'none';
+    const separated = items.filter(i => i.separated).length;
+    if (separated === 0) return 'none';
+    if (separated === items.length) return 'all';
+    return 'partial';
+  });
+
+  toggleSeparated(variantId: number) {
+    this.cart.update(items =>
+      items.map(i => i.productVariantId === variantId
+        ? { ...i, separated: !i.separated }
+        : i
+      )
+    );
+  }
+
+  markAllSeparated() {
+    this.cart.update(items => items.map(i => ({ ...i, separated: true })));
+  }
+
+  getProductImage(product: ProductResponseFull): string | null {
+  if (product.images?.length) return product.images[0].url;
+  const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
+    ?? product.variants?.[0]?.images?.[0];
+  return img?.url ?? null;
+}
+
+
+packingStatus = computed(() => {
   const items = this.order()?.orderItems;
   if (!items || items.length === 0) return 'none';
-  const separated = items.filter(i => i.separated === true).length;
-  if (separated === 0) return 'none';
-  if (separated === items.length) return 'all';
+  const packed = items.filter(i => i.packed === true).length;
+  if (packed === 0) return 'none';
+  if (packed === items.length) return 'all';
   return 'partial';
 });
 
-// Para el modo edición (carrito)
-cartSeparationStatus = computed(() => {
+cartPackingStatus = computed(() => {
   const items = this.cart();
   if (!items.length) return 'none';
-  const separated = items.filter(i => i.separated).length;
-  if (separated === 0) return 'none';
-  if (separated === items.length) return 'all';
+  const packed = items.filter(i => i.packed).length;
+  if (packed === 0) return 'none';
+  if (packed === items.length) return 'all';
   return 'partial';
 });
 
-toggleSeparated(variantId: number) {
+togglePacked(variantId: number) {
   this.cart.update(items =>
     items.map(i => i.productVariantId === variantId
-      ? { ...i, separated: !i.separated }
+      ? { 
+          ...i, 
+          packed: !i.packed,
+          // Si se marca packed, separated va a true automáticamente
+          // Si se desmarca packed, separated NO cambia
+          separated: !i.packed ? true : i.separated
+        }
       : i
     )
   );
 }
 
-markAllSeparated() {
-  this.cart.update(items => items.map(i => ({ ...i, separated: true })));
+markAllPacked() {
+  this.cart.update(items => 
+    items.map(i => ({ ...i, packed: true, separated: true }))
+  );
 }
 }

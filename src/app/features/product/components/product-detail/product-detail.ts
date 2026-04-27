@@ -11,6 +11,7 @@ import { SortByPipe } from "../../../../shared/pipes/sort-by.pipe";
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { VariantResponseFull } from '../../models/variant-response-full.model';
 import { VariantImageResponse } from '../../models/variant-image-response.model';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-product-detail',
@@ -50,7 +51,8 @@ export class ProductDetail implements OnInit, OnDestroy {
     private router: Router,
     private productService: ProductService,
     private categoryService: CategoryService,
-    private cartService: CartService
+    private cartService: CartService,
+    private location: Location
   ) { }
 
  ngOnInit(): void {
@@ -205,9 +207,8 @@ export class ProductDetail implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/products']);
-  }
-
+  this.location.back();
+}
   decreaseQuantity(): void {
     if (this.quantity > 1) this.quantity--;
   }
