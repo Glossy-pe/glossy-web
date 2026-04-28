@@ -1,8 +1,132 @@
 <div class="bg-[#FFFDF9] min-h-screen flex flex-col font-sans selection:bg-[#FFDDE4]">
-  <div class="container mx-auto px-4 sm:px-10 py-8 sm:py-14 flex-grow">
 
-    <div class="animate-fade-in pb-12" *ngIf="product$ | async as product">
-      <div *ngIf="!(isLoading$ | async) && !errorMessage">
+  <div *ngIf="product$ | async as product">
+    <div *ngIf="!(isLoading$ | async) && !errorMessage">
+
+      <!-- ══════════ MÓVIL: layout tipo Temu/Shein ══════════ -->
+      <div class="md:hidden">
+
+        <!-- Zona imagen: edge-to-edge, sin padding -->
+        <div class="relative w-full" style="aspect-ratio: 3/4;">
+
+          <!-- Botón volver flotante -->
+          <button (click)="goBack()"
+            class="absolute top-3 left-3 z-20 w-9 h-9 bg-white/90 flex items-center justify-center shadow-sm">
+            <span class="text-lg leading-none text-gray-700">←</span>
+          </button>
+
+          <!-- Imagen principal -->
+          <img
+            [src]="getActiveImages()[activeImageIndex].url"
+            class="w-full h-full object-cover"
+            [class.grayscale]="getActiveImages()[activeImageIndex]?.grayscale"
+            [alt]="product.name">
+
+          <!-- Badge agotado -->
+          <div *ngIf="selectedVariant && selectedVariant.stock === 0"
+            class="absolute inset-x-0 bottom-0 bg-[#FF8DA1]/90 py-2.5 flex justify-center border-t-2 border-white">
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Tono Agotado ☁️</span>
+          </div>
+
+          <!-- Thumbnails verticales pegadas a la izquierda -->
+          <div *ngIf="getActiveImages().length > 1"
+            class="absolute left-3 bottom-4 flex flex-col gap-1.5 z-10">
+            <button
+              *ngFor="let img of getActiveImages(); let i = index"
+              (click)="activeImageIndex = i"
+              class="w-11 h-14 border-2 flex-shrink-0 transition-all overflow-hidden"
+              [class.border-[#FF8DA1]]="activeImageIndex === i"
+              [class.border-white]="activeImageIndex !== i">
+              <img [src]="img.url" class="w-full h-full object-cover">
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Sheet de info: sube sobre la imagen con borde redondeado top -->
+        <div class="bg-white px-4 pt-5 pb-32">
+
+          <!-- Categoría + nombre + precio -->
+          <div class="mb-4">
+            <span class="inline-block bg-[#E5F9FF] text-[#49B6D6] px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest mb-2">
+              <ng-container *ngIf="categories$ | async as categories">
+                {{ getCategoryName(product.categoryId, categories) }}
+              </ng-container>
+            </span>
+
+            <h1 class="text-2xl font-black text-gray-800 tracking-tighter italic leading-tight mb-2">
+              {{ product.name }}
+            </h1>
+
+            <div class="flex items-center gap-3">
+              <p class="text-2xl font-black text-[#FF8DA1]">
+                S/. {{ selectedVariant ? selectedVariant.price.toFixed(2) : '---' }}
+              </p>
+              <div class="h-0.5 w-8 bg-[#A7E9FF]"></div>
+            </div>
+          </div>
+
+          <!-- Selector de tono -->
+          <div *ngIf="product.variants?.length" class="mb-5 pb-5 border-b border-[#F0FAFF]">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Elige tu tono</span>
+              <span class="text-[10px] font-bold text-[#FF8DA1] uppercase">{{ selectedVariant?.toneName }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+              <button
+                *ngFor="let variant of product.variants | sortBy:'position'"
+                (click)="selectVariant(variant)"
+                class="relative w-9 h-9 border-2 transition-all"
+                [class.border-[#FF8DA1]]="isVariantSelected(variant)"
+                [class.border-transparent]="!isVariantSelected(variant)"
+                [style.background-color]="variant.toneCode || '#e5e7eb'"
+                [title]="variant.toneName">
+                <div *ngIf="variant.stock === 0" class="absolute inset-0 bg-white/60 flex items-center justify-center">
+                  <div class="w-full h-[2px] bg-red-400 rotate-45 absolute"></div>
+                  <div class="w-full h-[2px] bg-red-400 -rotate-45 absolute"></div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="text-xs text-gray-500 leading-relaxed mb-5 pb-5 border-b border-[#F0FAFF]">
+            <p>{{ product.fullDescription || product.description }}</p>
+          </div>
+
+          <!-- Badges envío / original -->
+          <div class="flex gap-3">
+            <div class="flex items-center gap-2 flex-1 bg-[#E5F9FF] px-3 py-2.5">
+              <span class="text-[#49B6D6] font-bold text-base leading-none">✓</span>
+              <span class="text-[9px] font-black uppercase tracking-widest text-[#49B6D6]">Envío Flash</span>
+            </div>
+            <div class="flex items-center gap-2 flex-1 bg-[#FFF4F7] px-3 py-2.5">
+              <span class="text-[#FF8DA1] font-bold text-base leading-none">✧</span>
+              <span class="text-[9px] font-black uppercase tracking-widest text-[#FF8DA1]">Original K-Beauty</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Barra inferior fija: cantidad + CTA -->
+        <div class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t-2 border-[#FFDDE4] px-4 py-3 flex gap-3">
+          <div class="flex items-center border-2 border-[#F0FAFF] bg-white h-12 w-28 shrink-0">
+            <button (click)="decreaseQuantity()" class="flex-1 h-full text-xl font-black text-[#A7E9FF] hover:text-[#FF8DA1] transition-colors">−</button>
+            <span class="flex-1 text-center font-black text-sm text-gray-700">{{ quantity }}</span>
+            <button (click)="increaseQuantity()" class="flex-1 h-full text-xl font-black text-[#A7E9FF] hover:text-[#FF8DA1] transition-colors">+</button>
+          </div>
+          <button
+            (click)="addToCart()"
+            [disabled]="!canAddToCart()"
+            class="flex-grow h-12 bg-[#FF8DA1] text-white text-[11px] font-black uppercase tracking-[0.15em] shadow-[4px_4px_0px_#FFDDE4] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none">
+            {{ canAddToCart() ? 'Añadir a la bolsa ✦' : 'Agotado' }}
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ══════════ DESKTOP: layout 2 columnas original ══════════ -->
+      <div class="hidden md:block container mx-auto px-10 py-14">
 
         <button (click)="goBack()"
           class="mb-8 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-[#A7E9FF] hover:text-[#FF8DA1] transition-colors group">
@@ -10,8 +134,9 @@
           Volver al catálogo
         </button>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20">
+        <div class="grid grid-cols-2 gap-10 lg:gap-20">
 
+          <!-- Galería desktop -->
           <div class="flex flex-col gap-4">
             <div class="aspect-[3/4] bg-white border-2 border-[#FFDDE4] relative group overflow-hidden shadow-[8px_8px_0px_#F0FAFF]">
               <img
@@ -19,15 +144,11 @@
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 [class.grayscale]="getActiveImages()[activeImageIndex]?.grayscale"
                 [alt]="product.name">
-
               <div *ngIf="selectedVariant && selectedVariant.stock === 0"
                 class="absolute inset-x-0 bottom-0 bg-[#FF8DA1]/90 backdrop-blur-sm py-3 flex justify-center border-t-2 border-white">
-                <span class="text-[11px] font-black uppercase tracking-[0.3em] text-white">
-                  Tono Agotado ☁️
-                </span>
+                <span class="text-[11px] font-black uppercase tracking-[0.3em] text-white">Tono Agotado ☁️</span>
               </div>
             </div>
-
             <div class="flex gap-3 overflow-x-auto pb-4" *ngIf="getActiveImages().length > 1">
               <button
                 *ngFor="let img of getActiveImages(); let i = index"
@@ -40,6 +161,7 @@
             </div>
           </div>
 
+          <!-- Info desktop -->
           <div class="flex flex-col">
             <div class="border-b-2 border-[#FFDDE4] pb-6 mb-8">
               <span class="inline-block bg-[#E5F9FF] text-[#49B6D6] px-3 py-1 text-[9px] font-black uppercase tracking-widest mb-4">
@@ -47,15 +169,9 @@
                   {{ getCategoryName(product.categoryId, categories) }}
                 </ng-container>
               </span>
-              
-              <h2 class="text-4xl md:text-5xl font-black text-gray-800 tracking-tighter italic leading-none mb-4">
-                {{ product.name }}
-              </h2>
-
+              <h2 class="text-5xl font-black text-gray-800 tracking-tighter italic leading-none mb-4">{{ product.name }}</h2>
               <div class="flex items-center gap-4">
-                <p class="text-2xl font-black text-[#FF8DA1]">
-                  S/. {{ selectedVariant ? selectedVariant.price.toFixed(2) : '---' }}
-                </p>
+                <p class="text-2xl font-black text-[#FF8DA1]">S/. {{ selectedVariant ? selectedVariant.price.toFixed(2) : '---' }}</p>
                 <div class="h-1 w-12 bg-[#A7E9FF]"></div>
               </div>
             </div>
@@ -69,17 +185,15 @@
                 <span class="text-[11px] font-black uppercase tracking-widest text-gray-400 italic">Elige tu tono</span>
                 <span class="text-[10px] font-bold text-[#FF8DA1] uppercase">{{ selectedVariant?.toneName }}</span>
               </div>
-
               <div class="flex flex-wrap gap-3">
                 <button
                   *ngFor="let variant of product.variants | sortBy:'position'"
                   (click)="selectVariant(variant)"
-                  class="relative w-10 h-10 border-2 transition-all group"
+                  class="relative w-10 h-10 border-2 transition-all"
                   [class.border-[#FF8DA1]]="isVariantSelected(variant)"
                   [class.border-transparent]="!isVariantSelected(variant)"
                   [style.background-color]="variant.toneCode || '#e5e7eb'"
                   [title]="variant.toneName">
-                  
                   <div *ngIf="variant.stock === 0" class="absolute inset-0 bg-white/60 flex items-center justify-center">
                     <div class="w-full h-[2px] bg-red-400 rotate-45 absolute"></div>
                     <div class="w-full h-[2px] bg-red-400 -rotate-45 absolute"></div>
@@ -88,13 +202,12 @@
               </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-4 mb-8">
-              <div class="flex items-center border-2 border-[#F0FAFF] bg-white h-14 w-full sm:w-36">
+            <div class="flex gap-4 mb-8">
+              <div class="flex items-center border-2 border-[#F0FAFF] bg-white h-14 w-36">
                 <button (click)="decreaseQuantity()" class="flex-1 h-full text-lg font-black text-[#A7E9FF] hover:text-[#FF8DA1] transition-colors">−</button>
                 <span class="flex-1 text-center font-black text-sm text-gray-700">{{ quantity }}</span>
                 <button (click)="increaseQuantity()" class="flex-1 h-full text-lg font-black text-[#A7E9FF] hover:text-[#FF8DA1] transition-colors">+</button>
               </div>
-
               <button
                 (click)="addToCart()"
                 [disabled]="!canAddToCart()"
@@ -114,19 +227,22 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
-    </div>
 
-    <div *ngIf="showToast"
-      class="fixed bottom-6 right-6 z-50 flex items-center gap-4 bg-white border-4 border-[#A7E9FF] p-5 shadow-[10px_10px_0px_#F0FAFF] animate-fade-in max-w-sm">
-      <div class="w-10 h-10 bg-[#A7E9FF] flex items-center justify-center text-white font-black text-xl">!</div>
-      <div class="flex-grow">
-        <p class="text-[10px] font-black uppercase tracking-widest text-[#49B6D6]">Agregado</p>
-        <p class="text-xs font-bold text-gray-700 truncate">{{ currentProduct?.name }}</p>
-      </div>
-      <button (click)="dismissToast()" class="text-[#A7E9FF] hover:text-[#FF8DA1] font-black text-lg">✕</button>
     </div>
-
   </div>
+
+  <!-- Toast (ambos layouts) -->
+  <div *ngIf="showToast"
+    class="fixed bottom-20 md:bottom-6 right-3 left-3 md:left-auto md:right-6 z-50 flex items-center gap-3 bg-white border-4 border-[#A7E9FF] p-3.5 md:p-5 shadow-[6px_6px_0px_#F0FAFF] md:shadow-[10px_10px_0px_#F0FAFF] animate-fade-in md:max-w-sm">
+    <div class="w-8 h-8 md:w-10 md:h-10 bg-[#A7E9FF] flex items-center justify-center text-white font-black text-lg shrink-0">!</div>
+    <div class="flex-grow min-w-0">
+      <p class="text-[10px] font-black uppercase tracking-widest text-[#49B6D6]">Agregado</p>
+      <p class="text-xs font-bold text-gray-700 truncate">{{ currentProduct?.name }}</p>
+    </div>
+    <button (click)="dismissToast()" class="text-[#A7E9FF] hover:text-[#FF8DA1] font-black text-lg shrink-0">✕</button>
+  </div>
+
 </div>

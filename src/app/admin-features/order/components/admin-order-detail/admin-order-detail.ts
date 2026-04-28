@@ -220,6 +220,8 @@ export class AdminOrderDetail implements OnInit {
 
   onSearchInput(term: string) {
     this.searchTerm.set(term);
+    this.selectedProduct.set(null);   // ← agregar esta línea
+    this.selectedVariant.set(null);   // ← y esta
     this.search$.next(term);
     if (!term.trim()) this.selectedProduct.set(null);
   }

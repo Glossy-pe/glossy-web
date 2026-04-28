@@ -44,7 +44,7 @@ export class AdminOrderList implements OnInit {
   pendingOnly    = signal(true); // por defecto activo
 
   readonly allStatuses: OrderStatus[] = [
-    'CREATED', 'CREADO', 'ACUMULANDO',
+    'QUOTE','CREATED', 'CREADO', 'ACUMULANDO',
     'PENDIENTE_PACKAGE', 'PENDIENTE_ENVIO',
     'ENVIADO', 'PAID'
   ];

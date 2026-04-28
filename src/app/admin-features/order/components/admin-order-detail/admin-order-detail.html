@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans antialiased text-slate-700">
+<div class="min-h-screen bg-[#F8FAFC] p-3 md:p-8 font-sans antialiased text-slate-700">
   <div class="max-w-[800px] mx-auto">
 
     <!-- Loading -->
@@ -9,152 +9,151 @@
 
     <div *ngIf="!isLoading() && order() as order">
 
-      <!-- Header -->
-      <div class="flex items-center gap-4 mb-8">
-        <button (click)="goBack()"
-          class="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:bg-slate-50 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M15 19l-7-7 7-7" stroke-width="2.5" stroke-linecap="round" />
-          </svg>
-        </button>
-        <div class="flex-1">
-          <div class="flex items-center gap-3 flex-wrap">
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Orden #{{ order.id }}</h1>
-            <p class="text-xs font-mono text-slate-400">{{ order.orderCode }}</p>
-            <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider" [ngClass]="{
-                'bg-emerald-50 text-emerald-600': order.status === 'CREATED',
-                'bg-emerald-50 text-emerald-500': order.status === 'CREADO',
-                'bg-violet-50 text-violet-600':   order.status === 'ACUMULANDO',
-                'bg-amber-50 text-amber-600':      order.status === 'PENDIENTE_PACKAGE',
-                'bg-amber-50 text-amber-700':      order.status === 'PENDIENTE_ENVIO',
-                'bg-rose-50 text-rose-600':        order.status === 'ENVIADO',
-                'bg-blue-50 text-blue-600':        order.status === 'PAID'
-              }">
-              {{ order.status }}
-            </span>
+      <!-- ── Header ── -->
+      <div class="mb-6">
 
+        <!-- Fila 1: back + título + botones acción -->
+        <div class="flex items-center gap-3 mb-3">
+          <button (click)="goBack()"
+            class="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:bg-slate-50 transition-all shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M15 19l-7-7 7-7" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </button>
 
-            <!-- Badge separación general -->
-            <span
-              class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1.5"
-              [ngClass]="{
-                'bg-emerald-50 text-emerald-600': separationStatus() === 'all',
-                'bg-amber-50 text-amber-600':    separationStatus() === 'partial',
-                'bg-slate-100 text-slate-400':   separationStatus() === 'none'
-              }">
-              <!-- ícono check circle / half / empty según estado -->
-              <svg *ngIf="separationStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd" />
-              </svg>
-              <svg *ngIf="separationStatus() === 'partial'" class="w-3 h-3" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
-              </svg>
-              <svg *ngIf="separationStatus() === 'none'" class="w-3 h-3" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
-              </svg>
-              {{ separationStatus() === 'all' ? 'Todo separado' : separationStatus() === 'partial' ? 'Parcialmente
-              separado' : 'Sin separar' }}
-            </span>
-
-
-            <span
-                class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1.5"
-                [ngClass]="{
-                  'bg-blue-50 text-blue-600':   packingStatus() === 'all',
-                  'bg-amber-50 text-amber-600': packingStatus() === 'partial',
-                  'bg-slate-100 text-slate-400': packingStatus() === 'none'
-                }">
-                <svg *ngIf="packingStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clip-rule="evenodd" />
-                </svg>
-                <svg *ngIf="packingStatus() === 'partial'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <svg *ngIf="packingStatus() === 'none'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                {{ packingStatus() === 'all' ? 'Todo empacado' : packingStatus() === 'partial' ? 'Parcialmente empacado' : 'Sin empacar' }}
-              </span>
-
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-xl font-bold text-slate-900 tracking-tight">Orden #{{ order.id }}</h1>
+              <p class="text-xs font-mono text-slate-400 hidden sm:block">{{ order.orderCode }}</p>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">{{ order.createdAt | date:'dd/MM/yyyy · HH:mm' }}</p>
           </div>
-          <p class="text-sm text-slate-400 mt-0.5">{{ order.createdAt | date:'dd/MM/yyyy · HH:mm' }}</p>
+
+          <!-- Botones: solo íconos en móvil, texto en desktop -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button *ngIf="!isEditing()" (click)="enterEditMode()"
+              class="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                  stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span class="hidden sm:inline">Editar</span>
+            </button>
+
+            <button *ngIf="isEditing()" (click)="cancelEdit()"
+              class="px-3 py-2.5 bg-white border border-slate-200 text-slate-500 text-xs font-black rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+              <span class="hidden sm:inline">Cancelar</span>
+              <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+            </button>
+
+            <button *ngIf="!isEditing()" (click)="downloadPdf()"
+              class="flex items-center gap-1.5 px-3 py-2.5 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all active:scale-95">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                  stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span class="hidden sm:inline">PDF</span>
+            </button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button *ngIf="!isEditing()" (click)="enterEditMode()"
-            class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-slate-50 transition-all active:scale-95">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                stroke-width="2" stroke-linecap="round" />
+
+        <!-- Fila 2: badges de estado (scroll horizontal en móvil) -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+
+          <!-- Estado orden -->
+          <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider whitespace-nowrap shrink-0"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-600': order.status === 'CREATED',
+              'bg-emerald-50 text-emerald-500': order.status === 'CREADO',
+              'bg-violet-50 text-violet-600':   order.status === 'ACUMULANDO',
+              'bg-amber-50 text-amber-600':      order.status === 'PENDIENTE_PACKAGE',
+              'bg-amber-50 text-amber-700':      order.status === 'PENDIENTE_ENVIO',
+              'bg-rose-50 text-rose-600':        order.status === 'ENVIADO',
+              'bg-blue-50 text-blue-600':        order.status === 'PAID'
+            }">
+            {{ order.status }}
+          </span>
+
+          <!-- Badge separación -->
+          <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1 whitespace-nowrap shrink-0"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-600': separationStatus() === 'all',
+              'bg-amber-50 text-amber-600':    separationStatus() === 'partial',
+              'bg-slate-100 text-slate-400':   separationStatus() === 'none'
+            }">
+            <svg *ngIf="separationStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
-            Editar
-          </button>
-          <button *ngIf="isEditing()" (click)="cancelEdit()"
-            class="px-5 py-2.5 bg-white border border-slate-200 text-slate-500 text-xs font-black rounded-xl hover:bg-slate-50 transition-all active:scale-95">
-            Cancelar
-          </button>
-          <button *ngIf="!isEditing()" (click)="downloadPdf()"
-            class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all active:scale-95">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                stroke-width="2" stroke-linecap="round" />
+            <svg *ngIf="separationStatus() !== 'all'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
             </svg>
-            Descargar PDF
-          </button>
+            {{ separationStatus() === 'all' ? 'Separado' : separationStatus() === 'partial' ? 'Parcial sep.' : 'Sin separar' }}
+          </span>
+
+          <!-- Badge empacado -->
+          <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider flex items-center gap-1 whitespace-nowrap shrink-0"
+            [ngClass]="{
+              'bg-blue-50 text-blue-600':    packingStatus() === 'all',
+              'bg-amber-50 text-amber-600':  packingStatus() === 'partial',
+              'bg-slate-100 text-slate-400': packingStatus() === 'none'
+            }">
+            <svg *ngIf="packingStatus() === 'all'" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <svg *ngIf="packingStatus() !== 'all'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            {{ packingStatus() === 'all' ? 'Empacado' : packingStatus() === 'partial' ? 'Parcial emp.' : 'Sin empacar' }}
+          </span>
+
         </div>
       </div>
 
       <!-- ═══ MODO VISUALIZACIÓN ═══ -->
-      <div *ngIf="!isEditing()" class="space-y-6">
+      <div *ngIf="!isEditing()" class="space-y-4">
 
         <!-- Stats -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm text-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Productos</p>
-            <p class="text-2xl font-black text-slate-800">{{ order.orderItems.length }}</p>
+        <div class="grid grid-cols-3 gap-2 md:gap-4">
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-center">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Productos</p>
+            <p class="text-xl font-black text-slate-800">{{ order.orderItems.length }}</p>
           </div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm text-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Unidades</p>
-            <p class="text-2xl font-black text-slate-800">{{ totalUnits }}</p>
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-center">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unidades</p>
+            <p class="text-xl font-black text-slate-800">{{ totalUnits }}</p>
           </div>
-          <div class="bg-blue-600 rounded-2xl p-5 shadow-sm text-center">
-            <p class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Total</p>
-            <p class="text-2xl font-black text-white">{{ order.total | currency }}</p>
+          <div class="bg-blue-600 rounded-2xl p-4 shadow-sm text-center">
+            <p class="text-[9px] font-black text-blue-200 uppercase tracking-widest mb-1">Total</p>
+            <p class="text-lg font-black text-white">{{ order.total | currency }}</p>
           </div>
         </div>
 
         <!-- Cliente -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Datos del Cliente</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Datos del Cliente</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="flex items-start gap-3">
               <div class="p-2 bg-slate-100 rounded-xl shrink-0">
                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-width="2"
-                    stroke-linecap="round" />
+                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </div>
               <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliente</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Cliente</p>
                 <p class="text-sm font-bold text-slate-800">{{ order.customerName }}</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
               <div class="p-2 bg-slate-100 rounded-xl shrink-0">
                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" stroke-width="2"
-                    stroke-linecap="round" />
+                  <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" stroke-width="2" stroke-linecap="round" />
                   <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </div>
               <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dirección</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Dirección</p>
                 <p class="text-sm font-bold text-slate-800">{{ order.customerAddress }}</p>
               </div>
             </div>
@@ -162,109 +161,104 @@
         </div>
 
         <!-- Items -->
-        <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <div class="px-8 py-4 bg-slate-50/50 border-b border-slate-100">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div class="px-4 md:px-8 py-4 bg-slate-50/50 border-b border-slate-100">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos incluidos</h2>
           </div>
+
           <div class="divide-y divide-slate-50">
             @for (item of order.orderItems; track item.id) {
-            <div class="flex items-center gap-4 px-8 py-5">
-              <div
-                class="w-12 h-12 rounded-2xl border border-slate-100 shadow-sm shrink-0 overflow-hidden bg-slate-100">
-                <img *ngIf="item.productVariant.mainImageUrl; else viewToneBlock"
-                  [src]="item.productVariant.mainImageUrl" class="w-full h-full object-cover" />
-                <ng-template #viewToneBlock>
-                  <div class="w-full h-full" [style.backgroundColor]="item.productVariant.toneCode"></div>
-                </ng-template>
-              </div>
-              <div class="flex-1 min-w-0">
-                <a [href]="'/products/' + item.productVariant.productId" target="_blank"
-                  class="text-sm font-bold text-slate-800 truncate hover:underline block">
-                  {{ item.productVariant.productName }}
-                </a>
-                <p class="text-sm text-slate-400">{{ item.productVariant.toneName }}</p>
-                <p class="text-xs text-slate-400 mt-0.5">Stock: {{ item.productVariant.stock }}</p>
-              </div>
-              <div class="text-center px-4">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Cant.</p>
-                <p class="text-lg font-black text-slate-700">{{ item.quantity }}</p>
-              </div>
-              <div class="text-center px-4 hidden sm:block">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Precio u.</p>
-                <p class="text-sm font-bold text-slate-600">{{ item.productVariant.price | currency }}</p>
-              </div>
-              <div class="text-right min-w-[80px]">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Subtotal</p>
-                <p class="text-sm font-black text-slate-900">{{ item.productVariant.price * item.quantity | currency }}
-                </p>
+
+            <!-- Layout móvil: 2 filas -->
+            <div class="px-4 md:px-8 py-4">
+
+              <!-- Fila superior: imagen + info + cantidad + subtotal -->
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl border border-slate-100 shadow-sm shrink-0 overflow-hidden bg-slate-100">
+                  <img *ngIf="item.productVariant.mainImageUrl; else viewToneBlock"
+                    [src]="item.productVariant.mainImageUrl" class="w-full h-full object-cover" />
+                  <ng-template #viewToneBlock>
+                    <div class="w-full h-full" [style.backgroundColor]="item.productVariant.toneCode"></div>
+                  </ng-template>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <a [href]="'/products/' + item.productVariant.productId" target="_blank"
+                    class="text-sm font-bold text-slate-800 truncate hover:underline block">
+                    {{ item.productVariant.productName }}
+                  </a>
+                  <p class="text-xs text-slate-400">{{ item.productVariant.toneName }}</p>
+                </div>
+
+                <div class="text-center shrink-0">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cant.</p>
+                  <p class="text-lg font-black text-slate-700">{{ item.quantity }}</p>
+                </div>
+
+                <div class="text-right shrink-0">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Subtotal</p>
+                  <p class="text-sm font-black text-slate-900">{{ item.productVariant.price * item.quantity | currency }}</p>
+                </div>
               </div>
 
-              <div class="text-center px-2 shrink-0">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Separado</p>
-                <span *ngIf="item.separated; else notSeparated"
-                  class="inline-flex items-center justify-center w-7 h-7 bg-emerald-100 rounded-full">
-                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
-                  </svg>
+              <!-- Fila inferior: badges separado/empacado -->
+              <div class="flex items-center gap-3 mt-2.5 pl-14">
+                <span class="text-[10px] font-bold text-slate-400">
+                  {{ item.productVariant.price | currency }} c/u
                 </span>
-                <ng-template #notSeparated>
-                  <span class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 rounded-full">
-                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
-                    </svg>
-                  </span>
-                </ng-template>
+                <span class="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="item.separated ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path *ngIf="item.separated" d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
+                    <path *ngIf="!item.separated" d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                  Sep.
+                </span>
+                <span class="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="item.packed ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path *ngIf="item.packed" d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
+                    <path *ngIf="!item.packed" d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                  Emp.
+                </span>
               </div>
 
-              <div class="text-center px-2 shrink-0">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Empacado</p>
-                <span *ngIf="item.packed; else notPacked"
-                  class="inline-flex items-center justify-center w-7 h-7 bg-blue-100 rounded-full">
-                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" />
-                  </svg>
-                </span>
-                <ng-template #notPacked>
-                  <span class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 rounded-full">
-                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
-                    </svg>
-                  </span>
-                </ng-template>
-              </div>
             </div>
             } @empty {
             <div class="py-12 text-center text-slate-400 italic text-sm">Esta orden no tiene productos.</div>
             }
           </div>
-          <div class="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
-            <p class="text-xs text-slate-400">{{ order.orderItems.length }} producto(s)</p>
-            <div class="text-right">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Costo Total</p>
-              <p class="text-xl font-black text-blue-400">{{ order.costTotal | currency }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Orden</p>
-              <p class="text-2xl font-black text-slate-700">{{ order.total | currency }}</p>
-            </div>
 
-
+          <!-- Footer totales -->
+          <div class="px-4 md:px-8 py-4 bg-slate-50/50 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate-400">{{ order.orderItems.length }} producto(s)</p>
+              <div class="flex items-center gap-4">
+                <div class="text-right">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Costo</p>
+                  <p class="text-base font-black text-blue-400">{{ order.costTotal | currency }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                  <p class="text-xl font-black text-slate-700">{{ order.total | currency }}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
 
       <!-- ═══ MODO EDICIÓN ═══ -->
-      <div *ngIf="isEditing()" class="space-y-6">
+      <div *ngIf="isEditing()" class="space-y-4">
 
         <!-- Estado -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Estado de la
-            orden</label>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Estado de la orden</label>
           <select [ngModel]="currentStatus()" (ngModelChange)="currentStatus.set($event)"
             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
             [ngClass]="{
-              'text-emerald-450': currentStatus() === 'QUOTE',
               'text-emerald-600': currentStatus() === 'CREATED',
               'text-emerald-500': currentStatus() === 'CREADO',
               'text-violet-600':  currentStatus() === 'ACUMULANDO',
@@ -278,17 +272,17 @@
         </div>
 
         <!-- Datos cliente -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Datos del Cliente</h2>
-          <div class="space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm">
+          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Datos del Cliente</h2>
+          <div class="space-y-3">
             <div>
-              <label class="block text-xs font-bold text-slate-500 mb-2">Nombre del cliente</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">Nombre del cliente</label>
               <input type="text" placeholder="Ej. Juan Pérez" [ngModel]="customerName()"
                 (ngModelChange)="customerName.set($event)"
                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-500 mb-2">Dirección de entrega</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">Dirección de entrega</label>
               <input type="text" placeholder="Ej. Av. Principal 123, Lima" [ngModel]="customerAddress()"
                 (ngModelChange)="customerAddress.set($event)"
                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all" />
@@ -297,14 +291,11 @@
         </div>
 
         <!-- Buscador de productos -->
-        <!-- Buscador de productos -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Agregar Producto</h2>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm">
+          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Agregar Producto</h2>
 
-          <!-- Input de búsqueda estilo navbar -->
           <div class="relative">
-            <div
-              class="flex items-center w-full bg-white border-2 border-slate-200 h-11 relative shadow-[3px_3px_0px_#e2e8f0] focus-within:border-slate-400 transition-all">
+            <div class="flex items-center w-full bg-white border-2 border-slate-200 h-11 shadow-[3px_3px_0px_#e2e8f0] focus-within:border-slate-400 transition-all">
               <span class="pl-4 text-slate-400 shrink-0">
                 <svg *ngIf="!isSearching()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5" stroke-linecap="round" />
@@ -316,79 +307,74 @@
               </span>
               <input type="text" placeholder="BUSCAR PRODUCTO..." [ngModel]="searchTerm()"
                 (ngModelChange)="onSearchInput($event)"
-                class="flex-1 h-full px-4 text-xs font-medium text-slate-600 placeholder-slate-300 focus:outline-none bg-transparent uppercase tracking-widest" />
-              <button *ngIf="searchTerm()" type="button" (click)="resetSearch()"
-                class="pr-4 text-slate-300 hover:text-slate-500 transition-colors">
+                class="flex-1 h-full px-3 text-xs font-medium text-slate-600 placeholder-slate-300 focus:outline-none bg-transparent uppercase tracking-widest" />
+              <button *ngIf="searchTerm()" type="button" (click)="resetSearch()" class="pr-4 text-slate-300 hover:text-slate-500">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
                 </svg>
               </button>
             </div>
 
-            <!-- Dropdown resultados estilo navbar -->
+            <!-- Dropdown resultados -->
             <div *ngIf="searchResults().length > 0 && !selectedProduct()"
               class="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border-2 border-slate-200 z-50 shadow-xl">
               <button *ngFor="let product of searchResults().slice(0, 6)" type="button" (click)="selectProduct(product)"
-                class="w-full flex items-center gap-4 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors">
-                <div class="w-12 h-12 bg-gray-50 border border-gray-100 shrink-0 overflow-hidden">
-                  <img *ngIf="getProductImage(product); else dropdownTone" [src]="getProductImage(product)"
-                    class="w-full h-full object-cover" />
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors">
+                <div class="w-10 h-10 bg-gray-50 border border-gray-100 shrink-0 overflow-hidden">
+                  <img *ngIf="getProductImage(product); else dropdownTone" [src]="getProductImage(product)" class="w-full h-full object-cover" />
                   <ng-template #dropdownTone>
                     <div class="w-full h-full bg-slate-100 flex items-center justify-center">
-                      <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"
-                          stroke-width="2" stroke-linecap="round" />
+                      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" stroke-width="2" stroke-linecap="round" />
                       </svg>
                     </div>
                   </ng-template>
                 </div>
-                <div class="flex-1 text-left">
-                  <p class="text-xs font-black text-slate-800 uppercase tracking-tighter">{{ product.name }}</p>
+                <div class="flex-1 text-left min-w-0">
+                  <p class="text-xs font-black text-slate-800 uppercase tracking-tighter truncate">{{ product.name }}</p>
                   <p class="text-[10px] text-slate-400 font-bold">{{ product.variants?.length || 0 }} variante(s)</p>
                 </div>
-                <span class="text-xs font-bold text-slate-400 shrink-0">Seleccionar →</span>
+                <span class="text-xs font-bold text-slate-400 shrink-0">→</span>
               </button>
             </div>
           </div>
 
           <!-- Producto seleccionado -->
-          <div *ngIf="selectedProduct() as product" class="mt-5">
-            <div class="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 mb-5">
-              <div class="flex items-center gap-3">
+          <div *ngIf="selectedProduct() as product" class="mt-4">
+            <div class="flex items-center justify-between p-3 bg-slate-900 mb-4">
+              <div class="flex items-center gap-3 min-w-0">
                 <div class="w-8 h-8 bg-slate-700 shrink-0 overflow-hidden">
-                  <img *ngIf="getProductImage(product)" [src]="getProductImage(product)"
-                    class="w-full h-full object-cover" />
+                  <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" class="w-full h-full object-cover" />
                 </div>
-                <span class="text-xs font-black text-white uppercase tracking-widest">{{ product.name }}</span>
+                <span class="text-xs font-black text-white uppercase tracking-widest truncate">{{ product.name }}</span>
               </div>
               <button type="button" (click)="resetSearch()"
-                class="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+                class="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors shrink-0 ml-2">
                 Cambiar
               </button>
             </div>
 
-            <!-- Variantes -->
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Selecciona
-              variante</label>
+            <!-- Variantes: 2 cols siempre, más compactas en móvil -->
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Variante</label>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button *ngFor="let variant of product.variants" type="button" (click)="selectVariant(variant)"
-                [disabled]="variant.stock === 0" [class.ring-2]="selectedVariant()?.id === variant.id"
-                [class.ring-slate-900]="selectedVariant()?.id === variant.id" [class.opacity-40]="variant.stock === 0"
+                [disabled]="variant.stock === 0"
+                [class.ring-2]="selectedVariant()?.id === variant.id"
+                [class.ring-slate-900]="selectedVariant()?.id === variant.id"
+                [class.opacity-40]="variant.stock === 0"
                 [class.cursor-not-allowed]="variant.stock === 0"
-                class="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 hover:border-slate-400 transition-all text-left">
-                <div class="w-9 h-9 shrink-0 overflow-hidden border border-white shadow-sm">
-                  <img *ngIf="getMainImageFromVariant(variant); else variantTone"
-                    [src]="getMainImageFromVariant(variant)!" class="w-full h-full object-cover" />
+                class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 hover:border-slate-400 transition-all text-left">
+                <div class="w-8 h-8 shrink-0 overflow-hidden border border-white shadow-sm">
+                  <img *ngIf="getMainImageFromVariant(variant); else variantTone" [src]="getMainImageFromVariant(variant)!" class="w-full h-full object-cover" />
                   <ng-template #variantTone>
                     <div class="w-full h-full" [style.backgroundColor]="variant.toneCode"></div>
                   </ng-template>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-[10px] font-black text-slate-700 truncate uppercase tracking-tight">{{ variant.toneName
-                    }}</p>
+                  <p class="text-[10px] font-black text-slate-700 truncate uppercase tracking-tight">{{ variant.toneName }}</p>
                   <p class="text-[10px] text-slate-400">S/. {{ variant.price.toFixed(2) }}</p>
                 </div>
-                <span class="text-[9px] font-black px-1.5 py-0.5 shrink-0"
+                <span class="text-[9px] font-black px-1 py-0.5 shrink-0"
                   [ngClass]="variant.stock > 5 ? 'bg-emerald-50 text-emerald-600' : variant.stock > 0 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'">
                   {{ variant.stock > 0 ? variant.stock : '✕' }}
                 </span>
@@ -396,33 +382,29 @@
             </div>
 
             <!-- Cantidad -->
-            <div *ngIf="selectedVariant()" class="mt-5 pt-5 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-3">
+            <div *ngIf="selectedVariant()" class="mt-4 pt-4 border-t border-slate-100">
+              <div class="flex items-center justify-between mb-2">
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cantidad</label>
                 <span class="text-[10px] font-black text-slate-400">Máx. {{ availableStock() }}</span>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <div class="flex items-center border-2 bg-slate-50"
                   [ngClass]="stockError() ? 'border-rose-300' : 'border-slate-200'">
                   <button type="button" (click)="setQuantity(quantity() - 1)" [disabled]="quantity() <= 1"
-                    class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">−</button>
-                  <input type="number" [ngModel]="quantity()" (ngModelChange)="setQuantity($event)" min="1"
-                    [max]="availableStock()"
+                    class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">−</button>
+                  <input type="number" [ngModel]="quantity()" (ngModelChange)="setQuantity($event)" min="1" [max]="availableStock()"
                     class="w-12 text-center text-sm font-black text-slate-700 bg-transparent outline-none" />
-                  <button type="button" (click)="setQuantity(quantity() + 1)"
-                    [disabled]="quantity() >= availableStock()"
-                    class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">+</button>
+                  <button type="button" (click)="setQuantity(quantity() + 1)" [disabled]="quantity() >= availableStock()"
+                    class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-black text-lg">+</button>
                 </div>
                 <button type="button" (click)="addToCart()"
-                  class="flex-1 h-10 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">
+                  class="flex-1 h-11 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">
                   + Agregar
                 </button>
               </div>
               <p *ngIf="stockError()" class="mt-2 text-[10px] font-black text-rose-500 flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                    stroke-width="2" stroke-linecap="round" />
+                  <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 {{ stockError() }}
               </p>
@@ -431,138 +413,135 @@
         </div>
 
         <!-- Carrito -->
-        <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <div class="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos en la orden</h2>
-            <div class="flex items-center gap-3">
-              <span *ngIf="cartSeparationStatus() !== 'none'" class="text-[10px] font-black px-2.5 py-1 rounded-full"
-                [ngClass]="{
-                  'bg-emerald-50 text-emerald-600': cartSeparationStatus() === 'all',
-                  'bg-amber-50 text-amber-600':    cartSeparationStatus() === 'partial'
-                }">
-                {{ cartSeparationStatus() === 'all' ? '✓ Todo separado' : 'Parcial' }}
-              </span>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
 
+          <!-- Header carrito -->
+          <div class="px-4 md:px-8 py-3 bg-slate-50/50 border-b border-slate-100">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos</h2>
+                <span *ngIf="cart().length > 0" class="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
+                  {{ cart().length }}
+                </span>
+              </div>
 
-              
+              <!-- Acciones: wrap en móvil -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <span *ngIf="cartSeparationStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-emerald-50 text-emerald-600': cartSeparationStatus() === 'all',
+                    'bg-amber-50 text-amber-600':    cartSeparationStatus() === 'partial'
+                  }">
+                  {{ cartSeparationStatus() === 'all' ? '✓ Sep.' : 'Parcial' }}
+                </span>
+                <button type="button" (click)="markAllSeparated()" [disabled]="cartSeparationStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Sep. todo
+                </button>
 
-              <button type="button" (click)="markAllSeparated()" [disabled]="cartSeparationStatus() === 'all'"
-                class="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
-                Marcar todo
-              </button>
-
-              <span *ngIf="cartPackingStatus() !== 'none'" class="text-[10px] font-black px-2.5 py-1 rounded-full"
-  [ngClass]="{
-    'bg-blue-50 text-blue-600':   cartPackingStatus() === 'all',
-    'bg-amber-50 text-amber-600': cartPackingStatus() === 'partial'
-  }">
-  {{ cartPackingStatus() === 'all' ? '✓ Todo empacado' : 'Parcial emp.' }}
-</span>
-<button type="button" (click)="markAllPacked()" [disabled]="cartPackingStatus() === 'all'"
-  class="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
-  Empacar todo
-</button>
+                <span *ngIf="cartPackingStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-blue-50 text-blue-600':   cartPackingStatus() === 'all',
+                    'bg-amber-50 text-amber-600': cartPackingStatus() === 'partial'
+                  }">
+                  {{ cartPackingStatus() === 'all' ? '✓ Emp.' : 'P.emp.' }}
+                </span>
+                <button type="button" (click)="markAllPacked()" [disabled]="cartPackingStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Emp. todo
+                </button>
+              </div>
             </div>
-            <span *ngIf="cart().length > 0"
-              class="px-2.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
-              {{ cart().length }}
-            </span>
           </div>
 
-          <div class="p-6 space-y-3">
+          <div class="p-3 md:p-6 space-y-2">
             @for (item of cart(); track item.productVariantId) {
-            <div class="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
 
-              <!-- Color o imagen -->
-              <div
-                class="w-12 h-12 rounded-2xl border border-slate-100 shadow-sm shrink-0 overflow-hidden bg-slate-100">
-                <img *ngIf="item.imageUrl; else cartToneBlock" [src]="item.imageUrl" class="w-full h-full object-cover"
-                  (error)="item.imageUrl = null" />
-                <ng-template #cartToneBlock>
-                  <div class="w-full h-full" [style.backgroundColor]="item.toneCode"></div>
-                </ng-template>
-              </div>
+            <div class="p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
 
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-slate-800 truncate">{{ item.productName }}</p>
-                <p class="text-xs text-slate-400">{{ item.toneName }} · {{ item.price | currency }} c/u</p>
-              </div>
-
-
-
-
-              <!-- Cantidad -->
-              <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2 py-1.5">
-                <button type="button" (click)="updateCartQuantity(item.productVariantId, item.quantity - 1)"
-                  [disabled]="item.quantity <= 1"
-                  class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">−</button>
-                <span class="w-7 text-center text-sm font-bold text-slate-700">{{ item.quantity }}</span>
-                <button type="button" (click)="updateCartQuantity(item.productVariantId, item.quantity + 1)"
-                  [disabled]="item.quantity >= item.stock"
-                  class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">+</button>
-              </div>
-
-              <span class="text-sm font-black text-slate-900 w-20 text-right shrink-0">
-                {{ item.price * item.quantity | currency }}
-              </span>
-
-              <button type="button" (click)="removeFromCart(item.productVariantId)"
-                class="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
-                </svg>
-              </button>
-
-
-              <!-- Toggle separado -->
-              <button type="button" (click)="toggleSeparated(item.productVariantId)"
-                class="flex flex-col items-center gap-1 px-2 shrink-0 group">
-                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all" [ngClass]="item.separated
-                    ? 'bg-emerald-500 border-emerald-500'
-                    : 'bg-white border-slate-300 group-hover:border-emerald-300'">
-                  <svg *ngIf="item.separated" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
-                  </svg>
+              <!-- Fila 1: imagen + nombre + eliminar -->
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl border border-slate-100 shadow-sm shrink-0 overflow-hidden bg-slate-100">
+                  <img *ngIf="item.imageUrl; else cartToneBlock" [src]="item.imageUrl" class="w-full h-full object-cover" (error)="item.imageUrl = null" />
+                  <ng-template #cartToneBlock>
+                    <div class="w-full h-full" [style.backgroundColor]="item.toneCode"></div>
+                  </ng-template>
                 </div>
-                <span class="text-[9px] font-black uppercase tracking-wider"
-                  [ngClass]="item.separated ? 'text-emerald-500' : 'text-slate-300'">
-                  Sep.
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-800 truncate">{{ item.productName }}</p>
+                  <p class="text-xs text-slate-400">{{ item.toneName }}</p>
+                </div>
+                <button type="button" (click)="removeFromCart(item.productVariantId)"
+                  class="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Fila 2: precio + cantidad + total + toggles -->
+              <div class="flex items-center gap-2 pl-[52px]">
+
+                <span class="text-xs text-slate-400 shrink-0">{{ item.price | currency }}</span>
+
+                <!-- Cantidad -->
+                <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1">
+                  <button type="button" (click)="updateCartQuantity(item.productVariantId, item.quantity - 1)"
+                    [disabled]="item.quantity <= 1"
+                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">−</button>
+                  <span class="w-6 text-center text-sm font-bold text-slate-700">{{ item.quantity }}</span>
+                  <button type="button" (click)="updateCartQuantity(item.productVariantId, item.quantity + 1)"
+                    [disabled]="item.quantity >= item.stock"
+                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 font-bold">+</button>
+                </div>
+
+                <span class="text-sm font-black text-slate-900 flex-1 text-right">
+                  {{ item.price * item.quantity | currency }}
                 </span>
-              </button>
 
+                <!-- Toggle separado -->
+                <button type="button" (click)="toggleSeparated(item.productVariantId)"
+                  class="flex flex-col items-center gap-0.5 shrink-0 group">
+                  <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
+                    [ngClass]="item.separated ? 'bg-emerald-500 border-emerald-500' : 'bg-white border-slate-300 group-hover:border-emerald-300'">
+                    <svg *ngIf="item.separated" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                  <span class="text-[8px] font-black uppercase" [ngClass]="item.separated ? 'text-emerald-500' : 'text-slate-300'">Sep.</span>
+                </button>
 
-              <button type="button" (click)="togglePacked(item.productVariantId)"
-  class="flex flex-col items-center gap-1 px-2 shrink-0 group">
-  <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
-    [ngClass]="item.packed
-      ? 'bg-blue-500 border-blue-500'
-      : 'bg-white border-slate-300 group-hover:border-blue-300'">
-    <svg *ngIf="item.packed" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
-    </svg>
-  </div>
-  <span class="text-[9px] font-black uppercase tracking-wider"
-    [ngClass]="item.packed ? 'text-blue-500' : 'text-slate-300'">
-    Emp.
-  </span>
-</button>
+                <!-- Toggle empacado -->
+                <button type="button" (click)="togglePacked(item.productVariantId)"
+                  class="flex flex-col items-center gap-0.5 shrink-0 group">
+                  <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
+                    [ngClass]="item.packed ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-300 group-hover:border-blue-300'">
+                    <svg *ngIf="item.packed" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                  <span class="text-[8px] font-black uppercase" [ngClass]="item.packed ? 'text-blue-500' : 'text-slate-300'">Emp.</span>
+                </button>
+
+              </div>
             </div>
+
             } @empty {
             <div class="py-12 text-center text-slate-400 italic text-sm">No hay productos agregados.</div>
             }
 
             <!-- Total y guardar -->
-            <div class="pt-6 mt-2 border-t border-slate-100 flex justify-between items-end">
+            <div class="pt-4 mt-2 border-t border-slate-100 flex justify-between items-center">
               <div>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p>
-                <p class="text-3xl font-black text-blue-600">{{ cartTotal() | currency }}</p>
+                <p class="text-2xl font-black text-blue-600">{{ cartTotal() | currency }}</p>
               </div>
               <button type="button" (click)="saveOrder()" [disabled]="!canSave()"
-                class="px-8 py-3 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
-                <span *ngIf="isSaving()"
-                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                {{ isSaving() ? 'GUARDANDO...' : 'GUARDAR CAMBIOS' }}
+                class="px-5 py-3 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                <span *ngIf="isSaving()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                {{ isSaving() ? 'GUARDANDO...' : 'GUARDAR' }}
               </button>
             </div>
           </div>
