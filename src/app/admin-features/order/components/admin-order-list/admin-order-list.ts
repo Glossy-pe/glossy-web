@@ -7,7 +7,7 @@ import { OrderResponse, OrderStatus } from '../../models/order.model';
 import { PageResponse } from '../../../../shared/models/page-response.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { RouterModule } from '@angular/router';
-
+import { ActivatedRoute } from '@angular/router';
 
 const PENDING_STATUSES: OrderStatus[] = ['PENDIENTE_ENVIO', 'PENDIENTE_PACKAGE'];
 
@@ -19,6 +19,7 @@ const PENDING_STATUSES: OrderStatus[] = ['PENDIENTE_ENVIO', 'PENDIENTE_PACKAGE']
 })
 export class AdminOrderList implements OnInit {
 
+  private route = inject(ActivatedRoute);
   private orderService = inject(OrderService);
   private router       = inject(Router);
   private cdr          = inject(ChangeDetectorRef);
@@ -50,17 +51,19 @@ export class AdminOrderList implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadOrders(0);
+  // Leer página inicial desde URL
+  this.route.queryParamMap.subscribe(params => {
+    const page = parseInt(params.get('page') ?? '0', 10);
+    this.loadOrders(page);
+  });
 
-    this.search$.pipe(
-      debounceTime(400),
-      distinctUntilChanged()
-    ).subscribe(term => {
-      this.currentPage = 0;
-      this.isSearchMode = !!term.trim();
-      this.loadOrders(0);
-    });
-  }
+  this.search$.pipe(
+    debounceTime(400),
+    distinctUntilChanged()
+  ).subscribe(() => {
+    this.goToPage(0);
+  });
+}
 
   // ── Carga ────────────────────────────────────────────────────────────────────
 
@@ -130,10 +133,18 @@ export class AdminOrderList implements OnInit {
   // ── Paginación ───────────────────────────────────────────────────────────────
 
   goToPage(page: number) {
-    if (page < 0 || page >= this.totalPages) return;
-    this.loadOrders(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  if (page < 0 || page >= this.totalPages) return;
+  
+  // 👇 actualiza la URL, no recarga el componente
+  this.router.navigate([], {
+    relativeTo: this.route,
+    queryParams: { page },
+    queryParamsHandling: 'merge',
+    replaceUrl: false
+  });
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
   get pages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i);
@@ -163,6 +174,15 @@ export class AdminOrderList implements OnInit {
   const separated = items.filter(i => i.separated === true).length;
   if (separated === 0) return 'none';
   if (separated === items.length) return 'all';
+  return 'partial';
+}
+
+getPackedStatus(order: OrderResponse): 'all' | 'partial' | 'none' {
+  const items = order.orderItems;
+  if (!items?.length) return 'none';
+  const packed = items.filter(i => i.packed === true).length;
+  if (packed === 0) return 'none';
+  if (packed === items.length) return 'all';
   return 'partial';
 }
 }
