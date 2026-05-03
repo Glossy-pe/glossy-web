@@ -1,4 +1,6 @@
 # Comandos para build y deploy:
+git tag --sort=-creatordate | head -n 1
+
 
 # Construir la imagen (desde la carpeta del proyecto Angular)
 docker build -t glossy-frontend:local .

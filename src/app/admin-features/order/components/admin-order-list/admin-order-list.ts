@@ -58,11 +58,11 @@ export class AdminOrderList implements OnInit {
   });
 
   this.search$.pipe(
-    debounceTime(400),
-    distinctUntilChanged()
-  ).subscribe(() => {
-    this.goToPage(0);
-  });
+  debounceTime(400),
+  distinctUntilChanged()
+).subscribe(() => {
+  this.loadOrders(0); // ← directo, sin pasar por URL
+});
 }
 
   // ── Carga ────────────────────────────────────────────────────────────────────
@@ -96,9 +96,17 @@ export class AdminOrderList implements OnInit {
   // ── Búsqueda ─────────────────────────────────────────────────────────────────
 
   onSearchInput(term: string) {
-    this.searchTerm = term;
-    this.search$.next(term);
+  this.searchTerm = term.trim();
+
+  if (this.searchTerm) {
+    // Al escribir → limpia todos los filtros y va a página 0
+    this.pendingOnly.set(false);
+    this.selectedStatus.set('');
+    this.currentPage = 0;
   }
+
+  this.search$.next(this.searchTerm);
+}
 
   // ── Filtro estado ────────────────────────────────────────────────────────────
 
