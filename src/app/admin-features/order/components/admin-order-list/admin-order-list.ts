@@ -5,24 +5,36 @@ import { Router } from '@angular/router';
 import { OrderService } from '../../services/order.service';
 import { OrderResponse, OrderStatus } from '../../models/order.model';
 import { PageResponse } from '../../../../shared/models/page-response.model';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { environment } from '../../../../../environments/environment.prod';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 const PENDING_STATUSES: OrderStatus[] = ['PENDIENTE_ENVIO', 'PENDIENTE_PACKAGE'];
 
 @Component({
   selector: 'app-admin-order-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
   templateUrl: './admin-order-list.html',
 })
 export class AdminOrderList implements OnInit {
+
+
+  selectedVariantId   = signal<number | null>(null);
+  selectedVariantName = signal<string>('');
+  productSearchTerm   = '';
+  productResults      = signal<any[]>([]);
+  showVariantPicker   = signal<any | null>(null); // producto seleccionado para ver variantes
+  private productSearch$ = new Subject<string>();
+
 
   private route = inject(ActivatedRoute);
   private orderService = inject(OrderService);
   private router       = inject(Router);
   private cdr          = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
 
   // ── Datos ────────────────────────────────────────────────────────────────────
   orders        = signal<OrderResponse[]>([]);
@@ -63,6 +75,20 @@ export class AdminOrderList implements OnInit {
 ).subscribe(() => {
   this.loadOrders(0); // ← directo, sin pasar por URL
 });
+
+this.productSearch$.pipe(
+  debounceTime(350),
+  distinctUntilChanged(),
+  switchMap(term => {
+    if (!term.trim()) { this.productResults.set([]); return of(null); }
+    return this.http.get<any>(
+      `${environment.apiUrl}/products/full/search?q=${encodeURIComponent(term)}&size=10`
+    ).pipe(catchError(() => of(null)));
+  })
+).subscribe(res => {
+  if (res) this.productResults.set(res.content.filter((p: any) => p.active));
+});
+
 }
 
   // ── Carga ────────────────────────────────────────────────────────────────────
@@ -75,7 +101,7 @@ export class AdminOrderList implements OnInit {
       ? PENDING_STATUSES.join(',')
       : this.selectedStatus() || '';
 
-    this.orderService.getAll(page, this.pageSize, this.searchTerm, status)
+    this.orderService.getAll(page, this.pageSize, this.searchTerm, status, this.selectedVariantId() ?? undefined)
       .subscribe({
         next: (res: PageResponse<OrderResponse>) => {
           this.orders.set(res.content);
@@ -179,18 +205,60 @@ export class AdminOrderList implements OnInit {
   getSeparationStatus(order: OrderResponse): 'all' | 'partial' | 'none' {
   const items = order.orderItems;
   if (!items?.length) return 'none';
-  const separated = items.filter(i => i.separated === true).length;
-  if (separated === 0) return 'none';
-  if (separated === items.length) return 'all';
+  const fullySepped = items.filter(i => i.separatedQuantity >= i.quantity).length;
+  if (fullySepped === 0) return 'none';
+  if (fullySepped === items.length) return 'all';
   return 'partial';
 }
 
 getPackedStatus(order: OrderResponse): 'all' | 'partial' | 'none' {
   const items = order.orderItems;
   if (!items?.length) return 'none';
-  const packed = items.filter(i => i.packed === true).length;
-  if (packed === 0) return 'none';
-  if (packed === items.length) return 'all';
+  const fullyPacked = items.filter(i => i.packedQuantity >= i.quantity).length;
+  if (fullyPacked === 0) return 'none';
+  if (fullyPacked === items.length) return 'all';
   return 'partial';
+}
+
+getPaymentStatus(order: OrderResponse): 'paid' | 'partial' | 'none' {
+  const items = order.orderItems;
+  if (!items?.length) return 'none';
+  const totalAmount = items.reduce((acc, i) => acc + i.productVariant.price * i.quantity, 0);
+  const paidAmount  = items.reduce((acc, i) => acc + (i.amountPaid ?? 0), 0);
+  if (paidAmount <= 0) return 'none';
+  if (paidAmount >= totalAmount) return 'paid';
+  return 'partial';
+}
+
+onProductSearchInput(term: string) {
+  this.productSearchTerm = term;
+  this.showVariantPicker.set(null);
+  this.productSearch$.next(term);
+}
+
+selectProductForVariant(product: any) {
+  this.showVariantPicker.set(product);
+  this.productResults.set([]);
+}
+
+selectVariant(variant: any, productName: string) {
+  this.selectedVariantId.set(variant.id);
+  this.selectedVariantName.set(`${productName} · ${variant.toneName}`);
+  this.productSearchTerm = `${productName} · ${variant.toneName}`;
+  this.showVariantPicker.set(null);
+  this.pendingOnly.set(false);
+  this.selectedStatus.set('');
+  this.currentPage = 0;
+  this.loadOrders(0);
+}
+
+clearVariantFilter() {
+  this.selectedVariantId.set(null);
+  this.selectedVariantName.set('');
+  this.productSearchTerm = '';
+  this.showVariantPicker.set(null);
+  this.productResults.set([]);
+  this.currentPage = 0;
+  this.loadOrders(0);
 }
 }

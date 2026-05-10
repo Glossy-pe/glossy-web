@@ -50,6 +50,8 @@ interface CartItem {
   productVariantId: number;
   productId: number;
   quantity: number;
+  paidQuantity: number;       // ✅
+  amountPaid: number | null;  // ✅
   toneName: string;
   toneCode: string;
   cost: number;
@@ -57,8 +59,8 @@ interface CartItem {
   productName: string;
   stock: number;
   imageUrl: string | null;
-  separated: boolean;
-  packed: boolean;
+  separatedQuantity: number;
+  packedQuantity: number;
 }
 
 export enum OrderStatus {
@@ -79,6 +81,11 @@ export enum OrderStatus {
   templateUrl: './admin-order-create.html',
 })
 export class AdminOrderCreate {
+
+  // ── Status ───────────────────────────────────────────────────────────────────
+  currentStatus = signal<OrderStatus>(OrderStatus.QUOTE); // ✅ default QUOTE
+  orderStatusOptions = Object.values(OrderStatus);
+
 
   private http = inject(HttpClient);
   private orderService = inject(OrderService);
@@ -183,9 +190,9 @@ export class AdminOrderCreate {
   }
 
   getMainImageFromVariant(variant: VariantResponseFull | undefined | null): string | null {
-  if (!variant) return null;
-  return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
-}
+    if (!variant) return null;
+    return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
+  }
 
   // ── Carrito ──────────────────────────────────────────────────────────────────
 
@@ -204,6 +211,7 @@ export class AdminOrderCreate {
   addToCart() {
     const variant = this.selectedVariant();
     const product = this.selectedProduct();
+
     if (!variant || !product) return;
 
     if (this.quantity() > this.availableStock()) {
@@ -216,24 +224,37 @@ export class AdminOrderCreate {
 
     if (existing) {
       this.cart.update(items =>
-        items.map(i => i.productVariantId === variant.id
-          ? { ...i, quantity: i.quantity + this.quantity() }
-          : i
-        )
+        items.map(i => {
+          if (i.productVariantId !== variant.id) return i;
+          const newQty = i.quantity + this.quantity();
+          return {
+            ...i,
+            quantity: newQty,
+            paidQuantity: newQty,                                      // ✅
+            amountPaid: parseFloat((i.price * newQty).toFixed(2))     // ✅
+          };
+        })
       );
-    } else {
+    }
+
+    else {
+      const totalPrice = parseFloat((variant.price * this.quantity()).toFixed(2));
+
+
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
         productId: product.id,
         quantity: this.quantity(),
+        paidQuantity: this.quantity(),  // ✅ pagado completo
+        amountPaid: totalPrice,         // ✅ pagado completo
         toneName: variant.toneName,
         toneCode: variant.toneCode,
         cost: variant.cost,
         price: variant.price,
         productName: product.name,
         stock: variant.stock,
-        separated: variant.separated,
-        packed: variant.packed,
+        separatedQuantity: 0,
+        packedQuantity: 0,
         imageUrl
       }]);
     }
@@ -248,7 +269,12 @@ export class AdminOrderCreate {
     if (!item || qty < 1) return;
     if (qty > item.stock) qty = item.stock;
     this.cart.update(items =>
-      items.map(i => i.productVariantId === variantId ? { ...i, quantity: qty } : i)
+      items.map(i => i.productVariantId === variantId ? {
+        ...i,
+        quantity: qty,
+        paidQuantity: qty,                                    // ✅ actualiza al nuevo total
+        amountPaid: parseFloat((i.price * qty).toFixed(2))   // ✅
+      } : i)
     );
   }
 
@@ -265,15 +291,17 @@ export class AdminOrderCreate {
     const request: OrderRequest = {
       customerName: this.customerName(),
       customerAddress: this.customerAddress(),
-      status: OrderStatus.QUOTE,
+      status: this.currentStatus(), // ✅ usa el signal
       total: this.total(),
       costTotal: this.costTotal(),
       createdAt: new Date().toISOString(),
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
         quantity: i.quantity,
-        separated: i.separated,
-        packed: i.packed,
+        paidQuantity: i.paidQuantity,
+        amountPaid: i.amountPaid,
+        separatedQuantity: i.separatedQuantity,
+        packedQuantity: i.packedQuantity,
       }))
     };
 
@@ -289,8 +317,110 @@ export class AdminOrderCreate {
   goBack() { this.router.navigate(['/admin/orders']); }
 
   getProductImage(product: ProductResponseFull): string | null {
-  const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
-    ?? product.variants?.[0]?.images?.[0];
-  return img?.url ?? null;
+    const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
+      ?? product.variants?.[0]?.images?.[0];
+    return img?.url ?? null;
+  }
+
+  // ── Computed pago ────────────────────────────────────────────────────────────
+  totalPaid = computed(() =>
+    this.cart().reduce((acc, i) => acc + (i.amountPaid ?? 0), 0)
+  );
+
+  totalPending = computed(() =>
+    this.cart().reduce((acc, i) => acc + this.getPendingAmount(i), 0)
+  );
+
+  // ── Helpers pago ─────────────────────────────────────────────────────────────
+  getTotalPrice(item: CartItem): number {
+    return item.price * item.quantity;
+  }
+
+  getPendingAmount(item: CartItem): number {
+    return this.getTotalPrice(item) - (item.amountPaid ?? 0);
+  }
+
+  isFullyPaid(item: CartItem): boolean {
+    if (item.amountPaid == null) return false;
+    return item.amountPaid >= this.getTotalPrice(item);
+  }
+
+  updatePaidQuantity(variantId: number, qty: number) {
+    this.cart.update(items =>
+      items.map(i => {
+        if (i.productVariantId !== variantId) return i;
+        const clamped = Math.max(0, Math.min(qty, i.quantity));
+        return { ...i, paidQuantity: clamped, amountPaid: parseFloat((i.price * clamped).toFixed(2)) };
+      })
+    );
+  }
+
+  updateAmountPaid(variantId: number, amount: number) {
+    this.cart.update(items =>
+      items.map(i => {
+        if (i.productVariantId !== variantId) return i;
+        const clamped = Math.max(0, Math.min(amount, this.getTotalPrice(i)));
+        return { ...i, amountPaid: clamped, paidQuantity: Math.floor(clamped / i.price) };
+      })
+    );
+  }
+
+  getPaidRatio(item: CartItem): number {
+    if (!item.amountPaid) return 0;
+    return Math.min(item.amountPaid / this.getTotalPrice(item), 1);
+  }
+
+  togglePaid(variantId: number) {
+    this.cart.update(items =>
+      items.map(i => {
+        if (i.productVariantId !== variantId) return i;
+        const fullyPaid = this.isFullyPaid(i);
+        return {
+          ...i,
+          paidQuantity: fullyPaid ? 0 : i.quantity,
+          amountPaid: fullyPaid ? 0 : parseFloat(this.getTotalPrice(i).toFixed(2))
+        };
+      })
+    );
+  }
+
+  toggleSeparated(variantId: number) {
+    this.cart.update(items =>
+      items.map(i => i.productVariantId === variantId ? { ...i, separatedQuantity: !i.separatedQuantity ? i.quantity : 0 } : i)
+    );
+  }
+
+  togglePacked(variantId: number) {
+    this.cart.update(items =>
+      items.map(i => i.productVariantId === variantId
+        ? { ...i, packedQuantity: !i.packedQuantity ? i.quantity : 0 }
+        : i
+      )
+    );
+  }
+
+
+  updateSeparatedQuantity(variantId: number, qty: number) {
+  this.cart.update(items =>
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const clamped = Math.max(0, Math.min(qty, i.quantity));
+      return { ...i, separatedQuantity: clamped };
+    })
+  );
+}
+
+updatePackedQuantity(variantId: number, qty: number) {
+  this.cart.update(items =>
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const clamped = Math.max(0, Math.min(qty, i.quantity));
+      return {
+        ...i,
+        packedQuantity: clamped,
+        separatedQuantity: Math.max(i.separatedQuantity, clamped) // packed no puede superar separated
+      };
+    })
+  );
 }
 }

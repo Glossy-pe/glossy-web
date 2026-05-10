@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AdminStockList } from './admin-stock-list';
+import { AdminStockerList } from './admin-stocker-list';
 
-describe('AdminStockList', () => {
-  let component: AdminStockList;
-  let fixture: ComponentFixture<AdminStockList>;
+describe('AdminStockerList', () => {
+  let component: AdminStockerList;
+  let fixture: ComponentFixture<AdminStockerList>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AdminStockList]
+      imports: [AdminStockerList]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(AdminStockList);
+    fixture = TestBed.createComponent(AdminStockerList);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

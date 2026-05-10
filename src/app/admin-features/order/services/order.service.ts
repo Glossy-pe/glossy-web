@@ -12,16 +12,15 @@ export class OrderService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/orders`;
 
-  getAll(page = 0, size = 10, q = '', status = ''): Observable<PageResponse<OrderResponse>> {
-  const params = new URLSearchParams();
-  params.set('page', page.toString());
-  params.set('size', size.toString());
-  if (q) params.set('q', q);
-  if (status) params.set('status', status);
-  return this.http.get<PageResponse<OrderResponse>>(
-    `${this.apiUrl}?${params.toString()}`  // 👈 sin /orders
-  );
-}
+  getAll(page = 0, size = 10, q = '', status = '', variantId?: number): Observable<PageResponse<OrderResponse>> {
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    params.set('size', size.toString());
+    if (q) params.set('q', q);
+    if (status) params.set('status', status);
+    if (variantId) params.set('variantId', variantId.toString());
+    return this.http.get<PageResponse<OrderResponse>>(`${this.apiUrl}?${params.toString()}`);
+  }
 
   getById(id: number): Observable<OrderResponse> {
     return this.http.get<OrderResponse>(`${this.apiUrl}/${id}`);

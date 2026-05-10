@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { AdminStockerList } from "../admin-stocker-list/admin-stocker-list";
 
 interface VariantImageResponse {
   id: number;
@@ -47,7 +48,7 @@ interface PageResponse<T> {
 @Component({
   selector: 'app-admin-product-list',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, HttpClientModule, FormsModule, AdminStockerList],
   templateUrl: './admin-product-list.html',
   styleUrl: './admin-product-list.scss'
 })

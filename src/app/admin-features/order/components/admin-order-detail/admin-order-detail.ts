@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { OrderService } from '../../services/order.service';
-import { OrderResponse, OrderRequest } from '../../models/order.model';
+import { OrderResponse, OrderRequest, OrderItem } from '../../models/order.model';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { PdfGeneratorService } from '../../../../features/cart/services/pdf-generator.service';
 import { environment } from '../../../../../environments/environment';
@@ -16,6 +16,8 @@ interface CartItem {
   productVariantId: number;
   productId: number;
   quantity: number;
+  paidQuantity: number;       // ✅ nuevo
+  amountPaid: number | null;  // ✅ nuevo
   toneName: string;
   toneCode: string;
   cost: number;
@@ -23,8 +25,8 @@ interface CartItem {
   productName: string;
   stock: number;
   imageUrl: string | null;
-  separated: boolean;
-  packed: boolean;
+  separatedQuantity: number;
+  packedQuantity: number;
 }
 
 export enum OrderStatus {
@@ -197,6 +199,8 @@ export class AdminOrderDetail implements OnInit {
       productVariantId: item.productVariant.id,
       productId: item.productVariant.productId,
       quantity: item.quantity,
+      paidQuantity: item.paidQuantity ?? item.quantity,                           // ✅ default pagado todo
+      amountPaid: item.amountPaid ?? item.productVariant.price * item.quantity,
       toneName: item.productVariant.toneName,
       toneCode: item.productVariant.toneCode,
       cost: item.productVariant.cost,
@@ -204,8 +208,8 @@ export class AdminOrderDetail implements OnInit {
       productName: item.productVariant.productName,
       stock: item.productVariant.stock,
       imageUrl: item.productVariant.mainImageUrl ?? null,
-      separated: item.separated ?? false,
-      packed: item.packed ?? false,
+      separatedQuantity: item.separatedQuantity ?? 0,
+      packedQuantity:    item.packedQuantity ?? 0,
     })));
 
     this.isEditing.set(true);
@@ -265,6 +269,7 @@ export class AdminOrderDetail implements OnInit {
   addToCart() {
     const variant = this.selectedVariant();
     const product = this.selectedProduct();
+
     if (!variant || !product) return;
 
     if (this.quantity() > this.availableStock()) {
@@ -275,16 +280,27 @@ export class AdminOrderDetail implements OnInit {
     const existing = this.cart().find(i => i.productVariantId === variant.id);
     if (existing) {
       this.cart.update(items =>
-        items.map(i => i.productVariantId === variant.id
-          ? { ...i, quantity: i.quantity + this.quantity() }
-          : i
-        )
+        items.map(i => {
+          if (i.productVariantId !== variant.id) return i;
+          const newQty = i.quantity + this.quantity();
+          return {
+            ...i,
+            quantity: newQty,
+            paidQuantity: newQty,                                      // ✅
+            amountPaid: parseFloat((i.price * newQty).toFixed(2))     // ✅
+          };
+        })
       );
-    } else {
+    }
+    else {
+      const totalPrice = parseFloat((variant.price * this.quantity()).toFixed(2));
+
       this.cart.update(items => [...items, {
         productVariantId: variant.id,
         productId: product.id,
         quantity: this.quantity(),
+        paidQuantity: this.quantity(),  // ✅
+        amountPaid: totalPrice,         // ✅
         toneName: variant.toneName,
         toneCode: variant.toneCode,
         cost: variant.cost,
@@ -292,8 +308,8 @@ export class AdminOrderDetail implements OnInit {
         productName: product.name,
         stock: variant.stock,
         imageUrl: variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null,
-        separated: variant.separated,
-        packed: variant.packed,
+        separatedQuantity: 0,
+        packedQuantity: 0,
       }]);
     }
 
@@ -308,7 +324,12 @@ export class AdminOrderDetail implements OnInit {
     if (!item || qty < 1) return;
     if (qty > item.stock) qty = item.stock;
     this.cart.update(items =>
-      items.map(i => i.productVariantId === variantId ? { ...i, quantity: qty } : i)
+      items.map(i => i.productVariantId === variantId ? {
+        ...i,
+        quantity: qty,
+        paidQuantity: qty,                                    // ✅ actualiza al nuevo total
+        amountPaid: parseFloat((i.price * qty).toFixed(2))   // ✅
+      } : i)
     );
   }
 
@@ -335,8 +356,10 @@ export class AdminOrderDetail implements OnInit {
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
         quantity: i.quantity,
-        separated: i.separated,
-        packed: i.packed,
+        paidQuantity: i.paidQuantity,
+        amountPaid: i.amountPaid,
+        separatedQuantity: i.separatedQuantity,
+        packedQuantity: i.packedQuantity,
       }))
     };
 
@@ -358,82 +381,172 @@ export class AdminOrderDetail implements OnInit {
     return variant.images?.find(i => i.mainImage)?.url ?? variant.images?.[0]?.url ?? null;
   }
 
-  separationStatus = computed(() => {
-    const items = this.order()?.orderItems;
-    if (!items || items.length === 0) return 'none';
-    const separated = items.filter(i => i.separated === true).length;
-    if (separated === 0) return 'none';
-    if (separated === items.length) return 'all';
-    return 'partial';
-  });
+separationStatus = computed(() => {
+  const items = this.order()?.orderItems;
+  if (!items?.length) return 'none';
+  const fullySepped = items.filter(i => i.separatedQuantity >= i.quantity).length;
+  if (fullySepped === 0) return 'none';
+  if (fullySepped === items.length) return 'all';
+  return 'partial';
+});
 
-  // Para el modo edición (carrito)
-  cartSeparationStatus = computed(() => {
-    const items = this.cart();
-    if (!items.length) return 'none';
-    const separated = items.filter(i => i.separated).length;
-    if (separated === 0) return 'none';
-    if (separated === items.length) return 'all';
-    return 'partial';
-  });
+cartSeparationStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const fullySepped = items.filter(i => i.separatedQuantity >= i.quantity).length;
+  if (fullySepped === 0) return 'none';
+  if (fullySepped === items.length) return 'all';
+  return 'partial';
+});
 
   toggleSeparated(variantId: number) {
-    this.cart.update(items =>
-      items.map(i => i.productVariantId === variantId
-        ? { ...i, separated: !i.separated }
-        : i
-      )
-    );
-  }
+  this.cart.update(items =>
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const fullySepped = i.separatedQuantity >= i.quantity;
+      return { ...i, separatedQuantity: fullySepped ? 0 : i.quantity };
+    })
+  );
+}
 
-  markAllSeparated() {
-    this.cart.update(items => items.map(i => ({ ...i, separated: true })));
-  }
+markAllSeparated() {
+  this.cart.update(items => items.map(i => ({ ...i, separatedQuantity: i.quantity })));
+}
 
   getProductImage(product: ProductResponseFull): string | null {
-  if (product.images?.length) return product.images[0].url;
-  const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
-    ?? product.variants?.[0]?.images?.[0];
-  return img?.url ?? null;
-}
+    if (product.images?.length) return product.images[0].url;
+    const img = product.variants?.flatMap(v => v.images || []).find(i => i.mainImage)
+      ?? product.variants?.[0]?.images?.[0];
+    return img?.url ?? null;
+  }
 
 
 packingStatus = computed(() => {
   const items = this.order()?.orderItems;
-  if (!items || items.length === 0) return 'none';
-  const packed = items.filter(i => i.packed === true).length;
-  if (packed === 0) return 'none';
-  if (packed === items.length) return 'all';
+  if (!items?.length) return 'none';
+  const fullyPacked = items.filter(i => i.packedQuantity >= i.quantity).length;
+  if (fullyPacked === 0) return 'none';
+  if (fullyPacked === items.length) return 'all';
   return 'partial';
 });
 
 cartPackingStatus = computed(() => {
   const items = this.cart();
   if (!items.length) return 'none';
-  const packed = items.filter(i => i.packed).length;
-  if (packed === 0) return 'none';
-  if (packed === items.length) return 'all';
+  const fullyPacked = items.filter(i => i.packedQuantity >= i.quantity).length;
+  if (fullyPacked === 0) return 'none';
+  if (fullyPacked === items.length) return 'all';
   return 'partial';
 });
 
 togglePacked(variantId: number) {
   this.cart.update(items =>
-    items.map(i => i.productVariantId === variantId
-      ? { 
-          ...i, 
-          packed: !i.packed,
-          // Si se marca packed, separated va a true automáticamente
-          // Si se desmarca packed, separated NO cambia
-          separated: !i.packed ? true : i.separated
-        }
-      : i
-    )
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const fullyPacked = i.packedQuantity >= i.quantity;
+      return {
+        ...i,
+        packedQuantity: fullyPacked ? 0 : i.quantity,
+        separatedQuantity: !fullyPacked ? i.quantity : i.separatedQuantity // packed implica separado
+      };
+    })
   );
 }
 
 markAllPacked() {
-  this.cart.update(items => 
-    items.map(i => ({ ...i, packed: true, separated: true }))
+  this.cart.update(items =>
+    items.map(i => ({ ...i, packedQuantity: i.quantity, separatedQuantity: i.quantity }))
+  );
+}
+
+  getTotalPrice(item: CartItem): number {
+    return item.price * item.quantity;
+  }
+
+  getPaidRatio(item: CartItem): number {
+    if (!item.amountPaid) return 0;
+    return Math.min(item.amountPaid / this.getTotalPrice(item), 1);
+  }
+
+  isFullyPaid(item: CartItem): boolean {
+    return this.getPaidRatio(item) >= 1;
+  }
+
+  togglePaid(variantId: number) {
+    this.cart.update(items =>
+      items.map(i => {
+        if (i.productVariantId !== variantId) return i;
+        const fullyPaid = this.isFullyPaid(i);
+        return {
+          ...i,
+          paidQuantity: fullyPaid ? 0 : i.quantity,
+          amountPaid: fullyPaid ? 0 : parseFloat(this.getTotalPrice(i).toFixed(2))
+        };
+      })
+    );
+  }
+
+  updateAmountPaid(variantId: number, amount: number) {
+    this.cart.update(items =>
+      items.map(i => {
+        if (i.productVariantId !== variantId) return i;
+        const clamped = Math.max(0, Math.min(amount, this.getTotalPrice(i)));
+        return {
+          ...i,
+          amountPaid: clamped,
+          paidQuantity: clamped >= this.getTotalPrice(i) ? i.quantity : Math.floor(clamped / i.price)
+        };
+      })
+    );
+  }
+
+  totalPaid = computed(() =>
+    this.cart().reduce((acc, i) => acc + (i.amountPaid ?? 0), 0)
+  );
+
+  totalPending = computed(() =>
+    this.cart().reduce((acc, i) => acc + (this.getTotalPrice(i) - (i.amountPaid ?? 0)), 0)
+  );
+
+  getPaidRatioFromItem(item: OrderItem): number {
+    if (!item.amountPaid) return 0;
+    const total = item.productVariant.price * item.quantity;
+    if (total === 0) return 0;
+    return Math.min(item.amountPaid / total, 1);
+  }
+
+  totalPaidView = computed(() =>
+    this.order()?.orderItems.reduce((acc, i) => acc + (i.amountPaid ?? 0), 0) ?? 0
+  );
+
+  totalPendingView = computed(() =>
+    this.order()?.orderItems.reduce((acc, i) => {
+      const total = i.productVariant.price * i.quantity;
+      return acc + (total - (i.amountPaid ?? 0));
+    }, 0) ?? 0
+  );
+
+  updateSeparatedQuantity(variantId: number, qty: number) {
+  this.cart.update(items =>
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const clamped = Math.max(0, Math.min(qty, i.quantity));
+      return { ...i, separatedQuantity: clamped };
+    })
+  );
+}
+
+updatePackedQuantity(variantId: number, qty: number) {
+  this.cart.update(items =>
+    items.map(i => {
+      if (i.productVariantId !== variantId) return i;
+      const clamped = Math.max(0, Math.min(qty, i.quantity));
+      return {
+        ...i,
+        packedQuantity: clamped,
+        separatedQuantity: Math.max(i.separatedQuantity, clamped) // packed no puede superar separated
+      };
+    })
   );
 }
 }
