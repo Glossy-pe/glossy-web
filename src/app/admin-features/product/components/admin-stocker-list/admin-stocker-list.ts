@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductResponseFull } from '../../../../features/product/models/product-response-full.model';
+import { StockAlertResponse } from './models/StockAlertResponse';
 import { ProductService } from '../../../../features/product/services/product.service';
 
 @Component({
@@ -14,20 +14,18 @@ export class AdminStockerList implements OnInit {
   private productService = inject(ProductService);
   private cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
+
   isLoading = signal(true);
   isCollapsed = signal(true);
-  private _products = signal<ProductResponseFull[]>([]);
+  alerts = signal<StockAlertResponse[]>([]);
 
-  productsWithAlerts = computed(() =>
-    this._products().filter(p =>
-      p.variants?.some(v => v.stock < 2)
-    )
-  );
+  readonly fallbackImg = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e2e8f0" width="100" height="100"/%3E%3C/svg%3E';
 
   ngOnInit() {
-    this.productService.getProducts(0, 200).subscribe({
-      next: (res) => {
-        this._products.set(res.content);
+    this.productService.getStockAlerts().subscribe({
+      next: (data) => {
+        this.alerts.set(data);
         this.isLoading.set(false);
         this.cdr.markForCheck();
       },
@@ -42,28 +40,18 @@ export class AdminStockerList implements OnInit {
     this.isCollapsed.update(v => !v);
   }
 
-  getCriticalVariants(product: ProductResponseFull) {
-    return (product.variants || [])
-      .filter(v => v.stock < 2)
-      .sort((a, b) => a.stock - b.stock);
+  scrollLeft() {
+    this.scrollContainer.nativeElement.scrollBy({ left: -280, behavior: 'smooth' });
   }
 
-  getAlertCount(product: ProductResponseFull) {
-    return this.getCriticalVariants(product).length;
+  scrollRight() {
+    this.scrollContainer.nativeElement.scrollBy({ left: 280, behavior: 'smooth' });
   }
 
-  getUrgencyPercentage(product: ProductResponseFull) {
-    const critical = this.getCriticalVariants(product);
-    if (!critical.length) return 0;
-    const zeros = critical.filter(v => v.stock === 0).length;
-    return (zeros / critical.length) * 100;
+  getUrgencyPercentage(alert: StockAlertResponse): number {
+    if (!alert.criticalVariantCount) return 0;
+    return Math.round((alert.outOfStockCount / alert.criticalVariantCount) * 100);
   }
 
-  getMainImage(product: ProductResponseFull): string {
-    for (const v of product.variants || []) {
-      const main = v.images?.find((i: any) => i.mainImage);
-      if (main) return main.url;
-    }
-    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e2e8f0" width="100" height="100"/%3E%3C/svg%3E';
-  }
+  
 }

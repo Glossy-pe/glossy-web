@@ -7,6 +7,7 @@ import { ProductVariant } from '../models/product-variant-response.model';
 import { ProductImage } from '../models/product-image.model';
 import { PageResponse } from '../../../shared/models/page-response.model';
 import { ProductResponseFull } from '../models/product-response-full.model';
+import { StockAlertResponse } from '../../../admin-features/product/components/admin-stocker-list/models/StockAlertResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -163,5 +164,9 @@ export class ProductService {
 
   getProductBySlug(slug: string): Observable<ProductResponseFull> {
   return this.http.get<ProductResponseFull>(`${environment.apiUrl}/public/products/${slug}`);
+}
+
+getStockAlerts(): Observable<StockAlertResponse[]> {
+  return this.http.get<StockAlertResponse[]>(`${this.apiUrl}/stock-alerts`);
 }
 }
