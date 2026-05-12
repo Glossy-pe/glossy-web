@@ -167,6 +167,10 @@ export class ProductService {
 }
 
 getStockAlerts(): Observable<StockAlertResponse[]> {
-  return this.http.get<StockAlertResponse[]>(`${this.apiUrl}/stock-alerts`);
+  return this.http.get<StockAlertResponse[]>(`${environment.apiUrl}/stock-alerts`);
+}
+
+dismissStockAlert(alertId: number): Observable<void> {
+  return this.http.patch<void>(`${environment.apiUrl}/stock-alerts/${alertId}/dismiss`, {});
 }
 }

@@ -200,7 +200,7 @@ export class AdminOrderDetail implements OnInit {
       productId: item.productVariant.productId,
       quantity: item.quantity,
       paidQuantity: item.paidQuantity ?? item.quantity,                           // ✅ default pagado todo
-      amountPaid: item.amountPaid ?? item.productVariant.price * item.quantity,
+      amountPaid: item.amountPaid ?? 0,
       toneName: item.productVariant.toneName,
       toneCode: item.productVariant.toneCode,
       cost: item.productVariant.cost,
@@ -299,8 +299,8 @@ export class AdminOrderDetail implements OnInit {
         productVariantId: variant.id,
         productId: product.id,
         quantity: this.quantity(),
-        paidQuantity: this.quantity(),  // ✅
-        amountPaid: totalPrice,         // ✅
+        paidQuantity: 0,
+        amountPaid: 0,
         toneName: variant.toneName,
         toneCode: variant.toneCode,
         cost: variant.cost,
@@ -459,6 +459,16 @@ markAllPacked() {
   );
 }
 
+markAllPaid() {
+  this.cart.update(items =>
+    items.map(i => ({
+      ...i,
+      paidQuantity: i.quantity,
+      amountPaid: parseFloat(this.getTotalPrice(i).toFixed(2))
+    }))
+  );
+}
+
   getTotalPrice(item: CartItem): number {
     return item.price * item.quantity;
   }
@@ -549,4 +559,13 @@ updatePackedQuantity(variantId: number, qty: number) {
     })
   );
 }
+
+cartPaidStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const fullyPaid = items.filter(i => this.isFullyPaid(i)).length;
+  if (fullyPaid === 0) return 'none';
+  if (fullyPaid === items.length) return 'all';
+  return 'partial';
+});
 }

@@ -185,13 +185,67 @@
 
       <!-- Carrito -->
       <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-        <div class="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-          <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos en la orden</h2>
-          <span *ngIf="cart().length > 0"
-            class="px-2.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
-            {{ cart().length }}
-          </span>
-        </div>
+        <div class="px-4 md:px-8 py-3 bg-slate-50/50 border-b border-slate-100">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos</h2>
+                <span *ngIf="cart().length > 0" class="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full">
+                  {{ cart().length }}
+                </span>
+              </div>
+
+              <!-- Acciones: wrap en móvil -->
+              <div class="flex items-center gap-2 flex-wrap">
+
+                <!-- Separado -->
+                <span *ngIf="cartSeparationStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-emerald-50 text-emerald-600': cartSeparationStatus() === 'all',
+                    'bg-amber-50 text-amber-600':    cartSeparationStatus() === 'partial'
+                  }">
+                  {{ cartSeparationStatus() === 'all' ? '✓ Sep.' : 'Parcial' }}
+                </span>
+                <button type="button" (click)="markAllSeparated()" [disabled]="cartSeparationStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Sep. todo
+                </button>
+
+                <!-- Empacado -->
+                <span *ngIf="cartPackingStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-blue-50 text-blue-600':   cartPackingStatus() === 'all',
+                    'bg-amber-50 text-amber-600': cartPackingStatus() === 'partial'
+                  }">
+                  {{ cartPackingStatus() === 'all' ? '✓ Emp.' : 'P.emp.' }}
+                </span>
+                <button type="button" (click)="markAllPacked()" [disabled]="cartPackingStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Emp. todo
+                </button>
+
+                <!-- Pagado -->
+                <span *ngIf="cartPaidStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-violet-50 text-violet-600': cartPaidStatus() === 'all',
+                    'bg-amber-50 text-amber-600':   cartPaidStatus() === 'partial'
+                  }">
+                  {{ cartPaidStatus() === 'all' ? '✓ Pag.' : 'P.pag.' }}
+                </span>
+                <button type="button" (click)="markAllPaid()" [disabled]="cartPaidStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-violet-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Pag. todo
+                </button>
+
+              </div>
+            </div>
+          </div>
+
+
+              
+      
 
         <div class="p-6 space-y-3">
           @for (item of cart(); track item.productVariantId) {

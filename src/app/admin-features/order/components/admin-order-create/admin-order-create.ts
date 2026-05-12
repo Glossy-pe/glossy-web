@@ -245,8 +245,8 @@ export class AdminOrderCreate {
         productVariantId: variant.id,
         productId: product.id,
         quantity: this.quantity(),
-        paidQuantity: this.quantity(),  // ✅ pagado completo
-        amountPaid: totalPrice,         // ✅ pagado completo
+        paidQuantity: 0,
+        amountPaid: 0,
         toneName: variant.toneName,
         toneCode: variant.toneCode,
         cost: variant.cost,
@@ -298,7 +298,7 @@ export class AdminOrderCreate {
       orderItems: this.cart().map(i => ({
         productVariantId: i.productVariantId,
         quantity: i.quantity,
-        paidQuantity: i.paidQuantity,
+        paidQuantity: i.paidQuantity,  // conserva lo que ya había pagado
         amountPaid: i.amountPaid,
         separatedQuantity: i.separatedQuantity,
         packedQuantity: i.packedQuantity,
@@ -421,6 +421,54 @@ updatePackedQuantity(variantId: number, qty: number) {
         separatedQuantity: Math.max(i.separatedQuantity, clamped) // packed no puede superar separated
       };
     })
+  );
+}
+
+cartPaidStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const fullyPaid = items.filter(i => this.isFullyPaid(i)).length;
+  if (fullyPaid === 0) return 'none';
+  if (fullyPaid === items.length) return 'all';
+  return 'partial';
+});
+
+markAllPaid() {
+  this.cart.update(items =>
+    items.map(i => ({
+      ...i,
+      paidQuantity: i.quantity,
+      amountPaid: parseFloat(this.getTotalPrice(i).toFixed(2))
+    }))
+  );
+}
+
+cartSeparationStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const fullySepped = items.filter(i => i.separatedQuantity >= i.quantity).length;
+  if (fullySepped === 0) return 'none';
+  if (fullySepped === items.length) return 'all';
+  return 'partial';
+});
+
+markAllSeparated() {
+  this.cart.update(items => items.map(i => ({ ...i, separatedQuantity: i.quantity })));
+}
+
+cartPackingStatus = computed(() => {
+  const items = this.cart();
+  if (!items.length) return 'none';
+  const fullyPacked = items.filter(i => i.packedQuantity >= i.quantity).length;
+  if (fullyPacked === 0) return 'none';
+  if (fullyPacked === items.length) return 'all';
+  return 'partial';
+});
+
+
+markAllPacked() {
+  this.cart.update(items =>
+    items.map(i => ({ ...i, packedQuantity: i.quantity, separatedQuantity: i.quantity }))
   );
 }
 }

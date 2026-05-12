@@ -44,7 +44,7 @@ export const routes: Routes = [
                 path: 'orders/:id', // ✅ Después la dinámica
                 loadComponent: () => import('./admin-features/order/components/admin-order-detail/admin-order-detail').then(m => m.AdminOrderDetail)
             },
-
+            { path: 'stocker', loadComponent: () => import('./admin-features/product/components/admin-stocker-list/admin-stocker-list').then(m => m.AdminStockerList) },
         ]
     },
 

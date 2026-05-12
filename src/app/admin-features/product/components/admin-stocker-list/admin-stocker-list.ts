@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, 
+         ChangeDetectorRef, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StockAlertResponse } from './models/StockAlertResponse';
 import { ProductService } from '../../../../features/product/services/product.service';
@@ -23,6 +24,11 @@ export class AdminStockerList implements OnInit {
   readonly fallbackImg = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e2e8f0" width="100" height="100"/%3E%3C/svg%3E';
 
   ngOnInit() {
+    this.loadAlerts();
+  }
+
+  loadAlerts() {
+    this.isLoading.set(true);
     this.productService.getStockAlerts().subscribe({
       next: (data) => {
         this.alerts.set(data);
@@ -31,6 +37,16 @@ export class AdminStockerList implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  dismiss(alertId: number) {
+    this.productService.dismissStockAlert(alertId).subscribe({
+      next: () => {
+        // Quitar la card inmediatamente sin esperar reload
+        this.alerts.update(list => list.filter(a => a.alertId !== alertId));
         this.cdr.markForCheck();
       }
     });
@@ -48,10 +64,7 @@ export class AdminStockerList implements OnInit {
     this.scrollContainer.nativeElement.scrollBy({ left: 280, behavior: 'smooth' });
   }
 
-  getUrgencyPercentage(alert: StockAlertResponse): number {
-    if (!alert.criticalVariantCount) return 0;
-    return Math.round((alert.outOfStockCount / alert.criticalVariantCount) * 100);
+  isOutOfStock(alert: StockAlertResponse): boolean {
+    return alert.stock === 0;
   }
-
-  
 }

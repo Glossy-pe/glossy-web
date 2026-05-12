@@ -479,6 +479,8 @@
 
               <!-- Acciones: wrap en móvil -->
               <div class="flex items-center gap-2 flex-wrap">
+
+                <!-- Separado -->
                 <span *ngIf="cartSeparationStatus() !== 'none'"
                   class="text-[10px] font-black px-2 py-0.5 rounded-full"
                   [ngClass]="{
@@ -492,6 +494,7 @@
                   Sep. todo
                 </button>
 
+                <!-- Empacado -->
                 <span *ngIf="cartPackingStatus() !== 'none'"
                   class="text-[10px] font-black px-2 py-0.5 rounded-full"
                   [ngClass]="{
@@ -504,6 +507,21 @@
                   class="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
                   Emp. todo
                 </button>
+
+                <!-- Pagado -->
+                <span *ngIf="cartPaidStatus() !== 'none'"
+                  class="text-[10px] font-black px-2 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-violet-50 text-violet-600': cartPaidStatus() === 'all',
+                    'bg-amber-50 text-amber-600':   cartPaidStatus() === 'partial'
+                  }">
+                  {{ cartPaidStatus() === 'all' ? '✓ Pag.' : 'P.pag.' }}
+                </span>
+                <button type="button" (click)="markAllPaid()" [disabled]="cartPaidStatus() === 'all'"
+                  class="text-[10px] font-black text-slate-400 hover:text-violet-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider">
+                  Pag. todo
+                </button>
+
               </div>
             </div>
           </div>
