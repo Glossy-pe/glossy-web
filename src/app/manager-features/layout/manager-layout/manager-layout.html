@@ -1,0 +1,45 @@
+<div class="min-h-screen bg-gray-50">
+
+  <nav class="border-b border-gray-200 bg-white px-6 py-3">
+    <div class="mx-auto flex max-w-7xl items-center justify-between">
+
+      <!-- Logo / Brand -->
+      <span class="text-sm font-bold tracking-tight text-gray-900">
+        Admin Panel
+      </span>
+
+      <!-- Links -->
+      <div class="flex items-center gap-1">
+        
+        <a
+          routerLink="/manager/products"
+          routerLinkActive="bg-gray-100 text-gray-900"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="rounded-lg px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
+          Productos
+        </a>
+
+        <a
+          routerLink="/manager/orders"
+          routerLinkActive="bg-gray-100 text-gray-900"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="rounded-lg px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
+          Órdenes
+        </a>
+
+      </div>
+
+      <!-- Logout placeholder -->
+      <button
+        class="rounded-lg px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
+        Cerrar sesión
+      </button>
+
+    </div>
+  </nav>
+
+  <main class="p-6">
+    <router-outlet />
+  </main>
+
+</div>

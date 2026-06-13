@@ -1,0 +1,168 @@
+<div class="min-h-screen bg-gray-50 p-6">
+
+  <!-- Back -->
+  <button
+    (click)="cancel()"
+    class="mb-6 flex items-center gap-2 text-sm text-gray-500 transition hover:text-gray-900">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    {{ isEditMode() ? 'Volver al detalle' : 'Volver al listado' }}
+  </button>
+
+  <!-- Loading skeleton (solo en edit) -->
+  @if (isLoading()) {
+    <div class="mx-auto max-w-2xl animate-pulse rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div class="mb-6 h-6 w-1/3 rounded bg-gray-200"></div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="h-10 rounded-lg bg-gray-200"></div>
+        }
+      </div>
+      <div class="mt-4 h-20 rounded-lg bg-gray-200"></div>
+      <div class="mt-4 h-32 rounded-lg bg-gray-200"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <span class="mb-3 text-4xl">⚠️</span>
+      <p class="text-lg font-medium text-gray-700">No se pudo cargar el producto</p>
+      <button
+        (click)="loadProduct()"
+        class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading() && !hasError()) {
+    <div class="mx-auto max-w-2xl">
+      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+        <!-- Header -->
+        <div class="border-b border-gray-100 px-6 py-4">
+          <h1 class="text-xl font-bold text-gray-900">
+            {{ isEditMode() ? 'Editar producto' : 'Nuevo producto' }}
+          </h1>
+          <p class="mt-0.5 text-sm text-gray-400">
+            {{ isEditMode() ? 'Modificá los campos y guardá los cambios.' : 'Completá los campos para crear el producto.' }}
+          </p>
+        </div>
+
+        <!-- Fields -->
+        <div class="space-y-4 px-6 py-5">
+
+          <div class="grid gap-4 sm:grid-cols-2">
+
+            <!-- Nombre -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-gray-500">Nombre</label>
+              <input
+                type="text"
+                [value]="form().name"
+                (input)="updateField('name', $any($event.target).value)"
+                placeholder="Ej: Remera básica"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+            </div>
+
+            <!-- Slug -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-gray-500">Slug</label>
+              <input
+                type="text"
+                [value]="form().slug"
+                (input)="updateField('slug', $any($event.target).value)"
+                placeholder="Ej: remera-basica"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+            </div>
+
+            <!-- Etiqueta -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-gray-500">Etiqueta</label>
+              <input
+                type="text"
+                [value]="form().label"
+                (input)="updateField('label', $any($event.target).value)"
+                placeholder="Ej: Nuevo, Oferta…"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+            </div>
+
+            <!-- Categoría ID -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-gray-500">Categoría ID</label>
+              <input
+                type="number"
+                [value]="form().categoryId"
+                (input)="updateField('categoryId', +$any($event.target).value)"
+                placeholder="Ej: 3"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+            </div>
+
+          </div>
+
+          <!-- Descripción corta -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-gray-500">Descripción corta</label>
+            <textarea
+              rows="2"
+              [value]="form().description"
+              (input)="updateField('description', $any($event.target).value)"
+              placeholder="Breve resumen del producto…"
+              class="resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"></textarea>
+          </div>
+
+          <!-- Descripción completa -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-gray-500">Descripción completa</label>
+            <textarea
+              rows="5"
+              [value]="form().fullDescription"
+              (input)="updateField('fullDescription', $any($event.target).value)"
+              placeholder="Descripción detallada del producto…"
+              class="resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"></textarea>
+          </div>
+
+          <!-- Activo -->
+          <label class="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              [checked]="form().active"
+              (change)="updateField('active', $any($event.target).checked)"
+              class="h-4 w-4 rounded border-gray-300 accent-black"/>
+            <span class="text-sm text-gray-700">Producto activo</span>
+          </label>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-2 border-t border-gray-100 px-6 py-4">
+          <button
+            (click)="cancel()"
+            [disabled]="isSaving()"
+            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            (click)="submit()"
+            [disabled]="isSaving()"
+            class="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-60">
+            @if (isSaving()) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Guardando...
+            } @else {
+              {{ isEditMode() ? 'Guardar cambios' : 'Crear producto' }}
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

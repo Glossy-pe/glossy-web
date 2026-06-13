@@ -1,0 +1,10 @@
+<!-- create mode -->
+@if (isCreateMode()) {
+  <app-product-card [createMode]="true" (save)="saveCreate($event)" />
+}
+
+<!-- detail mode -->
+@if (!isCreateMode() && product()) {
+  <app-product-card [product]="product()!" (save)="onSave($event)" (delete)="confirmDelete()" />
+  <app-variant-list [productId]="product()!.id" />
+}

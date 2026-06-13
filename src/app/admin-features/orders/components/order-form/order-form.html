@@ -1,0 +1,192 @@
+<div class="min-h-screen bg-gray-50 p-6">
+
+  <!-- Back -->
+  <button
+    (click)="goBack()"
+    class="mb-6 flex items-center gap-2 text-sm text-gray-500 transition hover:text-gray-900">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Volver al listado
+  </button>
+
+  <!-- Loading skeleton -->
+  @if (isLoading()) {
+    <div class="animate-pulse rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div class="mb-4 h-6 w-1/3 rounded bg-gray-200"></div>
+      <div class="space-y-3">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <div class="h-10 rounded-lg bg-gray-200"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <span class="mb-3 text-4xl">⚠️</span>
+      <p class="text-lg font-medium text-gray-700">No se pudo cargar la orden</p>
+      <button
+        (click)="loadOrder()"
+        class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading() && !hasError()) {
+    <div class="mx-auto max-w-2xl">
+      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+        <!-- Header -->
+        <div class="border-b border-gray-100 px-6 py-4">
+          <h1 class="text-xl font-bold text-gray-900">
+            {{ isEditMode() ? 'Editar orden' : 'Nueva orden' }}
+          </h1>
+          <p class="mt-0.5 text-sm text-gray-400">
+            {{ isEditMode() ? 'Modifica los campos que necesites.' : 'Completa los datos para crear la orden.' }}
+          </p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="divide-y divide-gray-50 px-6 py-4">
+
+          <!-- Customer Name -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="customerName">
+              Nombre cliente <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="customerName" type="text" formControlName="customerName"
+                placeholder="Ej. Juan Pérez"
+                class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('customerName')"
+                [class.border-gray-200]="!isInvalid('customerName')"/>
+              @if (isInvalid('customerName')) {
+                <p class="mt-1 text-xs text-red-500">El nombre del cliente es requerido.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Customer Address -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="customerAddress">
+              Dirección <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="customerAddress" type="text" formControlName="customerAddress"
+                placeholder="Ej. Av. Lima 123"
+                class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('customerAddress')"
+                [class.border-gray-200]="!isInvalid('customerAddress')"/>
+              @if (isInvalid('customerAddress')) {
+                <p class="mt-1 text-xs text-red-500">La dirección es requerida.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Order Code -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="orderCode">
+              Código <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="orderCode" type="text" formControlName="orderCode"
+                placeholder="Ej. ORD-0001"
+                class="w-full rounded-lg border px-3 py-2 font-mono text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('orderCode')"
+                [class.border-gray-200]="!isInvalid('orderCode')"/>
+              @if (isInvalid('orderCode')) {
+                <p class="mt-1 text-xs text-red-500">El código es requerido.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Order Status ID -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="orderStatusId">
+              Estado ID <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="orderStatusId" type="number" formControlName="orderStatusId"
+                placeholder="ID del estado"
+                class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('orderStatusId')"
+                [class.border-gray-200]="!isInvalid('orderStatusId')"/>
+              @if (isInvalid('orderStatusId')) {
+                <p class="mt-1 text-xs text-red-500">El estado es requerido.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Cost Total -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="costTotal">
+              Costo total <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <div class="flex items-center rounded-lg border transition focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100"
+                   [class.border-red-300]="isInvalid('costTotal')"
+                   [class.border-gray-200]="!isInvalid('costTotal')">
+                <span class="pl-3 text-sm text-gray-400">S/</span>
+                <input id="costTotal" type="number" step="0.01" min="0" formControlName="costTotal"
+                  class="w-full rounded-lg px-2 py-2 text-sm text-gray-800 outline-none"/>
+              </div>
+              @if (isInvalid('costTotal')) {
+                <p class="mt-1 text-xs text-red-500">El costo total es requerido y debe ser mayor o igual a 0.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Total -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="total">
+              Total <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <div class="flex items-center rounded-lg border transition focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100"
+                   [class.border-red-300]="isInvalid('total')"
+                   [class.border-gray-200]="!isInvalid('total')">
+                <span class="pl-3 text-sm text-gray-400">S/</span>
+                <input id="total" type="number" step="0.01" min="0" formControlName="total"
+                  class="w-full rounded-lg px-2 py-2 text-sm text-gray-800 outline-none"/>
+              </div>
+              @if (isInvalid('total')) {
+                <p class="mt-1 text-xs text-red-500">El total es requerido y debe ser mayor o igual a 0.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end gap-2 pt-5">
+            <button type="button" (click)="goBack()" [disabled]="isSaving()"
+              class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600
+                     transition hover:bg-gray-50 disabled:opacity-50">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isSaving()"
+              class="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white
+                     transition hover:bg-gray-700 disabled:opacity-60">
+              @if (isSaving()) {
+                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Guardando...
+              } @else {
+                {{ isEditMode() ? 'Guardar cambios' : 'Crear orden' }}
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

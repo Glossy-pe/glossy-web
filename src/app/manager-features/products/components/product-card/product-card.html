@@ -1,0 +1,134 @@
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+    <div class="flex items-center gap-3">
+      <h1 class="text-xl font-bold text-gray-900">{{ product.name }}</h1>
+      <span
+        class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+        [class]="product.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+        {{ product.active ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+
+    @if (showActions && !isEditing()) {
+      <div class="flex gap-2">
+        <button
+          (click)="startEdit()"
+          class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+          Editar
+        </button>
+        <button
+          (click)="delete.emit()"
+          class="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-100">
+          Eliminar
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- View mode -->
+  @if (!isEditing()) {
+    <div class="divide-y divide-gray-50 px-6 py-4">
+      <div class="grid grid-cols-3 gap-4 py-3">
+        <span class="text-sm text-gray-400">Etiqueta</span>
+        <span class="col-span-2 text-sm text-gray-800">{{ product.label || '—' }}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-4 py-3">
+        <span class="text-sm text-gray-400">Categoría ID</span>
+        <span class="col-span-2 text-sm text-gray-800">{{ product.categoryId }}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-4 py-3">
+        <span class="text-sm text-gray-400">Descripción</span>
+        <span class="col-span-2 text-sm text-gray-800">{{ product.description }}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-4 py-3">
+        <span class="text-sm text-gray-400">Descripción completa</span>
+        <span class="col-span-2 text-sm leading-relaxed text-gray-800">{{ product.fullDescription }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Edit mode -->
+  @if (isEditing() && form()) {
+    <div class="space-y-4 px-6 py-5">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-500">Nombre</label>
+          <input
+            type="text"
+            [value]="form()!.name"
+            (input)="updateField('name', $any($event.target).value)"
+            class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-500">Etiqueta</label>
+          <input
+            type="text"
+            [value]="form()!.label"
+            (input)="updateField('label', $any($event.target).value)"
+            class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-500">Categoría ID</label>
+          <input
+            type="number"
+            [value]="form()!.categoryId"
+            (input)="updateField('categoryId', +$any($event.target).value)"
+            class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"/>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-500">Descripción corta</label>
+        <textarea
+          rows="2"
+          [value]="form()!.description"
+          (input)="updateField('description', $any($event.target).value)"
+          class="resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"></textarea>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-500">Descripción completa</label>
+        <textarea
+          rows="5"
+          [value]="form()!.fullDescription"
+          (input)="updateField('fullDescription', $any($event.target).value)"
+          class="resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-black focus:ring-1 focus:ring-black"></textarea>
+      </div>
+
+      <label class="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          [checked]="form()!.active"
+          (change)="updateField('active', $any($event.target).checked)"
+          class="h-4 w-4 rounded border-gray-300 accent-black"/>
+        <span class="text-sm text-gray-700">Producto activo</span>
+      </label>
+    </div>
+
+    <div class="flex justify-end gap-2 border-t border-gray-100 px-6 py-4">
+      <button
+        (click)="cancelEdit()"
+        [disabled]="isSaving()"
+        class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50">
+        Cancelar
+      </button>
+      <button
+        (click)="submitSave()"
+        [disabled]="isSaving()"
+        class="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-60">
+        @if (isSaving()) {
+          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
+          Guardando...
+        } @else {
+          Guardar cambios
+        }
+      </button>
+    </div>
+  }
+
+</div>

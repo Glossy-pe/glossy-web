@@ -1,0 +1,175 @@
+<div class="min-h-screen bg-gray-50 p-6">
+
+  <!-- Back -->
+  <button
+    (click)="goBack()"
+    class="mb-6 flex items-center gap-2 text-sm text-gray-500 transition hover:text-gray-900">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Volver a la orden
+  </button>
+
+  <!-- Loading skeleton -->
+  @if (isLoading()) {
+    <div class="animate-pulse rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div class="mb-4 h-6 w-1/3 rounded bg-gray-200"></div>
+      <div class="space-y-3">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="h-10 rounded-lg bg-gray-200"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <span class="mb-3 text-4xl">⚠️</span>
+      <p class="text-lg font-medium text-gray-700">No se pudo cargar el item</p>
+      <button
+        (click)="loadItem()"
+        class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading() && !hasError()) {
+    <div class="mx-auto max-w-2xl">
+      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+        <!-- Header -->
+        <div class="border-b border-gray-100 px-6 py-4">
+          <h1 class="text-xl font-bold text-gray-900">
+            {{ isEditMode() ? 'Editar item' : 'Nuevo item' }}
+          </h1>
+          <p class="mt-0.5 text-sm text-gray-400">
+            {{ isEditMode() ? 'Modifica los campos que necesites.' : 'Completa los datos para agregar el item.' }}
+          </p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="divide-y divide-gray-50 px-6 py-4">
+
+          <!-- Variant ID -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="productVariantId">
+              Variante ID <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="productVariantId" type="number" formControlName="productVariantId"
+                placeholder="ID de la variante"
+                class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('productVariantId')"
+                [class.border-gray-200]="!isInvalid('productVariantId')"/>
+              @if (isInvalid('productVariantId')) {
+                <p class="mt-1 text-xs text-red-500">La variante es requerida.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Quantity -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="quantity">
+              Cantidad <span class="text-red-400">*</span>
+            </label>
+            <div class="col-span-2">
+              <input id="quantity" type="number" min="1" formControlName="quantity"
+                class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                [class.border-red-300]="isInvalid('quantity')"
+                [class.border-gray-200]="!isInvalid('quantity')"/>
+              @if (isInvalid('quantity')) {
+                <p class="mt-1 text-xs text-red-500">La cantidad es requerida y debe ser mayor a 0.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Paid Quantity -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="paidQuantity">Cantidad pagada</label>
+            <div class="col-span-2">
+              <input id="paidQuantity" type="number" min="0" formControlName="paidQuantity"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"/>
+            </div>
+          </div>
+
+          <!-- Separated Quantity -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="separatedQuantity">Cantidad separada</label>
+            <div class="col-span-2">
+              <input id="separatedQuantity" type="number" min="0" formControlName="separatedQuantity"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"/>
+            </div>
+          </div>
+
+          <!-- Packed Quantity -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="packedQuantity">Cantidad empacada</label>
+            <div class="col-span-2">
+              <input id="packedQuantity" type="number" min="0" formControlName="packedQuantity"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none transition
+                       focus:border-gray-400 focus:ring-2 focus:ring-gray-100"/>
+            </div>
+          </div>
+
+          <!-- Amount Paid -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="amountPaid">Monto pagado</label>
+            <div class="col-span-2">
+              <div class="flex items-center rounded-lg border border-gray-200 transition
+                          focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
+                <span class="pl-3 text-sm text-gray-400">S/</span>
+                <input id="amountPaid" type="number" step="0.01" min="0" formControlName="amountPaid"
+                  placeholder="Opcional"
+                  class="w-full rounded-lg px-2 py-2 text-sm text-gray-800 outline-none"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unit Price -->
+          <div class="grid grid-cols-3 gap-4 py-3">
+            <label class="self-start pt-2 text-sm text-gray-400" for="unitPrice">Precio unitario</label>
+            <div class="col-span-2">
+              <div class="flex items-center rounded-lg border border-gray-200 transition
+                          focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
+                <span class="pl-3 text-sm text-gray-400">S/</span>
+                <input id="unitPrice" type="number" step="0.01" min="0" formControlName="unitPrice"
+                  placeholder="Opcional"
+                  class="w-full rounded-lg px-2 py-2 text-sm text-gray-800 outline-none"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end gap-2 pt-5">
+            <button type="button" (click)="goBack()" [disabled]="isSaving()"
+              class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600
+                     transition hover:bg-gray-50 disabled:opacity-50">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isSaving()"
+              class="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white
+                     transition hover:bg-gray-700 disabled:opacity-60">
+              @if (isSaving()) {
+                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Guardando...
+              } @else {
+                {{ isEditMode() ? 'Guardar cambios' : 'Agregar item' }}
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

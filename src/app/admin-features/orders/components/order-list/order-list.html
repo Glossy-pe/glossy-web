@@ -1,0 +1,107 @@
+<div class="min-h-screen bg-gray-50 p-6">
+
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Órdenes</h1>
+      @if (page()) {
+        <p class="mt-0.5 text-sm text-gray-400">{{ page()!.totalElements }} órdenes en total</p>
+      }
+    </div>
+    <button
+      (click)="goToCreate()"
+      class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700">
+      + Nueva orden
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="space-y-2">
+              <div class="h-4 w-32 rounded bg-gray-200"></div>
+              <div class="h-3 w-48 rounded bg-gray-200"></div>
+            </div>
+            <div class="h-8 w-20 rounded-lg bg-gray-200"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <span class="mb-3 text-4xl">⚠️</span>
+      <p class="text-lg font-medium text-gray-700">No se pudieron cargar las órdenes</p>
+      <button
+        (click)="loadOrders()"
+        class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!isLoading() && !hasError() && page()) {
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50 text-left">
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Código</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Cliente</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Dirección</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Total</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Estado ID</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (order of page()!.content; track order.id) {
+            <tr class="transition hover:bg-gray-50">
+              <td class="px-4 py-3 font-mono text-gray-800">{{ order.orderCode }}</td>
+              <td class="px-4 py-3 text-gray-800">{{ order.customerName }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ order.customerAddress }}</td>
+              <td class="px-4 py-3 font-medium text-gray-900">S/ {{ order.total | number:'1.2-2' }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ order.orderStatusId }}</td>
+              <td class="px-4 py-3 text-right">
+                <button
+                  (click)="goToDetail(order.id)"
+                  class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-100">
+                  Ver detalle
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+        <span class="text-xs text-gray-400">
+          Página {{ page()!.page + 1 }} de {{ page()!.totalPages }}
+        </span>
+        <div class="flex gap-2">
+          <button
+            (click)="prevPage()"
+            [disabled]="page()!.first"
+            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600
+                   transition hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            Anterior
+          </button>
+          <button
+            (click)="nextPage()"
+            [disabled]="page()!.last"
+            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600
+                   transition hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
