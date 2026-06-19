@@ -24,6 +24,49 @@
     </button>
   </div>
 
+  <div class="mb-4">
+    <input
+      #searchInput
+      type="text"
+      placeholder="Buscar por cliente..."
+      (input)="onSearch(searchInput.value)"
+      class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm
+            outline-none focus:border-gray-400">
+  </div>
+
+  <div class="mb-4 flex gap-2">
+    <select
+      (change)="onStatusChange($any($event.target).value)"
+      class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 outline-none focus:border-gray-400">
+      <option value="">Todos los estados</option>
+      @for (status of statuses(); track status.id) {
+        <option [value]="status.id">{{ status.code }}</option>
+      }
+    </select>
+    
+    <button
+      (click)="toggleFilter('isPaid')"
+      [class]="isPaid() === true
+        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
+        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
+      Pagado
+    </button>
+    <button
+      (click)="toggleFilter('isSeparated')"
+      [class]="isSeparated() === true
+        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
+        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
+      Separado
+    </button>
+    <button
+      (click)="toggleFilter('isPacked')"
+      [class]="isPacked() === true
+        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
+        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
+      Empacado
+    </button>
+  </div>
+
   <!-- Loading -->
   @if (isLoading()) {
     <div class="space-y-3">
@@ -60,22 +103,51 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 bg-gray-50 text-left">
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Código</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">ID</th>
             <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Cliente</th>
             <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Dirección</th>
             <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Total</th>
-            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Estado ID</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Estado</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Pagado</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Separado</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Empacado</th>
+            <th class="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-400">Creado</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (order of page()!.content; track order.id) {
             <tr class="transition hover:bg-gray-50">
-              <td class="px-4 py-3 font-mono text-gray-800">{{ order.orderCode }}</td>
+              <td class="px-4 py-3">
+                <a
+                  [href]="'/manager/orders/' + order.id"
+                  class="text-gray-800 hover:underline">
+                  {{ order.id }}
+                </a>
+              </td>
               <td class="px-4 py-3 text-gray-800">{{ order.customerName }}</td>
               <td class="px-4 py-3 text-gray-500">{{ order.customerAddress }}</td>
               <td class="px-4 py-3 font-medium text-gray-900">S/ {{ order.total | number:'1.2-2' }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ order.orderStatusId }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ order.orderStatus?.code ?? '—' }}</td>
+              <td class="px-4 py-3">
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="order.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+                  {{ order.paid ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="order.separated ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+                  {{ order.separated ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="order.packed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+                  {{ order.packed ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-400 text-xs">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
               <td class="px-4 py-3 text-right">
                 <button
                   (click)="goToDetail(order.id)"

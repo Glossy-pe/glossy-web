@@ -8,10 +8,11 @@ import { ProductService } from '../../services/product.service';
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { ProductRequest } from '../../models/product-request.model';
 import { PageResponse } from '../../../../../shared/models/page-response.model';
+import { ProductCard } from "../product-card/product-card";
 
 @Component({
   selector: 'app-product-list',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProductCard],
   templateUrl: './product-list.html',
 })
 export class ProductList implements OnInit, OnDestroy {

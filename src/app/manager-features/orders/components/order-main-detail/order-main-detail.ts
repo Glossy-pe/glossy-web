@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,16 +6,17 @@ import { finalize } from 'rxjs/operators';
 import { OrderService } from '../../services/order.service';
 import { OrderResponseFull } from '../../models/order-response-full.model';
 import { OrderStatusResponse } from '../../models/order-status-response.model';
-import { OrderItemList } from '../../../order-items/components/order-item-list/order-item-list';
-import { OrderMainDetail } from "../order-main-detail/order-main-detail";
 
 @Component({
-  selector: 'app-order-detail',
-  imports: [CommonModule, ReactiveFormsModule, OrderItemList, OrderMainDetail],
-  templateUrl: './order-detail.html',
-  styleUrl: './order-detail.scss',
+  selector: 'app-order-main-detail',
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './order-main-detail.html',
+  styleUrl: './order-main-detail.scss',
 })
-export class OrderDetail implements OnInit {
+export class OrderMainDetail {
+
+  @Input({ required: true }) orderId!: number;
+  
   order    = signal<OrderResponseFull | null>(null);
   statuses = signal<OrderStatusResponse[]>([]);
 
@@ -31,7 +32,6 @@ export class OrderDetail implements OnInit {
   );
 
   form!: FormGroup;
-  private orderId = 0;
 
   constructor(
     private route: ActivatedRoute,

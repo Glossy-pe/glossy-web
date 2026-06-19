@@ -47,6 +47,26 @@ export class OrderItemRow {
     this.changed.emit();
   }
 
+  onQuantityChange(): void {
+  if (this.item.variant?.stock != null) {
+    this.item.quantity = Math.min(Math.max(1, this.item.quantity), this.item.variant.stock);
+  }
+  // re-clampear los sub-campos si quantity bajó
+  this.item.separatedQuantity = Math.min(this.item.separatedQuantity ?? 0, this.item.quantity);
+  this.item.packedQuantity = Math.min(this.item.packedQuantity ?? 0, this.item.quantity);
+  this.item.paidQuantity = Math.min(this.item.paidQuantity ?? 0, this.item.quantity);
+  this.item.dirty = true;
+  this.changed.emit();
+}
+
+onSubFieldChange(): void {
+  this.item.separatedQuantity = Math.min(Math.max(0, this.item.separatedQuantity ?? 0), this.item.quantity);
+  this.item.packedQuantity = Math.min(Math.max(0, this.item.packedQuantity ?? 0), this.item.quantity);
+  this.item.paidQuantity = Math.min(Math.max(0, this.item.paidQuantity ?? 0), this.item.quantity);
+  this.item.dirty = true;
+  this.changed.emit();
+}
+
   onBlockClick(field: 'separatedQuantity' | 'packedQuantity' | 'paidQuantity', index: number): void {
     const current = this.item[field] as number;
     this.item[field] = current === index + 1 ? index : index + 1;

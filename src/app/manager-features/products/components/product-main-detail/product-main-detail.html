@@ -1,0 +1,155 @@
+@if (product(); as prod) {
+  <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-100">
+      <div>
+        <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-0.5">
+          Producto #{{ prod.id }}
+        </span>
+        <h2 class="m-0 text-lg font-semibold text-gray-900 leading-snug">{{ prod.name }}</h2>
+      </div>
+
+      <div class="flex gap-2 shrink-0">
+        @if (!editMode()) {
+          <button
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            (click)="enterEdit(prod)">
+            <i class="ti ti-edit text-base" aria-hidden="true"></i>
+            Editar
+          </button>
+        } @else {
+          <button
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+            (click)="cancelEdit()" [disabled]="saving()">
+            <i class="ti ti-x text-base" aria-hidden="true"></i>
+            Cancelar
+          </button>
+          <button
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50"
+            (click)="saveEdit()" [disabled]="saving()">
+            <i class="ti ti-check text-base" aria-hidden="true"></i>
+            {{ saving() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-5">
+
+      @if (!editMode()) {
+        <!-- Vista detalle -->
+        <div class="grid grid-cols-2 gap-x-8 gap-y-5">
+
+          <div class="col-span-2">
+            <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-1">Descripción corta</span>
+            <p class="m-0 text-sm text-gray-800">{{ prod.description || '—' }}</p>
+          </div>
+
+          <div class="col-span-2">
+            <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-1">Descripción completa</span>
+            <p class="m-0 text-sm text-gray-500 leading-relaxed">{{ prod.fullDescription || '—' }}</p>
+          </div>
+
+          <div>
+            <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-1">Categoría</span>
+            <p class="m-0 text-sm text-gray-800">{{ getCategoryName(prod.categoryId) }}</p>
+          </div>
+
+          <div>
+            <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-1">Etiqueta</span>
+            <p class="m-0 text-sm text-gray-800">
+              @if (prod.label) {
+                <span class="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded-md">
+                  {{ prod.label }}
+                </span>
+              } @else { — }
+            </p>
+          </div>
+
+          <div>
+            <span class="block text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-1">Estado</span>
+            <p class="m-0">
+              @if (prod.active) {
+                <span class="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full">
+                  <i class="ti ti-circle-check text-sm" aria-hidden="true"></i> Activo
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 text-xs font-medium bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
+                  <i class="ti ti-circle-x text-sm" aria-hidden="true"></i> Inactivo
+                </span>
+              }
+            </p>
+          </div>
+
+        </div>
+
+      } @else {
+        <!-- Modo edición -->
+        <form class="flex flex-col gap-4" [formGroup]="form">
+
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold tracking-widest uppercase text-gray-400" for="f-name">Nombre</label>
+            <input id="f-name" type="text" formControlName="name"
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold tracking-widest uppercase text-gray-400" for="f-desc">Descripción corta</label>
+            <input id="f-desc" type="text" formControlName="description"
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold tracking-widest uppercase text-gray-400" for="f-fulldesc">Descripción completa</label>
+            <textarea id="f-fulldesc" formControlName="fullDescription" rows="4"
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-y focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-semibold tracking-widest uppercase text-gray-400" for="f-category">Categoría</label>
+              <select id="f-category" formControlName="categoryId"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition bg-white">
+                <option [ngValue]="null" disabled>Selecciona una categoría</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [ngValue]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-semibold tracking-widest uppercase text-gray-400" for="f-label">Etiqueta</label>
+              <input id="f-label" type="text" formControlName="label"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-[11px] font-semibold tracking-widest uppercase text-gray-400">Estado</span>
+            <label class="inline-flex items-center gap-2.5 cursor-pointer">
+              <div class="relative">
+                <input type="checkbox" formControlName="active" class="sr-only peer" />
+                <div class="w-10 h-[22px] bg-gray-200 rounded-full peer-checked:bg-blue-700 transition-colors"></div>
+                <div class="absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-[18px]"></div>
+              </div>
+              <span class="text-sm text-gray-600">
+                {{ form.get('active')?.value ? 'Activo' : 'Inactivo' }}
+              </span>
+            </label>
+          </div>
+
+        </form>
+      }
+
+    </div>
+  </div>
+
+} @else {
+  <div class="border border-gray-200 rounded-xl p-6 flex flex-col gap-3">
+    <div class="h-3.5 w-3/5 rounded-md bg-gray-100 animate-pulse"></div>
+    <div class="h-3.5 w-2/5 rounded-md bg-gray-100 animate-pulse"></div>
+    <div class="h-3.5 w-1/4 rounded-md bg-gray-100 animate-pulse"></div>
+  </div>
+}

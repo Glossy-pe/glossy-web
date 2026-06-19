@@ -67,9 +67,11 @@
     } @else {
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @for (product of items; track product.id) {
-          <div class="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
 
-            <!-- Imagen -->
+          <app-product-card [product]="product" />
+
+          <!-- <div class="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+
             <div class="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gray-100">
               @if (product.variants?.[0]?.images?.[0]?.url; as url) {
                 <img [src]="url" [alt]="product.name"
@@ -89,7 +91,6 @@
               }
             </div>
 
-            <!-- Info -->
             <div class="flex flex-1 flex-col p-4">
               <h2 class="mb-1 line-clamp-1 text-sm font-semibold text-gray-900">{{ product.name }}</h2>
               <p class="mb-4 flex-1 line-clamp-2 text-xs text-gray-500">{{ product.description }}</p>
@@ -99,7 +100,7 @@
               </button>
             </div>
 
-          </div>
+          </div> -->
         }
       </div>
 
@@ -136,59 +137,59 @@
   }
 
   <!-- Modal creación -->
-@if (showModal()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+  @if (showModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-    <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
+      <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
 
-      <div class="p-6 text-center">
+        <div class="p-6 text-center">
 
-        <div class="mb-4 text-5xl">📦</div>
+          <div class="mb-4 text-5xl">📦</div>
 
-        <h2 class="mb-2 text-xl font-semibold text-gray-900">
-          Crear producto
-        </h2>
+          <h2 class="mb-2 text-xl font-semibold text-gray-900">
+            Crear producto
+          </h2>
 
-        <p class="text-sm text-gray-600">
-          Se creará un nuevo producto vacío.
-        </p>
+          <p class="text-sm text-gray-600">
+            Se creará un nuevo producto vacío.
+          </p>
 
-        <p class="mt-1 text-sm text-gray-600">
-          Podrás completar su información más adelante.
-        </p>
+          <p class="mt-1 text-sm text-gray-600">
+            Podrás completar su información más adelante.
+          </p>
 
-        @if (createError()) {
-          <div class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-            {{ createError() }}
-          </div>
-        }
+          @if (createError()) {
+            <div class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {{ createError() }}
+            </div>
+          }
 
-      </div>
+        </div>
 
-      <div class="flex justify-center gap-3 border-t p-4">
+        <div class="flex justify-center gap-3 border-t p-4">
 
-        <button
-          type="button"
-          (click)="closeModal()"
-          class="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium"
-        >
-          Cancelar
-        </button>
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium"
+          >
+            Cancelar
+          </button>
 
-        <button
-          type="button"
-          (click)="saveProduct()"
-          [disabled]="isCreating()"
-          class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {{ isCreating() ? 'Creando...' : 'Confirmar' }}
-        </button>
+          <button
+            type="button"
+            (click)="saveProduct()"
+            [disabled]="isCreating()"
+            class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {{ isCreating() ? 'Creando...' : 'Confirmar' }}
+          </button>
+
+        </div>
 
       </div>
 
     </div>
-
-  </div>
-}
+  }
 
 </div>

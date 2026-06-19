@@ -31,7 +31,7 @@ export const routes: Routes = [
         loadComponent: () => import('./manager-features/variants/components/variant-form/variant-form').then(m => m.VariantForm)
       },
       {
-        path: 'products/:id/variants/:variantId/detail',
+        path: 'products/:id/variants/:variantId',
         loadComponent: () => import('./manager-features/variants/components/variant-detail/variant-detail').then(m => m.VariantDetail)
       },
       {

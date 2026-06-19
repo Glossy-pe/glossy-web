@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { VariantService } from '../../services/variant.service';
 import { VariantResponse } from '../../models/variant-response';
+import { VariantRequest } from '../../models/variant.request';
 
 @Component({
   selector: 'app-variant-list',
@@ -19,6 +20,15 @@ export class VariantList implements OnInit {
   hasError = signal(false);
   isDeleting = signal(false);
   variantToDelete = signal<VariantResponse | null>(null);
+
+  // ── Modal creación ───────────────────────────────────────────────
+    showModal   = signal(false);
+    isCreating  = signal(false);
+    createError = signal('');
+    createForm  = signal<VariantRequest>({
+      toneName: '', toneCode: '', cost: 0,
+      price: 0, stock: 0, position: 0, active: true, productId: this.productId,
+    });
 
   constructor(
     private variantService: VariantService,
@@ -45,16 +55,12 @@ export class VariantList implements OnInit {
       });
   }
 
-  goToCreate(): void {
-    this.router.navigate(['/manager/products', this.productId, 'variants', 'new']);
-  }
-
-  goToEdit(variantId: number): void {
-    this.router.navigate(['/manager/products', this.productId, 'variants', variantId, 'edit']);
-  }
+  // goToCreate(): void {
+  //   this.router.navigate(['/manager/products', this.productId, 'variants', 'new']);
+  // }
 
   goToDetail(variantId: number): void {
-    this.router.navigate(['/manager/products', this.productId, 'variants', variantId, 'detail']);
+    this.router.navigate(['/manager/products', this.productId, 'variants', variantId]);
   }
 
   openDeleteConfirm(variant: VariantResponse): void {
@@ -82,4 +88,37 @@ export class VariantList implements OnInit {
         error: (err) => console.error(err),
       });
   }
+
+
+  // ── Modal ────────────────────────────────────────────────────────
+    openModal(): void {
+      this.createForm.set({
+        toneName: 'DEFAULT', toneCode: 'DEFAULT', cost: 0,
+        price: 0, stock: 0, position: 0, active: true, productId: this.productId
+      });
+      this.createError.set('');
+      this.showModal.set(true);
+    }
+  
+    closeModal(): void {
+      this.showModal.set(false);
+    }
+  
+    saveVariant(): void {
+      this.isCreating.set(true);
+      this.createError.set('');
+      this.variantService.create(this.createForm())
+        .pipe(finalize(() => this.isCreating.set(false)))
+        .subscribe({
+          next: res => { this.closeModal(); this.goToDetail(res.id); },
+          error: err => {
+            console.error(err);
+            this.createError.set('No se pudo crear la variante. Intenta nuevamente.');
+          },
+        });
+    }
+  
+    patchForm(patch: Partial<VariantRequest>): void {
+      this.createForm.update(v => ({ ...v, ...patch }));
+    }
 }
