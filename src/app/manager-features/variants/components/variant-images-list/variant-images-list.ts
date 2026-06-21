@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, signal, ViewChild } from '@angular/core';
+import { Component, computed, ElementRef, HostListener, Input, signal, ViewChild } from '@angular/core';
 import { VariantImageResponse } from '../../models/variant-image-response.model';
 import { VariantImageService } from '../../services/variant-image.service';
 
@@ -10,7 +10,7 @@ import { VariantImageService } from '../../services/variant-image.service';
 })
 export class VariantImagesList {
   @Input({ required: true }) variantId!: number;
-  @ViewChild('dropZone') dropZoneRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('lightboxVideo') lightboxVideoRef?: ElementRef<HTMLVideoElement>;
 
   images = signal<VariantImageResponse[]>([]);
   confirmDeleteImage = signal<VariantImageResponse | null>(null);
@@ -19,22 +19,28 @@ export class VariantImagesList {
   uploading = signal(false);
   successMessage = signal<string | null>(null);
   isDragOver = signal(false);
+  lightboxIndex = signal<number | null>(null);
+
+  isVideoFile = computed(() => this.previewFile()?.type.startsWith('video/') ?? false);
+  lightboxCurrent = computed(() => {
+    const idx = this.lightboxIndex();
+    return idx !== null ? this.images()[idx] : null;
+  });
 
   private successTimer: any;
 
-  constructor(private imageService: VariantImageService) {}
+  constructor(private variantImageService: VariantImageService) {}
 
   ngOnInit(): void {
     this.load();
   }
 
-  // Escucha paste global en el documento
   @HostListener('document:paste', ['$event'])
   onPaste(event: ClipboardEvent): void {
     const items = event.clipboardData?.items;
     if (!items) return;
     for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/')) {
+      if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
         const file = item.getAsFile();
         if (file) this.setPreview(file);
         break;
@@ -42,8 +48,16 @@ export class VariantImagesList {
     }
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (this.lightboxIndex() === null) return;
+    if (event.key === 'ArrowLeft') this.lightboxPrev();
+    if (event.key === 'ArrowRight') this.lightboxNext();
+    if (event.key === 'Escape') this.closeLightbox();
+  }
+
   load(): void {
-    this.imageService.getByVariantId(this.variantId).subscribe(res => {
+    this.variantImageService.getByVariantId(this.variantId).subscribe(res => {
       this.images.set(this.sortImages(res));
     });
   }
@@ -69,7 +83,7 @@ export class VariantImagesList {
     event.preventDefault();
     this.isDragOver.set(false);
     const file = event.dataTransfer?.files?.[0];
-    if (file && file.type.startsWith('image/')) this.setPreview(file);
+    if (file) this.setPreview(file);
   }
 
   private setPreview(file: File): void {
@@ -95,20 +109,54 @@ export class VariantImagesList {
     const nextPosition = this.images().length + 1;
     const isFirst = this.images().length === 0;
 
-    this.imageService.uploadAndCreate(file, this.variantId, nextPosition, isFirst).subscribe({
+    this.variantImageService.uploadAndCreate(file, this.variantId, nextPosition, isFirst).subscribe({
       next: newImage => {
         this.images.update(imgs => this.sortImages([...imgs, newImage]));
         this.uploading.set(false);
         this.cancelPreview();
-        this.showSuccess('Imagen subida exitosamente');
+        this.showSuccess('Archivo subido exitosamente');
       },
       error: () => this.uploading.set(false),
     });
   }
 
+  // Lightbox
+  openLightbox(img: VariantImageResponse): void {
+    const idx = this.images().findIndex(i => i.id === img.id);
+    if (idx !== -1) this.lightboxIndex.set(idx);
+  }
+
+  closeLightbox(): void {
+    this.pauseVideo();
+    this.lightboxIndex.set(null);
+  }
+
+  lightboxPrev(): void {
+    const idx = this.lightboxIndex();
+    if (idx === null || idx === 0) return;
+    this.pauseVideo();
+    this.lightboxIndex.set(idx - 1);
+  }
+
+  lightboxNext(): void {
+    const idx = this.lightboxIndex();
+    if (idx === null || idx === this.images().length - 1) return;
+    this.pauseVideo();
+    this.lightboxIndex.set(idx + 1);
+  }
+
+  onLightboxKey(event: KeyboardEvent): void {
+    event.stopPropagation();
+  }
+
+  private pauseVideo(): void {
+    this.lightboxVideoRef?.nativeElement?.pause();
+  }
+
+  // Acciones
   setMain(image: VariantImageResponse): void {
     if (image.mainImage) return;
-    this.imageService.update(image.id, { ...image, mainImage: true }).subscribe(updated => {
+    this.variantImageService.update(image.id, { ...image, mainImage: true }).subscribe(updated => {
       this.images.update(imgs =>
         this.sortImages(imgs.map(i => ({ ...i, mainImage: i.id === updated.id })))
       );
@@ -132,18 +180,20 @@ export class VariantImagesList {
     this.images.set(this.sortImages(remaining));
     this.confirmDeleteImage.set(null);
 
-    this.imageService.delete(image.id).subscribe({
+    if (this.lightboxIndex() !== null) this.closeLightbox();
+
+    this.variantImageService.delete(image.id).subscribe({
       next: () => {
         const needsNewMain = image.mainImage && remaining.length > 0;
         if (needsNewMain) {
           const newMain = remaining[0];
-          this.imageService.update(newMain.id, { ...newMain, mainImage: true }).subscribe(updated => {
+          this.variantImageService.update(newMain.id, { ...newMain, mainImage: true }).subscribe(updated => {
             this.images.set(
               this.sortImages(remaining.map(i => ({ ...i, mainImage: i.id === updated.id })))
             );
           });
         }
-        this.showSuccess('Imagen eliminada');
+        this.showSuccess('Archivo eliminado');
       },
       error: () => this.images.update(imgs => this.sortImages([...imgs, image])),
     });

@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { OrderService } from '../../services/order.service';
 import { OrderResponseFull } from '../../models/order-response-full.model';
 import { OrderStatusResponse } from '../../models/order-status-response.model';
+import { PdfService } from '../../services/pdf.service';
 
 @Component({
   selector: 'app-order-main-detail',
@@ -27,6 +28,8 @@ export class OrderMainDetail {
   isEditing  = signal(false);
   showDeleteConfirm = signal(false);
 
+  isGeneratingPdf = signal(false);
+
   currentStatus = computed(() =>
     this.statuses().find(s => s.id === this.order()?.orderStatusId) ?? null
   );
@@ -37,6 +40,7 @@ export class OrderMainDetail {
     private route: ActivatedRoute,
     private router: Router,
     private orderService: OrderService,
+    private pdfService: PdfService,
     private fb: FormBuilder
   ) {}
 
@@ -45,6 +49,17 @@ export class OrderMainDetail {
     this.orderId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadStatuses();
     if (this.orderId) this.loadOrder();
+  }
+
+  async generatePdf(): Promise<void> {
+    this.isGeneratingPdf.set(true);
+    try {
+      await this.pdfService.generateProforma(this.orderId);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.isGeneratingPdf.set(false);
+    }
   }
 
   deleteConfirmInput = signal('');

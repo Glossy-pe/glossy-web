@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './manager-features/authentication/guards/auth.guard';
 
 export const routes: Routes = [
   // Rutas admin con layout y guard
   {
     path: 'manager',
-    // canActivate: [authGuard],          // ← descomenta cuando lo implementes
+    canActivate: [authGuard],          // ← descomenta cuando lo implementes
     loadComponent: () => import('./manager-features/layout/manager-layout/manager-layout').then(m => m.ManagerLayout),
     children: [
       { path: '', redirectTo: 'products', pathMatch: 'full' },
@@ -83,11 +84,14 @@ export const routes: Routes = [
   },
 
   // Rutas públicas (cuando las tengas)
-  // {
-  //   path: '',
-  //   loadComponent: () => import('./public-features/layout/public-layout/public-layout').then(m => m.PublicLayout),
-  //   children: [...]
-  // },
+  {
+    path: 'guest/products',
+    loadComponent: () => import('./public-features/products/components/product-list/product-list').then(m => m.ProductList),
+  },
+  {
+    path: 'guest/products/:id',
+    loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
+  },
 
-  { path: '**', redirectTo: 'manager/products' }
+  { path: '**', redirectTo: 'guest/products' }
 ];

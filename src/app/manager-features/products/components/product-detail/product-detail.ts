@@ -19,15 +19,6 @@ import { ProductMainDetail } from "../product-main-detail/product-main-detail";
 export class ProductDetail implements OnInit {
 
   product = signal<ProductResponse | null>(null);
-  // form = signal<ProductRequest>({
-  //   name: 'Nuevo producto',
-  //   description: 'Descripción breve del producto',
-  //   fullDescription: 'Descripción completa del producto...',
-  //   label: 'Nuevo',
-  //   active: false,
-  //   categoryId: 0,
-  // });
-  
 
   private productId = 0;
 

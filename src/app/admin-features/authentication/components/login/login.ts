@@ -45,11 +45,8 @@ export class Login {
       password: this.password()
     }).subscribe({
       next: (response: any) => {
-        // Login exitoso
         localStorage.setItem('user', JSON.stringify(response));
-        
-        // Redirigir a home
-        this.router.navigate(['/admin/products']);
+        this.router.navigate(['/manager/orders']); // o '/manager/products', el que prefieras como home
       },  
       error: (error) => {
         // Error de autenticación

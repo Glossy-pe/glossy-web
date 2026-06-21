@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -123,5 +123,30 @@ export class ProductList implements OnInit, OnDestroy {
 
   patchForm(patch: Partial<ProductRequest>): void {
     this.createForm.update(v => ({ ...v, ...patch }));
+  }
+
+  pages = computed<number[]>(() => {
+    const total = this.pageData()?.totalPages ?? 0;
+    const current = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+
+    const result: number[] = [0];
+    const start = Math.max(1, current - 1);
+    const end = Math.min(total - 2, current + 1);
+
+    if (start > 1) result.push(-1); // -1 = elipsis
+    for (let i = start; i <= end; i++) result.push(i);
+    if (end < total - 2) result.push(-1);
+
+    result.push(total - 1);
+    return result;
+  });
+
+  onProductDeleted(id: number): void {
+    this.pageData.update(pd =>
+      pd ? { ...pd, content: pd.content.filter(p => p.id !== id), totalElements: pd.totalElements - 1 } : pd
+    );
+    // Si también puede estar en modo búsqueda:
+    this.searchResults.update(items => items.filter(p => p.id !== id));
   }
 }

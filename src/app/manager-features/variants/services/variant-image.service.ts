@@ -9,9 +9,8 @@ import { VariantImageRequest } from '../models/variant-image-request.model';
 export class VariantImageService {
 
   private readonly backendUrl = `${environment.apiUrl}/api/manager/variant-images`;
-  private readonly cloudName = environment.cloudinaryCloudName;
-  private readonly uploadPreset = environment.cloudinaryUploadPreset;
-  private readonly cloudinaryUrl = `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`;
+  private readonly cloudName = environment.cloudinaryCloudName; // 'dqyqtgkdk'
+  private readonly uploadPreset = environment.cloudinaryUploadPreset; // 'glossy_upload_preset'
 
   constructor(private http: HttpClient) {}
 

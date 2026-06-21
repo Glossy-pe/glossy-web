@@ -1,14 +1,32 @@
 @if (order(); as ord) {
 
+<div class="mb-6 flex items-center justify-between">
+  <button (click)="goBack()" class="flex items-center gap-2 text-sm text-gray-500 transition hover:text-gray-900">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Volver al listado
+  </button>
+
+  <button
+    (click)="generatePdf()"
+    [disabled]="isGeneratingPdf() || !order()"
+    class="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+  >
+    @if (isGeneratingPdf()) {
+      Generando...
+    } @else {
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H8a2 2 0 01-2-2V5a2 2 0 012-2h4l6 6v9a2 2 0 01-2 2z" />
+      </svg>
+      Generar Proforma
+    }
+  </button>
+</div>
+
 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
     <!-- Back -->
-    <button (click)="goBack()"
-        class="mb-6 flex items-center gap-2 text-sm text-gray-500 transition hover:text-gray-900">
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Volver al listado
-    </button>
+
 
     <!-- Loading -->
     @if (isLoading()) {
@@ -228,9 +246,9 @@
 </div>
 
 } @else {
-  <div class="border border-gray-200 rounded-xl p-6 flex flex-col gap-3">
+<div class="border border-gray-200 rounded-xl p-6 flex flex-col gap-3">
     <div class="h-3.5 w-3/5 rounded-md bg-gray-100 animate-pulse"></div>
     <div class="h-3.5 w-2/5 rounded-md bg-gray-100 animate-pulse"></div>
     <div class="h-3.5 w-1/4 rounded-md bg-gray-100 animate-pulse"></div>
-  </div>
+</div>
 }

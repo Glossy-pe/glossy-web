@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -38,6 +38,16 @@ export class VariantList implements OnInit {
   ngOnInit(): void {
     this.loadVariants();
   }
+
+  sortedVariants = computed(() =>
+    [...this.variants()].sort((a, b) => {
+      // sin posición asignada → al final (no usar `?? 0`,
+      // porque pisaría a las que sí tienen position === 0)
+      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+      return posA - posB;
+    })
+  );
 
   loadVariants(): void {
     this.isLoading.set(true);

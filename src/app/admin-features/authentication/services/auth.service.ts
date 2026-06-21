@@ -30,15 +30,10 @@ export class AuthService {
   }
 
   logout() {
-    // Limpiar localStorage
     localStorage.removeItem('user');
-    
-    // Actualizar signals
     this.isAuthenticated.set(false);
     this.currentUser.set(null);
-    
-    // Redirigir a login
-    this.router.navigate(['/admin/login']);
+    this.router.navigate(['/manager/login']);
   }
 
   getUsername(): string {

@@ -16,9 +16,10 @@
 export default {
   content: ["./src/**/*.{html,js}"],
   theme: {
-    extend: {
-            fontFamily: {
-        serif: ['"Playfair Display"', 'serif'],
+  extend: {
+      fontFamily: {
+        display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+        sans: ['Pretendard', 'system-ui', 'sans-serif'], // reemplaza el sans-serif default de TODA la app
       },
     },
   },

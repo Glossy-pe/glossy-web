@@ -1,0 +1,160 @@
+<div class="min-h-screen bg-[#FFFDF9]">
+
+  <div class="mb-6 flex items-center justify-between border-b-2 border-dashed border-[#FFDDE4] p-4">
+    <div>
+      <h1 class="text-2xl font-black uppercase tracking-tighter text-gray-800">
+        Productos <span class="text-[#FF8DA1]">✨</span>
+      </h1>
+      <p class="mt-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+        @if (isSearching()) {
+          {{ searchResults().length }} resultado(s) para "{{ query() }}"
+        } @else if (pageData()) {
+          {{ pageData()!.totalElements }} productos
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="relative mb-6 px-2">
+    <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#49B6D6]"
+      fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+
+    <input type="text" [ngModel]="query()" (ngModelChange)="onQueryChange($event)"
+      placeholder="BUSCAR PRODUCTOS..."
+      class="w-full border-2 border-[#F0FAFF] bg-white py-3.5 pl-11 pr-10 text-xs font-bold uppercase tracking-wider text-gray-700 shadow-[4px_4px_0px_#F0FAFF]
+            outline-none transition-all focus:border-[#FF8DA1] focus:shadow-[4px_4px_0px_#FFDDE4] placeholder:text-gray-300"/>
+
+    @if (query()) {
+      <button type="button" (click)="onQueryChange('')" aria-label="Limpiar búsqueda"
+        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-[#FF8DA1]">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    }
+  </div>
+
+
+  @if (categories().length > 0) {
+  <div class="mb-6 flex gap-2 overflow-x-auto px-2 pb-1">
+      <button type="button" (click)="selectCategory(null)"
+        class="shrink-0 border-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer"
+        [class]="selectedCategoryId() === null
+          ? 'border-[#FF8DA1] bg-[#FF8DA1] text-white'
+          : 'border-[#F0FAFF] bg-white text-gray-700 hover:bg-[#F0FAFF]'">
+        Todas
+      </button>
+
+      @for (cat of categories(); track cat.id) {
+        <button type="button" (click)="selectCategory(cat.id)"
+          class="shrink-0 border-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer"
+          [class]="selectedCategoryId() === cat.id
+            ? 'border-[#FF8DA1] bg-[#FF8DA1] text-white'
+            : 'border-[#F0FAFF] bg-white text-gray-700 hover:bg-[#F0FAFF]'">
+          {{ cat.name }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div role="status" aria-live="polite" class="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <span class="sr-only">Cargando productos…</span>
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="animate-pulse border-2 border-[#F0FAFF] bg-white p-4">
+          <div class="aspect-[3/4] w-full bg-[#FFFDF9] border border-gray-100"></div>
+          <div class="pt-4">
+            <div class="mb-2 h-2.5 w-1/3 bg-[#E5F9FF]"></div>
+            <div class="mb-2 h-4 w-3/4 bg-gray-200"></div>
+            <div class="mb-1 h-3 w-full bg-gray-100"></div>
+            <div class="mb-4 h-3 w-2/3 bg-gray-100"></div>
+            <div class="mt-4 flex items-center justify-between pt-3 border-t border-[#F0FAFF]">
+              <div class="h-4 w-16 bg-[#FFDDE4]"></div>
+              <div class="h-8 w-8 bg-[#F0FAFF]"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!isLoading() && hasError()) {
+    <div role="alert" class="flex flex-col items-center justify-center border-2 border-[#FFDDE4] bg-white py-20 text-center shadow-[6px_6px_0px_#FFDDE4]">
+      <svg class="mb-3 h-10 w-10 text-[#FF8DA1]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+      </svg>
+      <p class="text-xs font-black uppercase tracking-widest text-gray-800">Ocurrió un error al cargar</p>
+      <p class="mt-1 text-[11px] font-bold text-gray-400">Verifica tu conexión de internet</p>
+      <button (click)="loadPage(currentPage())"
+        class="mt-5 bg-[#49B6D6] px-5 py-2 text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-gray-800 cursor-pointer">
+        Reintentar 🔄
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !hasError()) {
+    @let items = isSearching() ? searchResults() : (pageData()?.content ?? []);
+
+    @if (items.length === 0) {
+      <div class="flex flex-col items-center justify-center border-2 border-[#F0FAFF] bg-white py-20 text-center shadow-[6px_6px_0px_#F0FAFF]">
+        <svg class="mb-3 h-10 w-10 text-[#A7E9FF]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          @if (isSearching()) {
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          } @else {
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9l-8.25 4.5m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9l8.25 4.5" />
+          }
+        </svg>
+        <p class="text-xs font-black uppercase tracking-widest text-gray-700">
+          {{ isSearching() ? 'Sin resultados coreanos' : 'Colección vacía' }}
+        </p>
+        @if (isSearching()) {
+          <p class="mt-1 text-[11px] font-bold text-gray-400">Prueba ajustando el término de búsqueda</p>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-cols-2 gap-1 auto-rows-fr sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+        @for (product of items; track product.id) {
+          <app-product-card [product]="product" />
+        }
+      </div>
+
+      @if (!isSearching() && pageData()!.totalPages > 1) {
+        <div class="mt-10 flex items-center justify-center gap-1.5">
+          
+          <button (click)="loadPage(currentPage() - 1)" [disabled]="pageData()!.first"
+            class="border-2 border-[#F0FAFF] bg-white px-3 py-2 text-xs font-black uppercase tracking-widest text-gray-700
+                   transition-colors hover:bg-[#F0FAFF] disabled:cursor-not-allowed disabled:opacity-30">
+            Prev
+          </button>
+
+          @for (p of pages(); track $index) {
+            @if (p === -1) {
+              <span class="px-2 font-black text-gray-300">...</span>
+            } @else {
+              <button (click)="loadPage(p)"
+                class="min-w-[2.25rem] border-2 px-3 py-2 text-xs font-black transition-colors"
+                [class]="p === currentPage()
+                  ? 'border-[#FF8DA1] bg-[#FF8DA1] text-white'
+                  : 'border-[#F0FAFF] bg-white text-gray-700 hover:bg-[#F0FAFF]'">
+                {{ p + 1 }}
+              </button>
+            }
+          }
+
+          <button (click)="loadPage(currentPage() + 1)" [disabled]="pageData()!.last"
+            class="border-2 border-[#F0FAFF] bg-white px-3 py-2 text-xs font-black uppercase tracking-widest text-gray-700
+                   transition-colors hover:bg-[#F0FAFF] disabled:cursor-not-allowed disabled:opacity-30">
+            Next
+          </button>
+        </div>
+        
+        <p class="mt-3 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">
+          [ {{ currentPage() + 1 }} / {{ pageData()!.totalPages }} ]
+        </p>
+      }
+    }
+  }
+
+</div>

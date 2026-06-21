@@ -1,0 +1,139 @@
+<div
+  class="group relative flex h-full flex-col border-2 border-[#DDF4FF] bg-white p-4
+         shadow-[6px_6px_0px_#F0FAFF]"
+  [class.opacity-60]="!product.active">
+
+  @let stock = product.variants?.[0]?.stock ?? 0;
+  @let variantCount = product.variants?.length ?? 0;
+
+  <!-- ==================== CONTENEDOR DE IMAGEN: ESTILO RECTANGULAR K-BEAUTY ==================== -->
+  <div class="relative aspect-square overflow-hidden bg-[#FFFDF9] cursor-pointer"
+       (click)="goToDetail(product.id)">
+    
+    @if (mainImageUrl; as url) {
+      <img [src]="url" [alt]="product.name"
+        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+    } @else {
+      <div class="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#FFFDF9]">
+        <svg class="h-6 w-6 text-[#FF8DA1] opacity-70 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l2.4 6.4L20.8 10.8l-6.4 2.4L12 22l-2.4-6.4-6.4-2.4 6.4-2.4z"/>
+        </svg>
+        <span class="text-[9px] font-black tracking-widest text-[#FF8DA1] uppercase">Coming Soon ✨</span>
+      </div>
+    }
+
+    <!-- Badges Flotantes Estilo Bloque / Sombra Rígida -->
+    <div class="absolute left-0 top-0 z-20 flex flex-col gap-1">
+      @if (stock <= 0) {
+        <span class="bg-[#49B6D6] px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#E5F9FF]">
+          Sold Out
+        </span>
+      } @else if (stock < 5) {
+        <span class="bg-[#FF8DA1] px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#FFDDE4]">
+          Hot {{ stock }} ud. ✨
+        </span>
+      }
+    </div>
+
+    <!-- Etiqueta de Tipo de Producto Estilo Revista -->
+    @if (product.label) {
+      <span class="absolute right-0 bottom-0 bg-white/90 border-l border-t border-[#F0FAFF] px-2.5 py-1 text-[8px] font-black tracking-widest text-gray-500 uppercase">
+        {{ product.label }}
+      </span>
+    }
+
+    <!-- Overlay de color sutil en Hover -->
+    <div class="absolute inset-0 bg-[#FF8DA1]/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"></div>
+  </div>
+
+  <!-- ==================== DETALLES DEL PRODUCTO ==================== -->
+  <div class="flex flex-1 flex-col pt-2">
+    <div class="mb-2 flex-1">
+      
+      <!-- Categoría / Badge de Edición -->
+      <!-- <p class="text-[9px] font-black text-[#A7E9FF] uppercase tracking-[0.2em] mb-1">
+        @if (variantCount > 1) {
+          {{ variantCount }} Shades Available
+        } @else {
+          K-Beauty Edition
+        }
+      </p> -->
+      
+      <!-- Título del Producto (Mayúsculas e interlineado apretado) -->
+      <h3 class="cursor-pointer text-xs sm:text-sm font-black uppercase leading-tight text-gray-800 tracking-tighter transition-colors hover:text-[#FF8DA1] line-clamp-2"
+          [title]="product.name"
+          (click)="goToDetail(product.id)">
+        {{ product.name }}
+      </h3>
+      
+      <!-- Descripción con corte limpio -->
+      <p class="truncate text-[11px] text-gray-400">
+        {{ product.description }}
+      </p>
+    </div>
+
+    <!-- ==================== PRECIO Y VARIANTES (PALETA ARTÍSTICA) ==================== -->
+    <div class="mt-auto flex items-center justify-between border-t border-[#F0FAFF]">
+      
+      <!-- Render dinámico de los cuadritos de variantes (Colores/Tonos) -->
+      <!-- @if (variantCount > 0 && product.variants) {
+        <div class="flex -space-x-1">
+          @for (variant of product.variants.slice(0, 4); track variant.id) {
+            <div class="w-4 h-4 border border-white shadow-xs"
+                 [style.background-color]="variant.toneCode || '#E5E7EB'"
+                 [title]="variant.toneName">
+            </div>
+          }
+          @if (variantCount > 4) {
+            <div class="w-4 h-4 bg-gray-50 flex items-center justify-center border border-white">
+              <span class="text-[7px] font-bold text-gray-400">+</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">
+          Stock: {{ stock }}
+        </span>
+      } -->
+
+      <!-- Contenedor de Precio Líquido -->
+      <div class="flex flex-col text-right">
+        <span class="text-sm sm:text-base font-black text-[#FF8DA1]">
+          {{ product.variants?.[0]?.price != null ? (product.variants[0].price | currency:'PEN':'symbol-narrow') : 'S/ --' }}
+        </span>
+      </div>
+
+
+      <button type="button"
+        (click)="goToDetail(product.id)"
+        class="w-8 h-8 bg-[#F0FAFF] text-[#49B6D6] hover:bg-[#49B6D6] hover:text-white transition-colors flex items-center justify-center cursor-pointer ml-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- ==================== ACCIÓN PRINCIPAL (BOTÓN ICONO RETRO) ==================== -->
+    <!-- <div class="mt-3 flex items-center justify-between gap-2">
+      <div class="flex flex-col">
+        @if (!product.active) {
+          <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5">Oculto</span>
+        }
+        @if (deleteError()) {
+          <span class="text-[9px] font-bold text-rose-400 leading-none">{{ deleteError() }}</span>
+        }
+      </div>
+
+      <button type="button"
+        (click)="goToDetail(product.id)"
+        class="w-8 h-8 bg-[#F0FAFF] text-[#49B6D6] hover:bg-[#49B6D6] hover:text-white transition-colors flex items-center justify-center cursor-pointer ml-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+    </div> -->
+  </div>
+
+  <!-- Línea decorativa inferior animada en Hover -->
+  <div class="absolute bottom-0 left-0 w-full h-1 bg-[#FF8DA1] scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
+</div>
