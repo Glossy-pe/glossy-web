@@ -4,4 +4,6 @@ export const environment = {
   apiImageServer: 'https://glossy-image-server.mimarca.pe',
   apiOAuth2Server: 'https://glossy-oauth2-server.mimarca.pe',
   wsUrl: 'wss://glossy-backend-server.mimarca.pe/ws', // 👈 mismo dominio del backend, wss://
+  cloudinaryCloudName: 'dqyqtgkdk',
+  cloudinaryUploadPreset: 'glossy_upload_preset',
 };
