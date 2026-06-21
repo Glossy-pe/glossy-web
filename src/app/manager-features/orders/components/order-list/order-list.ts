@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { OrderService } from '../../services/order.service';
 import { PageResponse } from '../../../../../shared/models/page-response.model';
@@ -10,7 +10,7 @@ import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-order-list',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './order-list.html',
   styleUrl: './order-list.scss',
 })
@@ -27,7 +27,7 @@ export class OrderList implements OnInit {
   readonly pageSize = 10;
 
   statuses = signal<OrderStatusResponse[]>([]);          // 👈
-  selectedStatusId = signal<number | undefined>(undefined); // 👈
+  selectedStatusId = signal<number | undefined>(2);
 
   isPaid = signal<boolean | undefined>(undefined);
   isSeparated = signal<boolean | undefined>(undefined);

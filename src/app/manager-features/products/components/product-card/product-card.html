@@ -2,12 +2,12 @@
   class="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md"
   [class.opacity-60]="!product.active">
 
-  @let stock = product.variants?.[0]?.stock ?? 0;
+  @let stock = getTotalStock(product);
   @let variantCount = product.variants?.length ?? 0;
 
   <!-- Cabecera: Imagen -->
   <div class="relative aspect-[16/10] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
-    @if (product.variants?.[0]?.images?.[0]?.url; as url) {
+    @if (mainImageUrl; as url) {
     <img [src]="url" [alt]="product.name"
       class="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.04]" />
     } @else {
@@ -55,9 +55,16 @@
         <span class="text-[10px] text-gray-400">{{ variantCount }} variantes</span>
         }
       </div>
-      <h3 class="mb-1 line-clamp-1 text-sm font-bold text-gray-900" [title]="product.name">
-        {{ product.name }}
-      </h3>
+      <h3 class="mb-1 line-clamp-1 text-sm font-bold text-gray-900">
+  <a
+    [href]="'/manager/products/' + product.id"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="mb-1 line-clamp-1 block text-sm font-bold text-gray-900 hover:underline"
+    [title]="product.name">
+    {{ product.name }}
+  </a>
+</h3>
       <p class="line-clamp-2 text-xs leading-normal text-gray-500">
         {{ product.description }}
       </p>

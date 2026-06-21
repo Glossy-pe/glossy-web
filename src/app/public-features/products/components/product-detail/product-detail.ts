@@ -6,6 +6,7 @@ import { CategoryService } from '../../../categories/services/category.service';
 import { CategoryResponse } from '../../../categories/models/category-response.model';
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
+import { Location } from '@angular/common';
 
 interface GalleryImage {
   url: string;
@@ -49,6 +50,7 @@ export class ProductDetail {
     private router: Router,
     private productService: ProductService,
     private categoryService: CategoryService,
+    private location: Location,
   ) {}
 
   ngOnInit(): void {
@@ -254,6 +256,6 @@ export class ProductDetail {
   }
 
   goBack(): void {
-    this.router.navigate(['/guest/products']);
+    this.location.back(); // 👈 en vez de this.router.navigate(['/guest/products'])
   }
 }

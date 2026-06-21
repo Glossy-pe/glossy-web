@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, EMPTY, finalize, Subject, switchMap } from 'rxjs';
 import { ProductService } from '../../services/product.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CategoryResponse } from '../../../categories/models/category-response.model';
 import { CategoryService } from '../../../categories/services/category.service';
 
@@ -29,10 +29,9 @@ export class ProductList {
   isLoading  = signal(false);
   hasError   = signal(false);
 
-  // ── Nuevo: categorías ───────────────────────────────────────────
+  // ── Categorías ───────────────────────────────────────────
   categories         = signal<CategoryResponse[]>([]);
   selectedCategoryId = signal<number | null>(null);
-
 
   private search$ = new Subject<{ query: string; categoryId: number | null }>();
 
@@ -40,42 +39,81 @@ export class ProductList {
     private productService: ProductService,
     private categoryService: CategoryService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.loadPage(0);
-
     this.categoryService.getAll().subscribe({
       next: cats => this.categories.set(cats),
       error: err => console.error('Error cargando categorías', err),
     });
 
+    // 👇 Leer estado inicial desde la URL
+    const qp = this.route.snapshot.queryParamMap;
+    const initialPage = Number(qp.get('page') ?? 0);
+    const initialQuery = qp.get('q') ?? '';
+    const initialCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
+
+    this.currentPage.set(initialPage);
+    this.query.set(initialQuery);
+    this.selectedCategoryId.set(initialCategoryId);
+
     this.search$.pipe(
-    debounceTime(400),
-    distinctUntilChanged((a, b) => a.query === b.query && a.categoryId === b.categoryId),
-    switchMap(({ query, categoryId }) => {
-      if (!query.trim()) {
-        this.isSearching.set(false);
-        this.searchResults.set([]);
-        return EMPTY;
-      }
+      debounceTime(400),
+      distinctUntilChanged((a, b) => a.query === b.query && a.categoryId === b.categoryId),
+      switchMap(({ query, categoryId }) => {
+        if (!query.trim()) {
+          this.isSearching.set(false);
+          this.searchResults.set([]);
+          this.syncUrl();
+          return EMPTY;
+        }
+        this.isSearching.set(true);
+        this.isLoading.set(true);
+        this.syncUrl();
+        return this.productService.search(query, categoryId ?? undefined).pipe(
+          finalize(() => this.isLoading.set(false))
+        );
+      }),
+    ).subscribe({
+      next: results => this.searchResults.set(results),
+      error: err => { console.error(err); this.hasError.set(true); },
+    });
+
+    // 👇 Carga inicial respetando el estado de la URL
+    if (initialQuery.trim()) {
       this.isSearching.set(true);
       this.isLoading.set(true);
-      return this.productService.search(query, categoryId ?? undefined).pipe(
-        finalize(() => this.isLoading.set(false))
-      );
-    }),
-  ).subscribe({
-    next: results => this.searchResults.set(results),
-    error: err => { console.error(err); this.hasError.set(true); },
-  });
+      this.productService.search(initialQuery, initialCategoryId ?? undefined)
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: results => this.searchResults.set(results),
+          error: err => { console.error(err); this.hasError.set(true); },
+        });
+    } else {
+      this.loadPage(initialPage);
+    }
   }
 
   ngOnDestroy(): void {
     this.search$.complete();
   }
 
-  // ── Nuevo: selección de categoría ───────────────────────────────
+  // 👇 Nuevo: sincroniza la URL con el estado actual
+  private syncUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        page: this.currentPage(),
+        q: this.query() || null,
+        categoryId: this.selectedCategoryId() ?? null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  // ── Selección de categoría ───────────────────────────────
   selectCategory(categoryId: number | null): void {
     if (this.selectedCategoryId() === categoryId) return;
     this.selectedCategoryId.set(categoryId);
@@ -99,12 +137,14 @@ export class ProductList {
     this.productService.getAllProducts(page, this.pageSize, this.selectedCategoryId() ?? undefined)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: data => { this.pageData.set(data); this.currentPage.set(page); },
+        next: data => {
+          this.pageData.set(data);
+          this.currentPage.set(page);
+          this.syncUrl(); // 👈
+        },
         error: err => { console.error(err); this.hasError.set(true); },
       });
   }
-
-  // ── Modal ────────────────────────────────────────────────────────
 
   pages = computed<number[]>(() => {
     const total = this.pageData()?.totalPages ?? 0;
@@ -122,5 +162,4 @@ export class ProductList {
     result.push(total - 1);
     return result;
   });
-
 }

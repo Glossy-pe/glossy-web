@@ -2,13 +2,13 @@ import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ProductResponseFull } from '../../models/product-response-full.model';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './product-card.html',
   styleUrl: './product-card.scss',
 })
@@ -28,6 +28,17 @@ export class ProductCard {
 
   goToDetail(id: number): void {
     this.router.navigate(['/manager/products', id]);
+  }
+
+  get mainImageUrl(): string | null {
+    const images = this.product?.images ?? [];
+    if (images.length === 0) return null;
+
+    return images.find(img => img.mainImage)?.url ?? images[0].url;
+  }
+
+  getTotalStock(product: ProductResponseFull): number {
+    return (product.variants ?? []).reduce((sum, v) => sum + (v.stock ?? 0), 0);
   }
 
   requestDelete(): void {
