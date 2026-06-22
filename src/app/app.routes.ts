@@ -92,6 +92,10 @@ export const routes: Routes = [
     path: 'guest/products/:id',
     loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
   },
+  {
+    path: 'orders/:token',
+    loadComponent: () => import('./public-features/orders/components/order-detail/order-detail').then(m => m.OrderDetail)
+  },
 
   { path: '**', redirectTo: 'guest/products' }
 ];

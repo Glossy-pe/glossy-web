@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
@@ -17,6 +17,7 @@ import { Subject } from 'rxjs';
 export class OrderList implements OnInit {
 
   private searchSubject = new Subject<string>();
+  @ViewChild('statusSelect') statusSelect!: ElementRef<HTMLSelectElement>;
 
   search = signal('');
   page = signal<PageResponse<OrderResponseFull> | null>(null);
@@ -25,6 +26,8 @@ export class OrderList implements OnInit {
   isCreating = signal(false);
   currentPage = signal(0);
   readonly pageSize = 10;
+  showCreateConfirm = signal(false);
+  newCustomerName = signal('');
 
   statuses = signal<OrderStatusResponse[]>([]);          // 👈
   selectedStatusId = signal<number | undefined>(2);
@@ -107,14 +110,19 @@ export class OrderList implements OnInit {
   createDefault(): void {
     this.isCreating.set(true);
 
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
     this.orderService
       .create({
         customerName: 'DEFAULT',
         customerAddress: 'NA',
+        description: 'NA',
         orderCode: '',
         orderStatusId: 1,
         costTotal: 0,
         total: 0,
+        expiresAt: expiresAt.toISOString(),
       })
       .pipe(finalize(() => this.isCreating.set(false)))
       .subscribe({
@@ -143,6 +151,54 @@ export class OrderList implements OnInit {
   }
 
   onSearch(value: string): void {
+    this.selectedStatusId.set(undefined);
+    // this.isPaid.set(undefined);
+    // this.isSeparated.set(undefined);
+    // this.isPacked.set(undefined);
+    if (this.statusSelect) {
+      this.statusSelect.nativeElement.value = '';
+    }
     this.searchSubject.next(value.trim());
   }
+
+
+  confirmCreate(): void {
+    this.showCreateConfirm.set(true);
+    this.newCustomerName.set('');
+  }
+
+  cancelCreate(): void {
+    this.showCreateConfirm.set(false);
+  }
+
+  confirmAndCreate(): void {
+    const name = this.newCustomerName().trim();
+    if (!name) return;
+    this.showCreateConfirm.set(false);
+    this.createDefaultWithName(name);
+  }
+
+  createDefaultWithName(customerName: string): void {
+  this.isCreating.set(true);
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
+  this.orderService
+    .create({
+      customerName,
+      customerAddress: 'NA',
+      description: 'NA',
+      orderCode: '',
+      orderStatusId: 1,
+      costTotal: 0,
+      total: 0,
+      expiresAt: expiresAt.toISOString(),
+    })
+    .pipe(finalize(() => this.isCreating.set(false)))
+    .subscribe({
+      next: (order) => this.router.navigate(['/manager/orders', order.id]),
+      error: (err) => console.error(err),
+    });
+}
 }

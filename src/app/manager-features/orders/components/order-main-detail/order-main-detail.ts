@@ -66,9 +66,12 @@ export class OrderMainDetail {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      customerName:    ['', Validators.required],
+      customerName: ['', Validators.required],
       customerAddress: ['', Validators.required],
-      orderStatusId:   [null, Validators.required],
+      description: [''],
+      orderStatusId: [null, Validators.required],
+      expiresAt: [null],
+      publicToken: ['']
     });
   }
 
@@ -100,11 +103,18 @@ export class OrderMainDetail {
   startEdit(): void {
     const o = this.order();
     if (!o) return;
+
     this.form.patchValue({
-      customerName:    o.customerName,
+      customerName: o.customerName,
       customerAddress: o.customerAddress,
-      orderStatusId:   o.orderStatusId,
+      description: o.description,
+      orderStatusId: o.orderStatusId,
+      expiresAt: o.expiresAt
+        ? this.toDateTimeLocal(o.expiresAt)
+        : null,
+      publicToken: o.publicToken
     });
+
     this.isEditing.set(true);
   }
 
@@ -114,6 +124,13 @@ export class OrderMainDetail {
     this.orderService.getById(this.orderId).subscribe({
       next: o => this.order.set(o as OrderResponseFull),
     });
+  }
+
+  toDateTimeLocal(dateStr: string): string {
+    const d = new Date(dateStr);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   save(): void {

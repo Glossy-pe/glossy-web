@@ -29,6 +29,7 @@ export class OrderItemList implements OnInit {
   @Input({ required: true }) orderId!: number;
   @Output() itemsSaved = new EventEmitter<void>();
 
+  viewMode = signal<'simple' | 'detailed'>('simple');
 
   items = signal<EditableOrderItem[]>([]);
   originalItems: OrderItemResponseFull[] = [];
@@ -253,4 +254,18 @@ export class OrderItemList implements OnInit {
       })
     );
   }
+
+  toggleViewMode(): void {
+    this.viewMode.set(this.viewMode() === 'simple' ? 'detailed' : 'simple');
+  }
+
+  toggleSimpleField(item: EditableOrderItem, field: 'separatedQuantity' | 'packedQuantity' | 'paidQuantity'): void {
+  const isComplete = item[field] >= item.quantity;
+  item[field] = isComplete ? 0 : item.quantity;
+  if (field === 'paidQuantity') {
+    item.amountPaid = isComplete ? 0 : (item.unitPrice ?? 0) * item.quantity;
+  }
+  item.dirty = true;
+  this.items.update(items => [...items]);
+}
 }
