@@ -96,6 +96,6 @@ export const routes: Routes = [
     path: 'orders/:token',
     loadComponent: () => import('./public-features/orders/components/order-detail/order-detail').then(m => m.OrderDetail)
   },
-
+  { path: 'tracking-agencies', loadComponent: () => import('./public-features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },
   { path: '**', redirectTo: 'guest/products' }
 ];

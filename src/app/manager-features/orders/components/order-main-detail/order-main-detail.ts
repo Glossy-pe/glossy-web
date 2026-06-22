@@ -20,6 +20,8 @@ export class OrderMainDetail {
   
   order    = signal<OrderResponseFull | null>(null);
   statuses = signal<OrderStatusResponse[]>([]);
+  copied = signal(false);
+  
 
   isLoading  = signal(false);
   isDeleting = signal(false);
@@ -33,6 +35,16 @@ export class OrderMainDetail {
   currentStatus = computed(() =>
     this.statuses().find(s => s.id === this.order()?.orderStatusId) ?? null
   );
+
+  orderUrl = computed(() =>
+    `${window.location.origin}/orders/${this.order()!.publicToken}`
+  );
+
+  copyOrderUrl() {
+  navigator.clipboard.writeText(this.orderUrl());
+  this.copied.set(true);
+  setTimeout(() => this.copied.set(false), 2000);
+}
 
   form!: FormGroup;
 
@@ -173,4 +185,7 @@ export class OrderMainDetail {
 }
 
   goBack(): void { this.router.navigate(['/manager/orders']); }
+
+  
+
 }

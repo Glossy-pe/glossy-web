@@ -1,3 +1,4 @@
+import { ProductResponseFull } from "../../products/models/product-response-full.model";
 import { VariantResponseFull } from "../../variants/models/variant-response.full.mode";
 
 export interface OrderItemResponseFull {
@@ -11,6 +12,7 @@ export interface OrderItemResponseFull {
   amountPaid: number | null;
   unitPrice: number | null;
   variant: VariantResponseFull | null;
+  product: ProductResponseFull | null;
   createdAt: string | null;
   updatedAt: string | null;
 }

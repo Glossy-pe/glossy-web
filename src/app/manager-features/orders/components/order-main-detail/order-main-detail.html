@@ -136,10 +136,31 @@
 
             <div class="grid grid-cols-3 gap-4 py-3">
                 <span class="self-start pt-2 text-sm text-gray-400">Token Público</span>
-
                 <div class="col-span-2">
-                    <div class="rounded-lg bg-gray-50 px-3 py-2 font-mono text-sm text-gray-800">
-                        {{ order()!.publicToken }}
+                    <div class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
+                        <a [href]="orderUrl()" target="_blank"
+                            class="flex-1 truncate font-mono text-sm text-blue-600 hover:underline">
+                            {{ orderUrl() }}
+                        </a>
+                        <button (click)="copyOrderUrl()" class="shrink-0 transition-colors"
+                            [class]="copied() ? 'text-green-500' : 'text-gray-400 hover:text-gray-600'"
+                            title="Copiar URL">
+                            @if (copied()) {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span class="text-xs font-medium">Copiado</span>
+                            } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                            }
+                        </button>
                     </div>
                 </div>
             </div>
@@ -149,10 +170,7 @@
 
                 <div class="col-span-2">
                     @if (isEditing()) {
-                    <input
-                        type="datetime-local"
-                        [formControl]="$any(form.get('expiresAt'))"
-                        class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
+                    <input type="datetime-local" [formControl]="$any(form.get('expiresAt'))" class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none transition
                             focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
                         [class.border-red-300]="isInvalid('expiresAt')"
                         [class.border-gray-200]="!isInvalid('expiresAt')" />
@@ -296,9 +314,9 @@
 </div>
 
 } @else {
-<div class="border border-gray-200 rounded-xl p-6 flex flex-col gap-3">
-    <div class="h-3.5 w-3/5 rounded-md bg-gray-100 animate-pulse"></div>
-    <div class="h-3.5 w-2/5 rounded-md bg-gray-100 animate-pulse"></div>
-    <div class="h-3.5 w-1/4 rounded-md bg-gray-100 animate-pulse"></div>
-</div>
+    <div class="border border-gray-200 rounded-xl p-6 flex flex-col gap-3">
+        <div class="h-3.5 w-3/5 rounded-md bg-gray-100 animate-pulse"></div>
+        <div class="h-3.5 w-2/5 rounded-md bg-gray-100 animate-pulse"></div>
+        <div class="h-3.5 w-1/4 rounded-md bg-gray-100 animate-pulse"></div>
+    </div>
 }
