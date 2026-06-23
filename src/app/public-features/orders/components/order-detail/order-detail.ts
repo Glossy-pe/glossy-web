@@ -25,11 +25,28 @@ export class OrderDetail implements OnInit {
   isExpired = signal(false);
 
   isLightboxOpen = signal(false);
+  lastUpdated = signal<Date | null>(null);
   selectedImageIndex = signal(0);
   lightboxImages = signal<LightboxImage[]>([]);
 
   activeImage = computed<LightboxImage>(() =>
     this.lightboxImages()[this.selectedImageIndex()] ?? { url: '', type: 'image' }
+  );
+
+  sortedItems = computed<OrderItemResponseFull[]>(() =>
+    [...(this.order()?.items ?? [])].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    })
+  );
+
+  paidItems = computed<OrderItemResponseFull[]>(() =>
+    this.sortedItems().filter(item => item.paidQuantity >= item.quantity)
+  );
+
+  unpaidItems = computed<OrderItemResponseFull[]>(() =>
+    this.sortedItems().filter(item => item.paidQuantity < item.quantity)
   );
 
   constructor(
@@ -53,6 +70,7 @@ export class OrderDetail implements OnInit {
           const expired = order.expiresAt != null && new Date(order.expiresAt) < new Date();
           this.isExpired.set(expired);
           this.order.set(order);
+          this.lastUpdated.set(new Date()); // 👈
         },
         error: () => this.hasError.set(true),
       });
@@ -125,5 +143,10 @@ navigateToProduct(item: OrderItemResponseFull): void {
     ? { tono: encodeURIComponent(item.variant.toneName) }
     : {};
   this.router.navigate(['/guest/products', productId], { queryParams });
+}
+
+refresh(): void {
+  const token = this.route.snapshot.paramMap.get('token');
+  if (token) this.load(token);
 }
 }
