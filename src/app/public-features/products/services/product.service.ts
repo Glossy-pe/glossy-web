@@ -15,10 +15,15 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  getAllProducts(page: number = 0, size: number = 10, categoryId?: number): Observable<PageResponse<ProductResponseFull>> {
+  getAllProducts(
+    page: number = 0,
+    size: number = 10,
+    categoryId?: number,
+    sort?: string
+  ): Observable<PageResponse<ProductResponseFull>> {
     let params: any = { page, size };
-    if (categoryId !== undefined && categoryId !== null) params.categoryId = categoryId;
-
+    if (categoryId != null) params.categoryId = categoryId;
+    if (sort)              params.sort = sort;
     return this.http.get<PageResponse<ProductResponseFull>>(this.baseUrl + '/full', { params });
   }
 

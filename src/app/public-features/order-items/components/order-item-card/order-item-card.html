@@ -1,0 +1,84 @@
+  <!-- Lightbox -->
+  @if (isLightboxOpen()) {
+  <div class="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" (click)="closeLightbox()">
+
+    <button type="button" (click)="closeLightbox()"
+      class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl font-black cursor-pointer">
+      ✕
+    </button>
+
+    @if (lightboxImages().length > 1) {
+    <span class="absolute top-5 left-4 text-[10px] font-black uppercase tracking-widest text-white/70">
+      {{ selectedImageIndex() + 1 }} / {{ lightboxImages().length }}
+    </span>
+    <button type="button" (click)="prevImage(); $event.stopPropagation()"
+      class="absolute left-2 md:left-6 w-11 h-11 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl cursor-pointer">
+      ‹
+    </button>
+    <button type="button" (click)="nextImage(); $event.stopPropagation()"
+      class="absolute right-2 md:right-6 w-11 h-11 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl cursor-pointer">
+      ›
+    </button>
+    }
+
+    @if (activeImage().type === 'video') {
+    <video [src]="activeImage().url" controls autoplay playsinline (click)="$event.stopPropagation()"
+      class="max-h-[90vh] max-w-[92vw] object-contain"></video>
+    } @else {
+    <img [src]="activeImage().url" (click)="$event.stopPropagation()"
+      class="max-h-[90vh] max-w-[92vw] object-contain" />
+    }
+  </div>
+  }
+  
+<div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+
+    <!-- Imagen clickeable -->
+    <button type="button" class="w-full" (click)="openLightbox(item)">
+        @if (getMainImage(item)) {
+        <img [src]="getMainImage(item)" [alt]="getProductName(item)" class="h-36 w-full object-cover" />
+        } @else {
+        <div class="h-36 w-full bg-gray-100 flex items-center justify-center">
+            <span class="text-2xl">🖼️</span>
+        </div>
+        }
+    </button>
+
+    <div class="p-3">
+        <!-- Nombre producto + tono -->
+        <button type="button" (click)="navigateToProduct(item)"
+            class="truncate text-xs font-semibold text-gray-800 leading-tight hover:text-blue-600 hover:underline text-left w-full">
+            {{ getProductName(item) }}
+        </button>
+        <p class="truncate text-[10px] text-gray-400 mb-2">
+            {{ item.variant?.toneName }} · {{ item.variant?.toneCode }}
+        </p>
+
+        <!-- Cantidad y precio -->
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] text-gray-400">
+                x{{ item.quantity }} · <span class="text-gray-500">S/ {{ item.unitPrice | number:'1.2-2' }}</span>
+            </span>
+            <span class="text-xs font-bold text-gray-900">
+                S/ {{ (item.unitPrice ?? 0) * item.quantity | number:'1.2-2' }}
+            </span>
+        </div>
+
+        <!-- Badges -->
+        <div class="flex gap-1">
+            <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
+                [class]="item.separatedQuantity >= item.quantity ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'">
+                Sep
+            </span>
+            <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
+                [class]="item.packedQuantity >= item.quantity ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'">
+                Pack
+            </span>
+            <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
+                [class]="item.paidQuantity >= item.quantity ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400'">
+                Pago
+            </span>
+        </div>
+    </div>
+
+</div>

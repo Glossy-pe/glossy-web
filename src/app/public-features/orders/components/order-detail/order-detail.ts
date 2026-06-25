@@ -5,6 +5,8 @@ import { OrderService } from '../../services/order.service';
 import { OrderResponseFull } from '../../models/order-response-full.model';
 import { OrderItemResponseFull } from '../../../order-items/models/order-item-response-full.model';
 import { finalize } from 'rxjs';
+import { OrderItemCard } from "../../../order-items/components/order-item-card/order-item-card";
+import { AuthService } from '../../../../manager-features/authentication/services/auth.service';
 
 interface LightboxImage {
   url: string;
@@ -13,12 +15,13 @@ interface LightboxImage {
 
 @Component({
   selector: 'app-order-detail',
-  imports: [CommonModule],
+  imports: [CommonModule, OrderItemCard],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
 export class OrderDetail implements OnInit {
 
+  
   order = signal<OrderResponseFull | null>(null);
   isLoading = signal(false);
   hasError = signal(false);
@@ -49,11 +52,12 @@ export class OrderDetail implements OnInit {
     this.sortedItems().filter(item => item.paidQuantity < item.quantity)
   );
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private orderService: OrderService
-  ) {}
+constructor(
+  private route: ActivatedRoute,
+  private router: Router,
+  private orderService: OrderService,
+  public authService: AuthService  // ← agregar
+) {}
 
   ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('token');
@@ -148,5 +152,9 @@ navigateToProduct(item: OrderItemResponseFull): void {
 refresh(): void {
   const token = this.route.snapshot.paramMap.get('token');
   if (token) this.load(token);
+}
+
+goToManagerOrder(): void {
+  this.router.navigate(['/manager/orders', this.order()!.id]);
 }
 }

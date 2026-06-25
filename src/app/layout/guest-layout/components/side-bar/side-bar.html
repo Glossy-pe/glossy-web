@@ -1,0 +1,100 @@
+<!-- Botón hamburguesa flotante (siempre visible) -->
+<button (click)="toggleSidebar()"
+  class="fixed top-3 left-4 z-50 flex flex-col gap-1 p-2 rounded-lg bg-white border border-[#FFDDE4] shadow-sm text-[#FF8DA1] hover:bg-[#FFF5F7] transition-colors cursor-pointer">
+  <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+  <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+  <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+</button>
+
+<!-- Overlay -->
+@if (isOpen()) {
+  <div class="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+       (click)="toggleSidebar()">
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="fixed top-0 left-0 z-50 flex h-full w-64 flex-col border-r-2 border-dashed border-[#FFDDE4] bg-white">
+
+    <!-- Header del sidebar con botón cerrar -->
+    <div class="flex items-center justify-between border-b-2 border-dashed border-[#FFDDE4] px-4 py-3">
+      <span class="text-xs font-black uppercase tracking-widest text-[#FF8DA1]">Menú</span>
+      <button (click)="toggleSidebar()"
+        class="text-[#FF8DA1] hover:bg-[#FFF5F7] rounded p-1 transition-colors cursor-pointer">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <nav class="flex flex-col gap-1 overflow-y-auto p-3">
+
+      <!-- Sección: Inicio -->
+      <div>
+        <button (click)="toggleSection('inicio')"
+          class="flex w-full items-center justify-between px-2 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#FF8DA1] cursor-pointer transition-colors">
+          <span>🏠 Inicio</span>
+          <svg class="h-3 w-3 transition-transform" [class.rotate-180]="openSections()['inicio']"
+            fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        @if (openSections()['inicio']) {
+          <a routerLink="/guest/products" (click)="toggleSidebar()"
+            class="block px-4 py-1.5 text-[11px] font-bold text-gray-600 hover:text-[#FF8DA1] transition-colors">
+            Ver todo
+          </a>
+        }
+      </div>
+
+      <div class="my-1 border-t border-dashed border-[#FFDDE4]"></div>
+
+      <!-- Sección: Productos -->
+      <div>
+        <button (click)="toggleSection('productos')"
+          class="flex w-full items-center justify-between px-2 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#FF8DA1] cursor-pointer transition-colors">
+          <span>📦 Productos</span>
+          <svg class="h-3 w-3 transition-transform" [class.rotate-180]="openSections()['productos']"
+            fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        @if (openSections()['productos']) {
+          <a routerLink="/guest/products" [queryParams]="{ sort: 'newest' }" (click)="toggleSidebar()"
+            class="block px-4 py-1.5 text-[11px] font-bold text-[#FF8DA1]">
+            ✨ Nuevos ingresos
+          </a>
+          @for (cat of categories(); track cat.id) {
+            <a [routerLink]="['/guest/products']" 
+              [queryParams]="{ categoryId: cat.id }"
+              queryParamsHandling="merge"
+              (click)="toggleSidebar()"
+              class="block px-4 py-1.5 text-[11px] font-bold text-gray-600 hover:text-[#FF8DA1] transition-colors">
+              {{ cat.name }}
+            </a>
+          }
+        }
+      </div>
+
+      <div class="my-1 border-t border-dashed border-[#FFDDE4]"></div>
+
+      <!-- Sección: Mi Pedido -->
+      <!-- <div>
+        <button (click)="toggleSection('pedido')"
+          class="flex w-full items-center justify-between px-2 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#FF8DA1] cursor-pointer transition-colors">
+          <span>🛒 Mi Pedido</span>
+          <svg class="h-3 w-3 transition-transform" [class.rotate-180]="openSections()['pedido']"
+            fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        @if (openSections()['pedido']) {
+          <a routerLink="/orders" (click)="toggleSidebar()"
+            class="block px-4 py-1.5 text-[11px] font-bold text-gray-600 hover:text-[#FF8DA1] transition-colors">
+            Ver mi orden
+          </a>
+        }
+      </div> -->
+
+    </nav>
+  </aside>
+}

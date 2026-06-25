@@ -6,11 +6,9 @@ export const routes: Routes = [
   {
     path: 'manager',
     canActivate: [authGuard],          // ← descomenta cuando lo implementes
-    loadComponent: () => import('./manager-features/layout/manager-layout/manager-layout').then(m => m.ManagerLayout),
+    loadComponent: () => import('./layout/manager-layout/manager-layout').then(m => m.ManagerLayout),
     children: [
       { path: '', redirectTo: 'products', pathMatch: 'full' },
-
-      // Rutas de productos
       {
         path: 'products',
         loadComponent: () => import('./manager-features/products/components/product-list/product-list').then(m => m.ProductList)
@@ -39,8 +37,6 @@ export const routes: Routes = [
         path: 'products/:id/variants/:variantId/edit',
         loadComponent: () => import('./manager-features/variants/components/variant-form/variant-form').then(m => m.VariantForm)
       },
-
-      // Rutas de órdenes
       {
         path: 'orders',
         loadComponent: () => import('./manager-features/orders/components/order-list/order-list').then(m => m.OrderList)
@@ -83,15 +79,24 @@ export const routes: Routes = [
     loadComponent: () => import('./manager-features/authentication/components/login/login').then(m => m.Login)
   },
 
-  // Rutas públicas (cuando las tengas)
   {
-    path: 'guest/products',
-    loadComponent: () => import('./public-features/products/components/product-list/product-list').then(m => m.ProductList),
+    path: 'guest',
+  loadComponent: () => import('./layout/guest-layout/guest-layout')
+    .then(m => m.GuestLayout),   // ← no NavBar
+    children: [
+      {
+        path: 'products',
+        loadComponent: () => import('./public-features/products/components/product-list/product-list').then(m => m.ProductList),
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
+      },
+    ]
   },
-  {
-    path: 'guest/products/:id',
-    loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
-  },
+
+
+  
   {
     path: 'orders/:token',
     loadComponent: () => import('./public-features/orders/components/order-detail/order-detail').then(m => m.OrderDetail)

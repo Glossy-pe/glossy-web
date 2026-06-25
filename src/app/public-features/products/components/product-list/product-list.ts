@@ -1,10 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { PageResponse } from '../../../../../shared/models/page-response.model';
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { ProductCard } from '../product-card/product-card';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, EMPTY, finalize, Subject, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, EMPTY, finalize, map, Subject, switchMap, take } from 'rxjs';
 import { ProductService } from '../../services/product.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CategoryResponse } from '../../../categories/models/category-response.model';
@@ -16,150 +16,144 @@ import { CategoryService } from '../../../categories/services/category.service';
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
-export class ProductList {
-  // ── Estado de lista ──────────────────────────────────────────────
-  pageData      = signal<PageResponse<ProductResponseFull> | null>(null);
-  searchResults = signal<ProductResponseFull[]>([]);
-  currentPage   = signal(0);
-  readonly pageSize = 12;
+export class ProductList implements OnInit, AfterViewInit, OnDestroy {
 
-  // ── Estado UI ────────────────────────────────────────────────────
-  query      = signal('');
-  isSearching = signal(false);
-  isLoading  = signal(false);
-  hasError   = signal(false);
+  @ViewChild('sentinel') set sentinel(el: ElementRef | undefined) {
+    if (el) this.observer?.observe(el.nativeElement);
+  }
 
-  // ── Categorías ───────────────────────────────────────────
-  categories         = signal<CategoryResponse[]>([]);
-  selectedCategoryId = signal<number | null>(null);
+  // Estado — solo lo esencial
+  products = signal<ProductResponseFull[]>([]);
+  loading = signal(false);
+  hasMore = signal(true);
+  error = signal(false);
 
-  private search$ = new Subject<{ query: string; categoryId: number | null }>();
+  // Filtros
+  query = signal('');
+  categoryId = signal<number | null>(null);
+  sort = signal('newest');
+  categories = signal<CategoryResponse[]>([]);
+
+  private page = 0;
+  private observer?: IntersectionObserver;
+  private search$ = new Subject<string>();
 
   constructor(
     private productService: ProductService,
     private categoryService: CategoryService,
-    private router: Router,
     private route: ActivatedRoute,
-  ) {}
+  ) { }
 
-  ngOnInit(): void {
-    this.categoryService.getAll().subscribe({
-      next: cats => this.categories.set(cats),
-      error: err => console.error('Error cargando categorías', err),
-    });
+ngOnInit(): void {
+  this.categoryService.getAll().subscribe(cats => this.categories.set(cats));
 
-    // 👇 Leer estado inicial desde la URL
-    const qp = this.route.snapshot.queryParamMap;
-    const initialPage = Number(qp.get('page') ?? 0);
-    const initialQuery = qp.get('q') ?? '';
-    const initialCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
+  // Search con debounce
+  this.search$.pipe(
+    debounceTime(400),
+    distinctUntilChanged(),
+    switchMap(q => {
+      this.reset();
+      if (!q.trim()) return this.loadPage();
+      return this.productService.search(q, this.categoryId() ?? undefined).pipe(
+        map(results => ({
+          content: results,
+          page: 0,
+          size: results.length,
+          totalElements: results.length,
+          totalPages: 1,
+          first: true,
+          last: true,
+        } as PageResponse<ProductResponseFull>))
+      );
+    })
+  ).subscribe({                                    // ← faltaba esto
+    next: res => this.handleResponse(res),
+    error: () => this.error.set(true),
+  });
 
-    this.currentPage.set(initialPage);
-    this.query.set(initialQuery);
-    this.selectedCategoryId.set(initialCategoryId);
+  // Carga inicial + reacción a cambios de URL
+this.route.queryParamMap.subscribe(qp => {
+  const newCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
+  const newSort = qp.get('sort') ?? 'newest';
 
-    this.search$.pipe(
-      debounceTime(400),
-      distinctUntilChanged((a, b) => a.query === b.query && a.categoryId === b.categoryId),
-      switchMap(({ query, categoryId }) => {
-        if (!query.trim()) {
-          this.isSearching.set(false);
-          this.searchResults.set([]);
-          this.syncUrl();
-          return EMPTY;
-        }
-        this.isSearching.set(true);
-        this.isLoading.set(true);
-        this.syncUrl();
-        return this.productService.search(query, categoryId ?? undefined).pipe(
-          finalize(() => this.isLoading.set(false))
-        );
-      }),
-    ).subscribe({
-      next: results => this.searchResults.set(results),
-      error: err => { console.error(err); this.hasError.set(true); },
-    });
+  this.categoryId.set(newCategoryId);
+  this.sort.set(newSort);
+  this.reset();
+  this.loadPage().subscribe({
+    next: res => this.handleResponse(res),
+    error: () => this.error.set(true),
+  });
+});
 
-    // 👇 Carga inicial respetando el estado de la URL
-    if (initialQuery.trim()) {
-      this.isSearching.set(true);
-      this.isLoading.set(true);
-      this.productService.search(initialQuery, initialCategoryId ?? undefined)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: results => this.searchResults.set(results),
-          error: err => { console.error(err); this.hasError.set(true); },
+  // ← ELIMINA el loadPage() que estaba aquí suelto
+}
+
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !this.loading() && this.hasMore()) {
+        this.loadPage().subscribe({
+          next: res => this.handleResponse(res),
+          error: () => this.error.set(true),
         });
-    } else {
-      this.loadPage(initialPage);
-    }
+      }
+    }, { rootMargin: '300px' });
   }
 
   ngOnDestroy(): void {
+    this.observer?.disconnect();
     this.search$.complete();
   }
 
-  // 👇 Nuevo: sincroniza la URL con el estado actual
-  private syncUrl(): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        page: this.currentPage(),
-        q: this.query() || null,
-        categoryId: this.selectedCategoryId() ?? null,
-      },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
+  private loadPage() {
+    this.loading.set(true);
+    this.error.set(false);
+    return this.productService
+      .getAllProducts(this.page, 12, this.categoryId() ?? undefined, this.sort() || undefined)
+      .pipe(finalize(() => this.loading.set(false)));
+  }
+
+  private handleResponse(res: PageResponse<ProductResponseFull>) {
+    this.products.update(prev => [...prev, ...res.content]);
+    this.hasMore.set(!res.last);
+    this.page = res.page + 1;
+  }
+
+  private reset() {
+    this.products.set([]);
+    this.page = 0;
+    this.hasMore.set(true);
+    this.error.set(false);
+  }
+
+  // Handlers públicos
+  onQueryChange(value: string): void {
+    this.query.set(value);
+    this.search$.next(value);
+  }
+
+  onSortChange(value: string): void {
+    this.sort.set(value);
+    this.reset();
+    this.loadPage().subscribe({
+      next: res => this.handleResponse(res),
+      error: () => this.error.set(true),
     });
   }
 
-  // ── Selección de categoría ───────────────────────────────
-  selectCategory(categoryId: number | null): void {
-    if (this.selectedCategoryId() === categoryId) return;
-    this.selectedCategoryId.set(categoryId);
-
-    if (this.isSearching()) {
-      this.search$.next({ query: this.query(), categoryId });
-    } else {
-      this.loadPage(0);
-    }
+  selectCategory(id: number | null): void {
+    if (this.categoryId() === id) return;
+    this.categoryId.set(id);
+    this.reset();
+    this.loadPage().subscribe({
+      next: res => this.handleResponse(res),
+      error: () => this.error.set(true),
+    });
   }
 
-  // ── Lista / búsqueda ─────────────────────────────────────────────
-  onQueryChange(value: string): void {
-    this.query.set(value);
-    this.search$.next({ query: value, categoryId: this.selectedCategoryId() });
+  retry(): void {
+    this.loadPage().subscribe({
+      next: res => this.handleResponse(res),
+      error: () => this.error.set(true),
+    });
   }
-
-  loadPage(page: number): void {
-    this.isLoading.set(true);
-    this.hasError.set(false);
-    this.productService.getAllProducts(page, this.pageSize, this.selectedCategoryId() ?? undefined)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: data => {
-          this.pageData.set(data);
-          this.currentPage.set(page);
-          this.syncUrl(); // 👈
-        },
-        error: err => { console.error(err); this.hasError.set(true); },
-      });
-  }
-
-  pages = computed<number[]>(() => {
-    const total = this.pageData()?.totalPages ?? 0;
-    const current = this.currentPage();
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i);
-
-    const result: number[] = [0];
-    const start = Math.max(1, current - 1);
-    const end = Math.min(total - 2, current + 1);
-
-    if (start > 1) result.push(-1); // -1 = elipsis
-    for (let i = start; i <= end; i++) result.push(i);
-    if (end < total - 2) result.push(-1);
-
-    result.push(total - 1);
-    return result;
-  });
 }

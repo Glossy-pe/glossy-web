@@ -26,84 +26,68 @@
 @if (!isLoading() && !hasError() && !isExpired() && order()) {
 <div class="min-h-screen bg-gray-50 pb-16">
 
-  <!-- Lightbox -->
-  @if (isLightboxOpen()) {
-  <div class="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" (click)="closeLightbox()">
 
-    <button type="button" (click)="closeLightbox()"
-      class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl font-black cursor-pointer">
-      ✕
-    </button>
-
-    @if (lightboxImages().length > 1) {
-    <span class="absolute top-5 left-4 text-[10px] font-black uppercase tracking-widest text-white/70">
-      {{ selectedImageIndex() + 1 }} / {{ lightboxImages().length }}
-    </span>
-    <button type="button" (click)="prevImage(); $event.stopPropagation()"
-      class="absolute left-2 md:left-6 w-11 h-11 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl cursor-pointer">
-      ‹
-    </button>
-    <button type="button" (click)="nextImage(); $event.stopPropagation()"
-      class="absolute right-2 md:right-6 w-11 h-11 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl cursor-pointer">
-      ›
-    </button>
-    }
-
-    @if (activeImage().type === 'video') {
-    <video [src]="activeImage().url" controls autoplay playsinline (click)="$event.stopPropagation()"
-      class="max-h-[90vh] max-w-[92vw] object-contain"></video>
-    } @else {
-    <img [src]="activeImage().url" (click)="$event.stopPropagation()"
-      class="max-h-[90vh] max-w-[92vw] object-contain" />
-    }
-  </div>
-  }
 
   <!-- Header -->
-  <div class="bg-white border-b border-gray-100 px-4 py-6">
-    <div class="mx-auto max-w-2xl">
-      <p class="text-xs text-gray-400 mb-1">Orden #{{ order()!.id }} · {{ order()!.orderCode || '—' }}</p>
-      <h1 class="text-2xl font-bold text-gray-900 mb-0.5">{{ order()!.customerName }}</h1>
-      <p class="text-sm text-gray-400">{{ order()!.customerAddress }}</p>
+<div class="bg-white border-b border-gray-100 px-4 py-6">
+  <div class="mx-auto max-w-2xl">
+    <p class="text-xs text-gray-400 mb-1">Orden #{{ order()!.id }} · {{ order()!.orderCode || '—' }}</p>
+    <h1 class="text-2xl font-bold text-gray-900 mb-0.5">{{ order()!.customerName }}</h1>
+    <p class="text-sm text-gray-400">{{ order()!.customerAddress }}</p>
 
-
-      @if (order()!.orderStatus) {
-      <div class="mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1"
-        [style.border-color]="order()!.orderStatus!.hexColor"
-        [style.background-color]="order()!.orderStatus!.hexColor + '15'">
-        <span class="h-2 w-2 rounded-full animate-pulse"
-          [style.background-color]="order()!.orderStatus!.hexColor"></span>
-        <span class="text-xs font-semibold" [style.color]="order()!.orderStatus!.hexColor">
-          {{ order()!.orderStatus!.code }}
-        </span>
-        <span class="text-[10px] text-gray-400 font-normal">· Estado en tiempo real</span>
-      </div>
-      }
-
-      <div class="mt-4 flex items-center gap-3">
-        <button type="button" (click)="refresh()" [disabled]="isLoading()"
-          class="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1 text-[11px] text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-40 transition-colors">
-          <svg class="h-3 w-3" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Actualizar
-        </button>
-
-
-
-        @if (lastUpdated()) {
-        <span class="text-[10px] text-gray-300">
-          Actualizado {{ lastUpdated() | date:'HH:mm:ss' }}
-        </span>
+    <!-- Contenedor Flex con justify-between para separar el Estado y el Botón Admin -->
+    <div class="mt-4 flex justify-between items-center gap-4">
+      
+      <!-- Lado izquierdo: Estado -->
+      <div>
+        @if (order()!.orderStatus) {
+        <div class="inline-flex items-center gap-2 rounded-full border px-3 py-1"
+          [style.border-color]="order()!.orderStatus!.hexColor"
+          [style.background-color]="order()!.orderStatus!.hexColor + '15'">
+          <span class="h-2 w-2 rounded-full animate-pulse"
+            [style.background-color]="order()!.orderStatus!.hexColor"></span>
+          <span class="text-xs font-semibold" [style.color]="order()!.orderStatus!.hexColor">
+            {{ order()!.orderStatus!.code }}
+          </span>
+          <span class="text-[10px] text-gray-400 font-normal">· Estado en tiempo real</span>
+        </div>
         }
-
-
       </div>
 
-
+      <!-- Lado derecho: Botón Admin -->
+      @if (authService.isAuthenticated()) {
+        <button type="button" (click)="goToManagerOrder()"
+          class="flex items-center gap-1.5 rounded-full border border-[#FF8DA1] px-3 py-1 text-[11px] text-[#FF8DA1] hover:bg-[#FFF5F7] transition-colors shrink-0">
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Ver en admin
+        </button>
+      }
     </div>
+
+    <!-- Sección inferior: Actualizar -->
+    <div class="mt-4 flex items-center gap-3">
+      <button type="button" (click)="refresh()" [disabled]="isLoading()"
+        class="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1 text-[11px] text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-40 transition-colors">
+        <svg class="h-3 w-3" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Actualizar
+      </button>
+
+      @if (lastUpdated()) {
+      <span class="text-[10px] text-gray-300">
+        Actualizado {{ lastUpdated() | date:'HH:mm:ss' }}
+      </span>
+      }
+    </div>
+
   </div>
+</div>
 
   <div class="mx-auto max-w-2xl px-4 pt-6 space-y-4">
 
@@ -141,57 +125,7 @@
 
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
         @for (item of unpaidItems(); track item.id) {
-        <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-
-          <!-- Imagen clickeable -->
-          <button type="button" class="w-full" (click)="openLightbox(item)">
-            @if (getMainImage(item)) {
-            <img [src]="getMainImage(item)" [alt]="getProductName(item)" class="h-36 w-full object-cover" />
-            } @else {
-            <div class="h-36 w-full bg-gray-100 flex items-center justify-center">
-              <span class="text-2xl">🖼️</span>
-            </div>
-            }
-          </button>
-
-          <div class="p-3">
-            <!-- Nombre producto + tono -->
-            <button type="button" (click)="navigateToProduct(item)"
-              class="truncate text-xs font-semibold text-gray-800 leading-tight hover:text-blue-600 hover:underline text-left w-full">
-              {{ getProductName(item) }}
-            </button>
-            <p class="truncate text-[10px] text-gray-400 mb-2">
-              {{ item.variant?.toneName }} · {{ item.variant?.toneCode }}
-            </p>
-
-            <!-- Cantidad y precio -->
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-[10px] text-gray-400">
-                x{{ item.quantity }} · <span class="text-gray-500">S/ {{ item.unitPrice | number:'1.2-2' }}</span>
-              </span>
-              <span class="text-xs font-bold text-gray-900">
-                S/ {{ (item.unitPrice ?? 0) * item.quantity | number:'1.2-2' }}
-              </span>
-            </div>
-
-            <!-- Badges -->
-            <div class="flex gap-1">
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.separatedQuantity >= item.quantity ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'">
-                Sep
-              </span>
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.packedQuantity >= item.quantity ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'">
-                Pack
-              </span>
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.paidQuantity >= item.quantity ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400'">
-                Pago
-              </span>
-            </div>
-          </div>
-
-        </div>
+        <app-order-item-card [item]="item"></app-order-item-card>
         }
       </div>
     </div>
@@ -207,57 +141,7 @@
 
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
         @for (item of paidItems(); track item.id) {
-        <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-
-          <!-- Imagen clickeable -->
-          <button type="button" class="w-full" (click)="openLightbox(item)">
-            @if (getMainImage(item)) {
-            <img [src]="getMainImage(item)" [alt]="getProductName(item)" class="h-36 w-full object-cover" />
-            } @else {
-            <div class="h-36 w-full bg-gray-100 flex items-center justify-center">
-              <span class="text-2xl">🖼️</span>
-            </div>
-            }
-          </button>
-
-          <div class="p-3">
-            <!-- Nombre producto + tono -->
-            <button type="button" (click)="navigateToProduct(item)"
-              class="truncate text-xs font-semibold text-gray-800 leading-tight hover:text-blue-600 hover:underline text-left w-full">
-              {{ getProductName(item) }}
-            </button>
-            <p class="truncate text-[10px] text-gray-400 mb-2">
-              {{ item.variant?.toneName }} · {{ item.variant?.toneCode }}
-            </p>
-
-            <!-- Cantidad y precio -->
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-[10px] text-gray-400">
-                x{{ item.quantity }} · <span class="text-gray-500">S/ {{ item.unitPrice | number:'1.2-2' }}</span>
-              </span>
-              <span class="text-xs font-bold text-gray-900">
-                S/ {{ (item.unitPrice ?? 0) * item.quantity | number:'1.2-2' }}
-              </span>
-            </div>
-
-            <!-- Badges -->
-            <div class="flex gap-1">
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.separatedQuantity >= item.quantity ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'">
-                Sep
-              </span>
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.packedQuantity >= item.quantity ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'">
-                Pack
-              </span>
-              <span class="flex-1 text-center rounded-full py-0.5 text-[10px] font-medium"
-                [class]="item.paidQuantity >= item.quantity ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400'">
-                Pago
-              </span>
-            </div>
-          </div>
-
-        </div>
+        <app-order-item-card [item]="item"></app-order-item-card>
         }
       </div>
     </div>
