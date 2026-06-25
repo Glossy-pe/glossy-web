@@ -1,6 +1,7 @@
 # Comandos para build y deploy:
 git tag --sort=-creatordate | head -n 1
 
+git add . && git commit -m "Mi commit" && git push
 
 # Construir la imagen (desde la carpeta del proyecto Angular)
 docker build -t glossy-frontend:local .
