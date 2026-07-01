@@ -201,4 +201,20 @@ export class OrderList implements OnInit {
       error: (err) => console.error(err),
     });
 }
+
+  getTotalQuantity(order: OrderResponseFull): number {
+    return order.items.reduce((sum, i) => sum + i.quantity, 0);
+  }
+
+  getSeparatedQuantity(order: OrderResponseFull): number {
+    return order.items.reduce((sum, i) => sum + i.separatedQuantity, 0);
+  }
+
+  getPackedQuantity(order: OrderResponseFull): number {
+    return order.items.reduce((sum, i) => sum + i.packedQuantity, 0);
+  }
+
+  getPaidAmount(order: OrderResponseFull): number {
+    return order.items.reduce((sum, i) => sum + (i.amountPaid ?? 0), 0);
+  }
 }

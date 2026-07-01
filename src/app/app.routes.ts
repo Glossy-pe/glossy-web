@@ -69,6 +69,10 @@ export const routes: Routes = [
         path: 'orders/:id/order-items/:itemId/edit',
         loadComponent: () => import('./manager-features/order-items/components/order-item-form/order-item-form').then(m => m.OrderItemForm)
       },
+      {
+        path: 'order-items',
+        loadComponent: () => import('./manager-features/order-items/components/order-item-full-list/order-item-full-list').then(m => m.OrderItemFullList)
+      },
       
     ]
   },

@@ -129,21 +129,40 @@
         S/ {{ order.total | number:'1.2-2' }}
       </div>
 
-      <!-- Badges de estado booleano -->
-      <div class="mb-4 flex flex-wrap gap-1.5">
-        <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-          [class]="order.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-          {{ order.paid ? '✓ Pagado' : '✕ Pagado' }}
-        </span>
-        <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-          [class]="order.separated ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-          {{ order.separated ? '✓ Separado' : '✕ Separado' }}
-        </span>
-        <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-          [class]="order.packed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-          {{ order.packed ? '✓ Empacado' : '✕ Empacado' }}
-        </span>
-      </div>
+<!-- Badges de estado con cantidad -->
+<div class="mb-4 flex flex-wrap gap-1.5">
+
+  <!-- Separado -->
+  <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+    [class]="getSeparatedQuantity(order) === getTotalQuantity(order)
+      ? 'bg-green-100 text-green-700'
+      : getSeparatedQuantity(order) > 0
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-red-100 text-red-600'">
+    Separado {{ getSeparatedQuantity(order) }}/{{ getTotalQuantity(order) }}
+  </span>
+
+  <!-- Empacado -->
+  <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+    [class]="getPackedQuantity(order) === getTotalQuantity(order)
+      ? 'bg-green-100 text-green-700'
+      : getPackedQuantity(order) > 0
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-red-100 text-red-600'">
+    Empacado {{ getPackedQuantity(order) }}/{{ getTotalQuantity(order) }}
+  </span>
+
+  <!-- Pagado -->
+  <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+    [class]="getPaidAmount(order) >= order.total
+      ? 'bg-green-100 text-green-700'
+      : getPaidAmount(order) > 0
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-red-100 text-red-600'">
+    Pagado S/ {{ getPaidAmount(order) | number:'1.2-2' }} / {{ order.total | number:'1.2-2' }}
+  </span>
+
+</div>
 
       <!-- Footer -->
       <div class="flex items-center justify-between border-t border-gray-100 pt-3">
