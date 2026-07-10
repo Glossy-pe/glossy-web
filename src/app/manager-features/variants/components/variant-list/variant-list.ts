@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { VariantService } from '../../services/variant.service';
 import { VariantResponse } from '../../models/variant-response';
@@ -8,7 +8,7 @@ import { VariantRequest } from '../../models/variant.request';
 
 @Component({
   selector: 'app-variant-list',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './variant-list.html',
   styleUrl: './variant-list.scss',
 })

@@ -72,7 +72,12 @@
                   [style.background]="variant.toneCode">
                 </span>
                 <div>
-                  <h3 class="font-bold text-gray-900 text-sm">{{ variant.toneName }}</h3>
+                  <a
+  [routerLink]="['/manager/products', productId, 'variants', variant.id]"
+  class="font-bold text-gray-900 text-sm hover:text-blue-600 hover:underline"
+>
+  {{ variant.toneName }}
+</a>
                   <p class="font-mono text-[11px] text-gray-400">Código: {{ variant.toneCode }}</p>
                 </div>
               </div>

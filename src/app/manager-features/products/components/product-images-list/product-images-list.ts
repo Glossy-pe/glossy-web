@@ -64,6 +64,69 @@ export class ProductImagesList implements OnInit {
     });
   }
 
+
+async processImage(
+  file: File,
+  opts: { maxSize?: number; quality?: number } = {}
+): Promise<File> {
+  const { maxSize = 1800, quality = 0.8 } = opts;
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  const blob: Blob = await new Promise(resolve =>
+    canvas.toBlob(b => resolve(b!), 'image/webp', quality)
+  );
+
+  const newName = file.name.replace(/\.\w+$/, '.webp');
+  return new File([blob], newName, { type: 'image/webp' });
+}
+
+  private drawWatermarkPattern(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    text: string
+  ): void {
+    const fontSize = Math.max(14, Math.round(width * 0.045));
+    ctx.font = `500 ${fontSize}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textWidth = ctx.measureText(text).width;
+    const stepX = textWidth + fontSize * 2.5;
+    const stepY = fontSize * 4;
+    const angle = -25 * (Math.PI / 180);
+
+    ctx.save();
+    ctx.rotate(angle);
+
+    // Cubrimos todo el canvas rotado con margen extra para que no queden huecos
+    const diagonal = Math.sqrt(width * width + height * height);
+    const startX = -diagonal;
+    const endX = diagonal;
+    const startY = -diagonal;
+    const endY = diagonal;
+
+    for (let y = startY; y < endY; y += stepY) {
+      for (let x = startX; x < endX; x += stepX) {
+        ctx.fillText(text, x, y);
+      }
+    }
+
+    ctx.restore();
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -102,16 +165,18 @@ export class ProductImagesList implements OnInit {
     this.previewUrl.set(null);
   }
 
-  confirmUpload(): void {
+  async confirmUpload(): Promise<void> {
     const file = this.previewFile();
     if (!file) return;
 
     this.uploading.set(true);
 
+    const processed = this.isVideoFile() ? file : await this.processImage(file);
+
     const nextPosition = this.images().length + 1;
     const isFirst = this.images().length === 0;
 
-    this.imageService.uploadAndCreate(file, this.productId, nextPosition, isFirst).subscribe({
+    this.imageService.uploadAndCreate(processed, this.productId, nextPosition, isFirst).subscribe({
       next: newImage => {
         this.images.update(imgs => this.sortImages([...imgs, newImage]));
         this.uploading.set(false);

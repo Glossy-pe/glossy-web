@@ -47,13 +47,13 @@
 
           <div class="flex items-center gap-3 px-3 py-2.5">
             <!-- Image -->
-            <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
-              @if (product.variants?.[0]?.images?.[0]?.url) {
-                <img [src]="product.variants[0].images[0].url" class="h-full w-full object-cover"/>
-              } @else {
-                <span class="flex h-full w-full items-center justify-center text-lg text-gray-300">🖼️</span>
-              }
-            </div>
+<div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+  @if (product.images?.[0]?.url) {
+    <img [src]="product.images[0].url" class="h-full w-full object-cover"/>
+  } @else {
+    <span class="flex h-full w-full items-center justify-center text-lg text-gray-300">🖼️</span>
+  }
+</div>
             <!-- Info -->
             <div class="flex-1 min-w-0">
               <p class="truncate text-sm font-medium text-gray-800">{{ product.name }}</p>
