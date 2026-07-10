@@ -1,6 +1,5 @@
 <div class="mt-6">
 
-  <!-- Header -->
   <div class="mb-3 flex items-center justify-between">
     <h2 class="text-base font-semibold text-gray-800">Items de la orden</h2>
     <div class="flex items-center gap-2">
@@ -19,7 +18,6 @@
 
   </div>
 
-  <!-- Picker (solo en modo edición) -->
   @if (isEditMode()) {
   <div class="mb-4">
     <app-order-item-product-picker [orderId]="orderId" (variantSelected)="onVariantSelected($event)" />
@@ -46,7 +44,6 @@
   </div>
   }
 
-  <!-- Loading -->
   @if (isLoading()) {
   <div class="space-y-2">
     @for (i of [1,2,3]; track i) {
@@ -63,7 +60,6 @@
   </div>
   }
 
-  <!-- Error -->
   @if (!isLoading() && hasError()) {
   <div class="rounded-xl border border-gray-200 bg-white py-8 text-center">
     <p class="text-sm text-gray-500">No se pudieron cargar los items.</p>
@@ -73,7 +69,6 @@
   </div>
   }
 
-  <!-- Empty -->
   @if (!isLoading() && !hasError() && items().length === 0) {
   <div class="rounded-xl border border-dashed border-gray-200 bg-white py-10 text-center">
     <p class="text-sm text-gray-400">Esta orden no tiene items aún.</p>
@@ -85,10 +80,8 @@
   </div>
   }
 
-  <!-- Tabla -->
   @if (!isLoading() && !hasError() && items().length > 0) {
 
-  <!-- Vista simple: grid de cards -->
   @if (viewMode() === 'simple') {
   <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
     @for (item of sortedItems(); track item.id) {
@@ -99,7 +92,6 @@
         [class.border-gray-200]="!item.isNew && !item.dirty && !item.pendingDelete"
         [class.opacity-40]="item.pendingDelete">
 
-        <!-- Imagen -->
         @if (item.variant?.imageUrl) {
           <img [src]="item.variant!.imageUrl" [alt]="item.variant!.productName"
             class="h-32 w-full object-cover"/>
@@ -108,19 +100,20 @@
         }
 
         <div class="p-2">
-          <!-- Nombre + tono -->
           <p class="truncate text-xs font-semibold text-gray-800 leading-tight">{{ item.variant?.productName ?? '—' }}</p>
           <p class="truncate text-[10px] text-gray-400 mb-1.5">{{ item.variant?.toneName ?? '—' }}</p>
 
-          <!-- Cantidad -->
           @if (isEditMode()) {
             <input type="number" min="1" [(ngModel)]="item.quantity" (ngModelChange)="markDirty(item)"
               class="w-full rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-800 outline-none focus:border-gray-400 mb-1.5"/>
+              
           } @else {
+            <div class="flex justify-between">
             <p class="text-[10px] text-gray-400 mb-1.5">Cant: <span class="font-semibold text-gray-700">{{ item.quantity }}</span></p>
+            <p class="text-sm font-bold text-gray-800">${{item.variant?.price | number:'1.2-2'}}</p>
+            </div>
           }
 
-          <!-- Badges toggleables -->
           <div class="flex gap-1">
             <button
               (click)="isEditMode() && toggleSimpleField(item, 'separatedQuantity')"
@@ -152,7 +145,6 @@
             </button>
           </div>
 
-          <!-- Eliminar -->
           @if (isEditMode()) {
             <button (click)="togglePendingDelete(item)"
               class="mt-1.5 w-full rounded-md border border-gray-200 py-0.5 text-[10px] font-medium transition"
@@ -167,7 +159,6 @@
   </div>
 }
 
-  <!-- Vista detallada: rows actuales -->
   @if (viewMode() === 'detailed') {
   <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
     <div class="space-y-3">
@@ -183,7 +174,6 @@
 
   
 
-  <!-- Sticky footer de guardado -->
   @if (isEditMode()) {
   <div class="sticky bottom-4 mt-4 flex items-center justify-between rounded-xl border border-gray-200
                 bg-white px-5 py-3 shadow-lg ring-1 ring-black/5">
@@ -220,7 +210,6 @@
   </div>
   }
 
-  <!-- Toast -->
   @if (toastMessage()) {
   <div class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-900 px-4 py-2.5
                 text-sm font-medium text-white shadow-lg animate-fade-in">
@@ -229,3 +218,36 @@
   }
 
 </div>
+
+
+
+<!-- 
+@if (!isEditMode()) {
+  <button mat-raised-button (click)="enterEditMode()">
+    Editar
+  </button>
+} @else(){
+  <button mat-raised-button (click)="cancelEdit()">
+    Cancelar
+  </button>
+
+  <button mat-raised-button (click)="saveAll()" >
+    Guardar
+  </button>
+}
+
+
+<div class="py-4">
+
+  <div class="flex gap-3">
+    @if (!isLoading() && !hasError() && items().length > 0) {
+      @for (item of sortedItems(); track item.id) {
+
+        <app-order-item-row [isEditMode]="isEditMode()" [item]="item" (changed)="markDirty(item)"></app-order-item-row>
+
+      }
+    }
+  </div>
+
+
+</div> -->

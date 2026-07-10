@@ -2,10 +2,17 @@ import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EditableOrderItem } from '../order-item-list/order-item-list';
+import { MatAnchor, MatButtonModule } from "@angular/material/button";
 
 @Component({
   selector: 'app-order-item-row',
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    DecimalPipe, 
+    MatAnchor,
+    MatButtonModule
+  ],
   templateUrl: './order-item-row.html',
 })
 export class OrderItemRow {
@@ -14,6 +21,7 @@ export class OrderItemRow {
   @Output() changed = new EventEmitter<void>();
   @Output() deleteToggled = new EventEmitter<void>();
 
+  deleteSelected = false;
   expanded = signal(false);
 
   get maxQuantity(): number {
@@ -101,4 +109,44 @@ onSubFieldChange(): void {
     this.item.dirty = true;
     this.changed.emit();
   }
+
+
+
+
+  toggleSeparatedButton(): void {
+    if (this.item.separatedQuantity < this.item.quantity) {
+      this.item.separatedQuantity = this.item.quantity;
+    } else {
+      this.item.separatedQuantity = 0;
+    }
+    this.item.dirty = true;
+    this.changed.emit();
+  }
+
+  togglePaquedButton(): void {
+    if (this.item.packedQuantity < this.item.quantity) {
+      this.item.packedQuantity = this.item.quantity;
+    } else {
+      this.item.packedQuantity = 0;
+    }
+    this.item.dirty = true;
+    this.changed.emit();
+  }
+
+  togglePaidButton(): void {
+    if (this.item.paidQuantity < this.item.quantity) {
+      this.item.paidQuantity = this.item.quantity;
+    } else {
+      this.item.paidQuantity = 0;
+    }
+    this.item.dirty = true;
+    this.changed.emit();
+  }
+
+  toggleDelete(): void {
+    this.item.pendingDelete = !this.item.pendingDelete;
+    this.item.dirty = true;
+    this.changed.emit();
+  }
+
 }

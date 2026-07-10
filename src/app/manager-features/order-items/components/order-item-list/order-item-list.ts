@@ -190,14 +190,15 @@ export class OrderItemList implements OnInit {
       i => i.productVariantId === variant.id && !i.pendingDelete
     );
 
-    if (existing) {
-      existing.quantity += quantity;
-      existing.dirty = true;
-      this.items.update(items => [...items]);
-      this.showToast(`"${product.name} - ${variant.toneName}" ya existe — cantidad actualizada a ${existing.quantity}`);
-      return;
-    }
+    // if (existing) {
+    //   existing.quantity += quantity;
+    //   existing.dirty = true;
+    //   this.items.update(items => [...items]);
+    //   this.showToast(`"${product.name} - ${variant.toneName}" ya existe — cantidad actualizada a ${existing.quantity}`);
+    //   return;
+    // }
 
+    
     const mainImage = variant.images?.find(img => img.mainImage) ?? variant.images?.[0] ?? null;
 
     const draft: EditableOrderItem = {

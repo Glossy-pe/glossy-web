@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { VariantImageResponse } from '../models/variant-image-response.model';
 import { VariantImageRequest } from '../models/variant-image-request.model';
 
@@ -9,8 +9,6 @@ import { VariantImageRequest } from '../models/variant-image-request.model';
 export class VariantImageService {
 
   private readonly backendUrl = `${environment.apiUrl}/api/manager/variant-images`;
-  private readonly cloudName = environment.cloudinaryCloudName; // 'dqyqtgkdk'
-  private readonly uploadPreset = environment.cloudinaryUploadPreset; // 'glossy_upload_preset'
 
   constructor(private http: HttpClient) {}
 
@@ -21,24 +19,19 @@ export class VariantImageService {
   }
 
   uploadAndCreate(file: File, variantId: number, position: number, mainImage: boolean): Observable<VariantImageResponse> {
-    const isVideo = file.type.startsWith('video/');
-    const resourceType = isVideo ? 'video' : 'image';
-    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${this.cloudName}/${resourceType}/upload`;
-
     const form = new FormData();
     form.append('file', file);
-    form.append('upload_preset', this.uploadPreset);
-    form.append('folder', `variants/${variantId}`);
+    form.append('position', position.toString());
+    form.append('mainImage', mainImage.toString());
+    form.append('productVariantId', variantId.toString());
 
-    return this.http.post<{ secure_url: string }>(cloudinaryUrl, form).pipe(
-      switchMap(({ secure_url }) =>
-        this.create({ url: secure_url, position, mainImage, productVariantId: variantId, resourceType })
-      )
-    );
+    return this.http.post<VariantImageResponse>(this.backendUrl, form);
   }
 
-  create(request: VariantImageRequest): Observable<VariantImageResponse> {
-    return this.http.post<VariantImageResponse>(this.backendUrl, request);
+  replaceImage(id: number, file: File): Observable<VariantImageResponse> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.put<VariantImageResponse>(`${this.backendUrl}/${id}/image`, form);
   }
 
   update(id: number, request: VariantImageRequest): Observable<VariantImageResponse> {
