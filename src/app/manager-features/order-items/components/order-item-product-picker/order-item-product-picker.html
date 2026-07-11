@@ -102,7 +102,7 @@
               <!-- Quantity + Add -->
               @if (selectedVariant() && selectedProduct()?.id === product.id) {
                 <div class="mt-3 flex items-center gap-3">
-                  <div class="flex items-center gap-2">
+                  <!-- <div class="flex items-center gap-2">
                     <button
                       (click)="$event.stopPropagation(); onQuantityChange(quantity() - 1)"
                       class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 disabled:opacity-40"
@@ -112,7 +112,7 @@
                       (click)="$event.stopPropagation(); onQuantityChange(quantity() + 1)"
                       class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 disabled:opacity-40"
                       [disabled]="quantity() >= (selectedVariant()?.stock ?? 1)">+</button>
-                  </div>
+                  </div> -->
                   <button
                     (click)="$event.stopPropagation(); addItem()"
                     class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-gray-700">

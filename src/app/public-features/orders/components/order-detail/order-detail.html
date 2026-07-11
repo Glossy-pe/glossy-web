@@ -117,7 +117,7 @@
     </div>
 
     <!-- Productos en grid -->
-    @if (unpaidItems().length) {
+    <!-- @if (unpaidItems().length) {
     <div>
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
         Pendientes ({{ unpaidItems().length }})
@@ -129,19 +129,31 @@
         }
       </div>
     </div>
-    }
+    } -->
 
 
     <!-- Productos en grid -->
-    @if (paidItems().length) {
+    @if (unpaidProducts().length) {
     <div>
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-        Pagados ({{ paidItems().length }})
+        Pendientes ({{ unpaidProducts().length }})
       </p>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        @for (group of unpaidProducts(); track group.productId) {
+        <app-order-item-card [group]="group"></app-order-item-card>
+        }
+      </div>
+    </div>
+    }
 
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        @for (item of paidItems(); track item.id) {
-        <app-order-item-card [item]="item"></app-order-item-card>
+    @if (paidProducts().length) {
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        Pagados ({{ paidProducts().length }})
+      </p>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        @for (group of paidProducts(); track group.productId) {
+        <app-order-item-card [group]="group"></app-order-item-card>
         }
       </div>
     </div>

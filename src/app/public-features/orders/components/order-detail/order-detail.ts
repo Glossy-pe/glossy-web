@@ -8,9 +8,29 @@ import { finalize } from 'rxjs';
 import { OrderItemCard } from "../../../order-items/components/order-item-card/order-item-card";
 import { AuthService } from '../../../../manager-features/authentication/services/auth.service';
 
-interface LightboxImage {
+export interface LightboxImage {
   url: string;
   type: 'image' | 'video';
+}
+
+export interface VariantGroup {
+  variantId: number | null;
+  toneName?: string;
+  toneCode?: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  amountPaid: number;
+  isPaid: boolean;
+}
+
+export interface ProductGroup {
+  productId: number;
+  productName: string;
+  images: LightboxImage[];
+  variants: VariantGroup[];
+  totalAmount: number;
+  amountPaid: number;
 }
 
 @Component({
@@ -21,43 +41,18 @@ interface LightboxImage {
 })
 export class OrderDetail implements OnInit {
 
-  
   order = signal<OrderResponseFull | null>(null);
   isLoading = signal(false);
   hasError = signal(false);
   isExpired = signal(false);
-
-  isLightboxOpen = signal(false);
   lastUpdated = signal<Date | null>(null);
-  selectedImageIndex = signal(0);
-  lightboxImages = signal<LightboxImage[]>([]);
 
-  activeImage = computed<LightboxImage>(() =>
-    this.lightboxImages()[this.selectedImageIndex()] ?? { url: '', type: 'image' }
-  );
-
-  sortedItems = computed<OrderItemResponseFull[]>(() =>
-    [...(this.order()?.items ?? [])].sort((a, b) => {
-      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return bTime - aTime;
-    })
-  );
-
-  paidItems = computed<OrderItemResponseFull[]>(() =>
-    this.sortedItems().filter(item => item.paidQuantity >= item.quantity)
-  );
-
-  unpaidItems = computed<OrderItemResponseFull[]>(() =>
-    this.sortedItems().filter(item => item.paidQuantity < item.quantity)
-  );
-
-constructor(
-  private route: ActivatedRoute,
-  private router: Router,
-  private orderService: OrderService,
-  public authService: AuthService  // ← agregar
-) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService,
+    public authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('token');
@@ -74,87 +69,134 @@ constructor(
           const expired = order.expiresAt != null && new Date(order.expiresAt) < new Date();
           this.isExpired.set(expired);
           this.order.set(order);
-          this.lastUpdated.set(new Date()); // 👈
+          this.lastUpdated.set(new Date());
         },
         error: () => this.hasError.set(true),
       });
   }
 
-  // Imagen principal del producto (fallback a variante)
-  getMainImage(item: OrderItemResponseFull): string | null {
-    const productImg = item.product?.images?.find(i => i.mainImage) ?? item.product?.images?.[0];
-    if (productImg) return productImg.url;
-    const variantImg = item.variant?.images?.find(i => i.mainImage) ?? item.variant?.images?.[0];
-    return variantImg?.url ?? null;
+  refresh(): void {
+    const token = this.route.snapshot.paramMap.get('token');
+    if (token) this.load(token);
   }
 
-  getProductName(item: OrderItemResponseFull): string {
+  goToManagerOrder(): void {
+    this.router.navigate(['/manager/orders', this.order()!.id]);
+  }
+
+  // --- Agrupación por producto + variante ---
+
+  private getProductName(item: OrderItemResponseFull): string {
     return item.product?.name ?? item.variant?.toneName ?? '';
   }
 
-  // Lightbox
-  openLightbox(item: OrderItemResponseFull, startIndex = 0): void {
-    const productImages: LightboxImage[] = (item.product?.images ?? [])
-      .map(i => ({ url: i.url, type: i.resourceType === 'video' ? 'video' : 'image' as 'image' | 'video' }));
-
-    const variantImages: LightboxImage[] = (item.variant?.images ?? [])
-      .map(i => ({ url: i.url, type: i.resourceType === 'video' ? 'video' : 'image' as 'image' | 'video' }));
-
-    const all = [...productImages, ...variantImages];
-    if (!all.length) return;
-
-    this.lightboxImages.set(all);
-    this.selectedImageIndex.set(startIndex);
-    this.isLightboxOpen.set(true);
+  private getProductImages(item: OrderItemResponseFull): LightboxImage[] {
+    return (item.product?.images ?? [])
+      .map(i => ({ url: i.url, type: (i.resourceType === 'video' ? 'video' : 'image') as 'image' | 'video' }));
   }
 
-  closeLightbox(): void {
-    this.isLightboxOpen.set(false);
+  private getVariantImages(item: OrderItemResponseFull): LightboxImage[] {
+    return (item.variant?.images ?? [])
+      .map(i => ({ url: i.url, type: (i.resourceType === 'video' ? 'video' : 'image') as 'image' | 'video' }));
   }
 
-  prevImage(): void {
-    this.selectedImageIndex.update(i =>
-      i === 0 ? this.lightboxImages().length - 1 : i - 1
-    );
-  }
+  sortedItems = computed<OrderItemResponseFull[]>(() =>
+    [...(this.order()?.items ?? [])].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    })
+  );
 
-  nextImage(): void {
-    this.selectedImageIndex.update(i =>
-      i === this.lightboxImages().length - 1 ? 0 : i + 1
-    );
-  }
+  // Agrupa por producto -> variante, calculando monto pagado real por variante
+  private variantsByProduct = computed<Map<number, { productName: string; images: LightboxImage[]; variants: VariantGroup[] }>>(() => {
+    const map = new Map<number, { productName: string; images: LightboxImage[]; variants: VariantGroup[] }>();
 
-  getPaidAmount(item: OrderItemResponseFull): number {
-    return (item.unitPrice ?? 0) * item.paidQuantity;
-  }
+    for (const item of this.sortedItems()) {
+      const productId = item.product?.id ?? item.variant?.productId;
+      if (productId == null) continue;
 
-  getPendingAmount(item: OrderItemResponseFull): number {
-    return (item.unitPrice ?? 0) * (item.quantity - item.paidQuantity);
-  }
+      const itemTotal = (item.unitPrice ?? 0) * item.quantity;
+      const itemPaid = item.amountPaid ?? 0;
+
+      let entry = map.get(productId);
+      if (!entry) {
+        entry = { productName: this.getProductName(item), images: this.getProductImages(item), variants: [] };
+        map.set(productId, entry);
+      }
+
+      const variantId = item.variant?.id ?? -1;
+      let variant = entry.variants.find(v => (v.variantId ?? -1) === variantId);
+      if (!variant) {
+        variant = {
+          variantId: item.variant?.id ?? null,
+          toneName: item.variant?.toneName,
+          toneCode: item.variant?.toneCode,
+          quantity: 0,
+          unitPrice: item.unitPrice ?? 0,
+          totalAmount: 0,
+          amountPaid: 0,
+          isPaid: false,
+        };
+        entry.variants.push(variant);
+        entry.images.push(...this.getVariantImages(item));
+      }
+
+      variant.quantity += item.quantity;
+      variant.totalAmount += itemTotal;
+      variant.amountPaid += itemPaid;
+    }
+
+    for (const entry of map.values()) {
+      for (const v of entry.variants) {
+        v.isPaid = v.amountPaid >= v.totalAmount;
+      }
+    }
+
+    return map;
+  });
+
+  // Una card por producto, solo con las variantes AÚN NO completas
+  unpaidProducts = computed<ProductGroup[]>(() => {
+    const result: ProductGroup[] = [];
+    this.variantsByProduct().forEach((entry, productId) => {
+      const pending = entry.variants.filter(v => !v.isPaid);
+      if (!pending.length) return;
+      result.push({
+        productId,
+        productName: entry.productName,
+        images: entry.images,
+        variants: pending,
+        totalAmount: pending.reduce((s, v) => s + v.totalAmount, 0),
+        amountPaid: pending.reduce((s, v) => s + v.amountPaid, 0),
+      });
+    });
+    return result;
+  });
+
+  // Una card por producto, solo con las variantes YA completas
+  paidProducts = computed<ProductGroup[]>(() => {
+    const result: ProductGroup[] = [];
+    this.variantsByProduct().forEach((entry, productId) => {
+      const paid = entry.variants.filter(v => v.isPaid);
+      if (!paid.length) return;
+      result.push({
+        productId,
+        productName: entry.productName,
+        images: entry.images,
+        variants: paid,
+        totalAmount: paid.reduce((s, v) => s + v.totalAmount, 0),
+        amountPaid: paid.reduce((s, v) => s + v.amountPaid, 0),
+      });
+    });
+    return result;
+  });
 
   totalPaid = computed<number>(() =>
-    (this.order()?.items ?? []).reduce((sum, item) => sum + this.getPaidAmount(item), 0)
+    (this.order()?.items ?? []).reduce((sum, item) => sum + (item.amountPaid ?? 0), 0)
   );
 
   totalPending = computed<number>(() =>
-    (this.order()?.items ?? []).reduce((sum, item) => sum + this.getPendingAmount(item), 0)
+    (this.order()?.items ?? []).reduce((sum, item) => sum + ((item.unitPrice ?? 0) * item.quantity - (item.amountPaid ?? 0)), 0)
   );
-
-navigateToProduct(item: OrderItemResponseFull): void {
-  const productId = item.product?.id ?? item.variant?.productId;
-  if (!productId) return;
-  const queryParams = item.variant?.toneName
-    ? { tono: encodeURIComponent(item.variant.toneName) }
-    : {};
-  this.router.navigate(['/guest/products', productId], { queryParams });
-}
-
-refresh(): void {
-  const token = this.route.snapshot.paramMap.get('token');
-  if (token) this.load(token);
-}
-
-goToManagerOrder(): void {
-  this.router.navigate(['/manager/orders', this.order()!.id]);
-}
 }

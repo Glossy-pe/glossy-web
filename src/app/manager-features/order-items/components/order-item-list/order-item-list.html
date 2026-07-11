@@ -104,7 +104,7 @@
           <p class="truncate text-[10px] text-gray-400 mb-1.5">{{ item.variant?.toneName ?? '—' }}</p>
 
           @if (isEditMode()) {
-            <input type="number" min="1" [(ngModel)]="item.quantity" (ngModelChange)="markDirty(item)"
+            <input type="number" min="1" disabled="true" [(ngModel)]="item.quantity" (ngModelChange)="markDirty(item)"
               class="w-full rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-800 outline-none focus:border-gray-400 mb-1.5"/>
               
           } @else {
