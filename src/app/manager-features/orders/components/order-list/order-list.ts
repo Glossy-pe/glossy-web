@@ -70,17 +70,30 @@ export class OrderList implements OnInit {
     this.loadOrders();
   }
 
-  toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
-    const map = {
-      isPaid: this.isPaid,
-      isSeparated: this.isSeparated,
-      isPacked: this.isPacked,
-    };
-    const current = map[filter]();
-    map[filter].set(current === true ? undefined : true);
-    this.currentPage.set(0);
-    this.loadOrders();
+toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
+  const map = {
+    isPaid: this.isPaid,
+    isSeparated: this.isSeparated,
+    isPacked: this.isPacked,
+  };
+
+  const signal = map[filter];
+  const current = signal();
+
+  let next: boolean | undefined;
+
+  if (current === undefined) {
+    next = true;
+  } else if (current === true) {
+    next = false;
+  } else {
+    next = undefined;
   }
+
+  signal.set(next);
+  this.currentPage.set(0);
+  this.loadOrders();
+}
 
   loadOrders(): void {
     this.isLoading.set(true);

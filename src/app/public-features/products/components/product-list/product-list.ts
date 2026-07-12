@@ -72,21 +72,21 @@ ngOnInit(): void {
   });
 
   // Carga inicial + reacción a cambios de URL
-this.route.queryParamMap.subscribe(qp => {
-  const newCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
-  const newSort = qp.get('sort') ?? 'newest';
+  this.route.queryParamMap.subscribe(qp => {
+    const newCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
+    const newSort = qp.get('sort') ?? 'newest';
 
-  this.categoryId.set(newCategoryId);
-  this.sort.set(newSort);
-  this.reset();
-  this.loadPage().subscribe({
-    next: res => this.handleResponse(res),
-    error: () => this.error.set(true),
+    this.categoryId.set(newCategoryId);
+    this.sort.set(newSort);
+    this.reset();
+    this.loadPage().subscribe({
+      next: res => this.handleResponse(res),
+      error: () => this.error.set(true),
+    });
   });
-});
 
-  // ← ELIMINA el loadPage() que estaba aquí suelto
-}
+    // ← ELIMINA el loadPage() que estaba aquí suelto
+  }
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(entries => {

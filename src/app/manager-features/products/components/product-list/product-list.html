@@ -1,149 +1,122 @@
-<div class="min-h-screen bg-gray-50 p-6">
+<div class="min-h-screen bg-gray-50">
 
-  <!-- Encabezado -->
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Productos</h1>
-      <p class="mt-1 text-sm text-gray-500">
-        @if (isSearching()) {
-          {{ searchResults().length }} resultado(s) para "{{ query() }}"
-        } @else if (pageData()) {
-          {{ pageData()!.totalElements }} productos en total
-        }
-      </p>
-    </div>
-    <button (click)="openModal()"
-      class="flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 active:scale-95">
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-      Nuevo producto
-    </button>
-  </div>
+  <!-- Header -->
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white p-4">
+    <h1 class="text-2xl font-bold text-gray-900">Productos</h1>
 
-  <!-- Búsqueda -->
-  <div class="relative mb-6">
-    <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-      fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-    </svg>
-    <input type="text" [ngModel]="query()" (ngModelChange)="onQueryChange($event)"
-      placeholder="Buscar productos..."
-      class="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm shadow-sm
-             outline-none focus:border-black focus:ring-1 focus:ring-black"/>
-    @if (query()) {
-      <button type="button" (click)="onQueryChange('')" aria-label="Limpiar búsqueda"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-600">
+    <div class="flex items-center gap-3">
+      <select [ngModel]="sort()" (ngModelChange)="onSortChange($event)"
+        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-black cursor-pointer">
+        <option value="">Relevancia</option>
+        <option value="newest">Más nuevos</option>
+        <option value="oldest">Más antiguos</option>
+        <option value="price_asc">Menor precio</option>
+        <option value="price_desc">Mayor precio</option>
+      </select>
+
+      <button (click)="openModal()"
+        class="flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 active:scale-95">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
+        Nuevo producto
       </button>
-    }
+    </div>
   </div>
 
-  <!-- Loading skeleton -->
-  @if (isLoading()) {
-    <div role="status" aria-live="polite" class="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <span class="sr-only">Cargando productos…</span>
-      @for (i of [1,2,3,4,5,6,7,8]; track i) {
-        <div class="animate-pulse overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div class="aspect-[16/10] w-full bg-gray-200"></div>
-          <div class="p-4">
-            <div class="mb-2 h-2.5 w-1/4 rounded bg-gray-200"></div>
-            <div class="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
-            <div class="mb-1 h-3 w-full rounded bg-gray-200"></div>
-            <div class="mb-4 h-3 w-2/3 rounded bg-gray-200"></div>
-            <div class="mb-4 grid grid-cols-2 gap-2">
-              <div class="h-10 rounded bg-gray-100"></div>
-              <div class="h-10 rounded bg-gray-100"></div>
-            </div>
-            <div class="flex gap-2">
-              <div class="h-9 flex-1 rounded-lg bg-gray-200"></div>
-              <div class="h-9 w-9 rounded-lg bg-gray-200"></div>
+  <div class="px-4">
+    <!-- Búsqueda -->
+    <div class="relative mb-4">
+      <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" [ngModel]="query()" (ngModelChange)="onQueryChange($event)"
+        placeholder="Buscar productos..."
+        class="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm shadow-sm
+               outline-none focus:border-black focus:ring-1 focus:ring-black"/>
+      @if (query()) {
+        <button type="button" (click)="onQueryChange('')" aria-label="Limpiar búsqueda"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-600">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      }
+    </div>
+
+    <!-- Categorías -->
+    <div class="mb-6 flex flex-wrap gap-2">
+      <button (click)="selectCategory(null)"
+        class="rounded-full px-4 py-1.5 text-xs font-medium transition"
+        [class]="categoryId() === null ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'">
+        Todas
+      </button>
+      @for (cat of categories(); track cat.id) {
+        <button (click)="selectCategory(cat.id)"
+          class="rounded-full px-4 py-1.5 text-xs font-medium transition"
+          [class]="categoryId() === cat.id ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'">
+          {{ cat.name }}
+        </button>
+      }
+    </div>
+
+    <!-- Grid -->
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      @for (product of products(); track product.id) {
+        <app-product-card [product]="product" (deleted)="onProductDeleted($event)" />
+      }
+
+      <!-- Skeletons iniciales -->
+      @if (loading() && products().length === 0) {
+        @for (i of [1,2,3,4,5,6,7,8]; track i) {
+          <div class="animate-pulse overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="aspect-[16/10] w-full bg-gray-200"></div>
+            <div class="p-4">
+              <div class="mb-2 h-2.5 w-1/4 rounded bg-gray-200"></div>
+              <div class="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
+              <div class="h-3 w-full rounded bg-gray-200"></div>
             </div>
           </div>
-        </div>
+        }
       }
     </div>
-  }
 
-  <!-- Error -->
-  @if (!isLoading() && hasError()) {
-    <div role="alert" class="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-20 text-center">
-      <svg class="mb-3 h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-      </svg>
-      <p class="text-sm font-medium text-gray-700">Ocurrió un error al cargar los productos</p>
-      <p class="mt-1 text-xs text-gray-400">Verifica tu conexión e inténtalo de nuevo</p>
-      <button (click)="loadPage(currentPage())"
-        class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
-        Reintentar
-      </button>
-    </div>
-  }
-
-  <!-- Grid -->
-  @if (!isLoading() && !hasError()) {
-    @let items = isSearching() ? searchResults() : (pageData()?.content ?? []);
-
-    @if (items.length === 0) {
+    <!-- Vacío -->
+    @if (!loading() && !error() && products().length === 0) {
       <div class="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-20 text-center">
         <svg class="mb-3 h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          @if (isSearching()) {
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          } @else {
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9l-8.25 4.5m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9l8.25 4.5" />
-          }
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9l-8.25 4.5m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9l8.25 4.5" />
         </svg>
-        <p class="text-sm font-medium text-gray-700">
-          {{ isSearching() ? 'No se encontraron productos' : 'No hay productos disponibles' }}
-        </p>
-        @if (isSearching()) {
-          <p class="mt-1 text-xs text-gray-400">Prueba con otro término de búsqueda</p>
-        }
+        <p class="text-sm font-medium text-gray-700">No hay productos disponibles</p>
       </div>
-    } @else {
-      <div class="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        @for (product of items; track product.id) {
-          <app-product-card [product]="product" (deleted)="onProductDeleted($event)" />
-        }
-      </div>
-
-      <!-- Paginación (solo en modo normal) -->
-      @if (!isSearching() && pageData()!.totalPages > 1) {
-        <div class="mt-8 flex items-center justify-center gap-2">
-          <button (click)="loadPage(currentPage() - 1)" [disabled]="pageData()!.first"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700
-                   transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">
-            ← Anterior
-          </button>
-
-          @for (p of pages(); track $index) {
-            @if (p === -1) {
-              <span class="px-1 text-sm text-gray-400">…</span>
-            } @else {
-              <button (click)="loadPage(p)"
-                class="min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition"
-                [class]="p === currentPage()
-                  ? 'bg-black text-white'
-                  : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'">
-                {{ p + 1 }}
-              </button>
-            }
-          }
-
-          <button (click)="loadPage(currentPage() + 1)" [disabled]="pageData()!.last"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700
-                   transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">
-            Siguiente →
-          </button>
-        </div>
-        <p class="mt-3 text-center text-xs text-gray-400">
-          Página {{ currentPage() + 1 }} de {{ pageData()!.totalPages }}
-        </p>
-      }
     }
-  }
+
+    <!-- Sentinel scroll infinito -->
+    @if (!loading() && hasMore()) {
+      <div #sentinel class="h-1"></div>
+    }
+
+    @if (loading() && products().length > 0) {
+      <div class="flex justify-center py-8">
+        <div class="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+      </div>
+    }
+
+    @if (error()) {
+      <div role="alert" class="flex flex-col items-center gap-3 py-10 text-center">
+        <p class="text-sm font-medium text-gray-700">Ocurrió un error al cargar los productos</p>
+        <button (click)="retry()"
+          class="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+          Reintentar
+        </button>
+      </div>
+    }
+
+    @if (!hasMore() && !loading() && products().length > 0) {
+      <p class="py-8 text-center text-xs text-gray-400">— No hay más productos —</p>
+    }
+  </div>
 
   <!-- Modal creación -->
   @if (showModal()) {
@@ -152,24 +125,15 @@
       (click)="closeModal()" (document:keydown.escape)="closeModal()">
 
       <div class="w-full max-w-md rounded-2xl bg-white shadow-xl" (click)="$event.stopPropagation()">
-
         <div class="p-6 text-center">
           <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
             <svg class="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9l-8.25 4.5m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9l8.25 4.5" />
             </svg>
           </div>
-
-          <h2 id="create-modal-title" class="mb-2 text-xl font-semibold text-gray-900">
-            Crear producto
-          </h2>
-
-          <p class="text-sm text-gray-600">
-            Se creará un nuevo producto vacío.
-          </p>
-          <p class="mt-1 text-sm text-gray-600">
-            Podrás completar su información más adelante.
-          </p>
+          <h2 id="create-modal-title" class="mb-2 text-xl font-semibold text-gray-900">Crear producto</h2>
+          <p class="text-sm text-gray-600">Se creará un nuevo producto vacío.</p>
+          <p class="mt-1 text-sm text-gray-600">Podrás completar su información más adelante.</p>
 
           @if (createError()) {
             <div role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
@@ -183,7 +147,6 @@
             class="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
             Cancelar
           </button>
-
           <button type="button" (click)="saveProduct()" [disabled]="isCreating()"
             class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50">
             {{ isCreating() ? 'Creando...' : 'Confirmar' }}

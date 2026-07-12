@@ -38,21 +38,38 @@
       }
     </select>
 
-    <button (click)="toggleFilter('isPaid')" [class]="isPaid() === true
-        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
-        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
-      Pagado
-    </button>
-    <button (click)="toggleFilter('isSeparated')" [class]="isSeparated() === true
-        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
-        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
-      Separado
-    </button>
-    <button (click)="toggleFilter('isPacked')" [class]="isPacked() === true
-        ? 'rounded-lg px-3 py-1.5 text-xs font-medium bg-green-600 text-white border border-green-600'
-        : 'rounded-lg px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
-      Empacado
-    </button>
+<button
+  (click)="toggleFilter('isPaid')"
+  [ngClass]="{
+    'rounded-lg px-3 py-1.5 text-xs font-medium border': true,
+    'bg-green-600 text-white border-green-600': isPaid() === true,
+    'bg-red-600 text-white border-red-600': isPaid() === false,
+    'bg-white text-gray-600 border-gray-200 hover:bg-gray-50': isPaid() === undefined
+  }">
+  Pagado
+</button>
+
+<button
+  (click)="toggleFilter('isSeparated')"
+  [ngClass]="{
+    'rounded-lg px-3 py-1.5 text-xs font-medium border': true,
+    'bg-green-600 text-white border-green-600': isSeparated() === true,
+    'bg-red-600 text-white border-red-600': isSeparated() === false,
+    'bg-white text-gray-600 border-gray-200 hover:bg-gray-50': isSeparated() === undefined
+  }">
+  Separado
+</button>
+
+<button
+  (click)="toggleFilter('isPacked')"
+  [ngClass]="{
+    'rounded-lg px-3 py-1.5 text-xs font-medium border': true,
+    'bg-green-600 text-white border-green-600': isPacked() === true,
+    'bg-red-600 text-white border-red-600': isPacked() === false,
+    'bg-white text-gray-600 border-gray-200 hover:bg-gray-50': isPacked() === undefined
+  }">
+  Empacado
+</button>
   </div>
 
   <!-- Loading -->
