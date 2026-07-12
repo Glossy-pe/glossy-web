@@ -23,80 +23,35 @@
 </div>
 }
 
-@if (!isLoading() && !hasError() && !isExpired() && order()) {
-<div class="min-h-screen bg-gray-50 pb-16">
+@if (!isLoading() && !hasError() && !isExpired() && order(); as ord) {
+<div class="min-h-screen bg-gray-50 pb-28 md:pb-16">
 
-
-
-  <!-- Header -->
-<div class="bg-white border-b border-gray-100 px-4 py-6">
-  <div class="mx-auto max-w-2xl">
-    <p class="text-xs text-gray-400 mb-1">Orden #{{ order()!.id }} · {{ order()!.orderCode || '—' }}</p>
-    <h1 class="text-2xl font-bold text-gray-900 mb-0.5">{{ order()!.customerName }}</h1>
-    <p class="text-sm text-gray-400">{{ order()!.customerAddress }}</p>
-
-    <!-- Contenedor Flex con justify-between para separar el Estado y el Botón Admin -->
-    <div class="mt-4 flex justify-between items-center gap-4">
-      
-      <!-- Lado izquierdo: Estado -->
-      <div>
-        @if (order()!.orderStatus) {
-        <div class="inline-flex items-center gap-2 rounded-full border px-3 py-1"
-          [style.border-color]="order()!.orderStatus!.hexColor"
-          [style.background-color]="order()!.orderStatus!.hexColor + '15'">
-          <span class="h-2 w-2 rounded-full animate-pulse"
-            [style.background-color]="order()!.orderStatus!.hexColor"></span>
-          <span class="text-xs font-semibold" [style.color]="order()!.orderStatus!.hexColor">
-            {{ order()!.orderStatus!.code }}
-          </span>
-          <span class="text-[10px] text-gray-400 font-normal">· Estado en tiempo real</span>
-        </div>
-        }
-      </div>
-
-      <!-- Lado derecho: Botón Admin -->
-      @if (authService.isAuthenticated()) {
-        <button type="button" (click)="goToManagerOrder()"
-          class="flex items-center gap-1.5 rounded-full border border-[#FF8DA1] px-3 py-1 text-[11px] text-[#FF8DA1] hover:bg-[#FFF5F7] transition-colors shrink-0">
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Ver en admin
-        </button>
-      }
-    </div>
-
-    <!-- Sección inferior: Actualizar -->
-    <div class="mt-4 flex items-center gap-3">
-      <button type="button" (click)="refresh()" [disabled]="isLoading()"
-        class="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1 text-[11px] text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-40 transition-colors">
-        <svg class="h-3 w-3" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Actualizar
-      </button>
-
-      @if (lastUpdated()) {
-      <span class="text-[10px] text-gray-300">
-        Actualizado {{ lastUpdated() | date:'HH:mm:ss' }}
-      </span>
-      }
-    </div>
-
+  <!-- Header: solo desktop -->
+  <div class="hidden md:block">
+    <app-order-customer-header
+      [order]="ord"
+      [isLoading]="isLoading()"
+      [isAdmin]="authService.isAuthenticated()"
+      [lastUpdated]="lastUpdated()"
+      (refreshClick)="refresh()"
+      (adminClick)="goToManagerOrder()">
+    </app-order-customer-header>
   </div>
-</div>
 
   <div class="mx-auto max-w-2xl px-4 pt-6 space-y-4">
 
-    <!-- Resumen -->
-    <!-- Total -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <!-- Resumen: solo desktop -->
+    <div class="hidden md:block rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <div class="flex items-center justify-between mb-3">
         <p class="text-sm text-gray-500">Total</p>
-        <p class="text-2xl font-bold text-gray-900">S/ {{ order()!.total | number:'1.2-2' }}</p>
+        <div class="flex items-baseline gap-2">
+          @if (totalDiscount() > 0) {
+            <span class="text-sm font-semibold text-red-400 line-through">
+              S/ {{ totalOriginal() | number:'1.2-2' }}
+            </span>
+          }
+          <p class="text-2xl font-bold text-gray-900">S/ {{ ord.total | number:'1.2-2' }}</p>
+        </div>
       </div>
       <div class="border-t border-gray-100 pt-3 space-y-2">
         <div class="flex items-center justify-between">
@@ -113,60 +68,152 @@
           </div>
           <p class="text-sm font-semibold text-gray-400">S/ {{ totalPending() | number:'1.2-2' }}</p>
         </div>
-      </div>
-    </div>
-
-    <!-- Productos en grid -->
-    <!-- @if (unpaidItems().length) {
-    <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-        Pendientes ({{ unpaidItems().length }})
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        @for (item of unpaidItems(); track item.id) {
-        <app-order-item-card [item]="item"></app-order-item-card>
+        @if (totalDiscount() > 0) {
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <p class="text-xs text-gray-500">Ahorro</p>
+          </div>
+          <p class="text-sm font-semibold text-emerald-600">S/ {{ totalDiscount() | number:'1.2-2' }}</p>
+        </div>
         }
       </div>
     </div>
-    } -->
 
+    <!-- Listado -->
+    <div class="flex flex-col gap-6">
 
-    <!-- Productos en grid -->
-    @if (unpaidProducts().length) {
-    <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-        Pendientes ({{ unpaidProducts().length }})
-      </p>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        @for (group of unpaidProducts(); track group.productId) {
-        <app-order-item-card [group]="group"></app-order-item-card>
-        }
+      @if (unpaidProducts().length) {
+      <div>
+        <div class="flex items-center gap-2 mb-3 px-1">
+          <span class="w-1.5 h-3.5 rounded-full bg-amber-500"></span>
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pendientes</h3>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+            {{ unpaidProducts().length }}
+          </span>
+        </div>
+        <div class="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3">
+          @for (group of unpaidProducts(); track group.productId) {
+          <app-order-item-card [group]="group"></app-order-item-card>
+          }
+        </div>
       </div>
-    </div>
-    }
+      }
 
-    @if (paidProducts().length) {
-    <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-        Pagados ({{ paidProducts().length }})
-      </p>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        @for (group of paidProducts(); track group.productId) {
-        <app-order-item-card [group]="group"></app-order-item-card>
-        }
+      @if (paidProducts().length) {
+      <div>
+        <div class="flex items-center gap-2 mb-3 px-1">
+          <span class="w-1.5 h-3.5 rounded-full bg-emerald-500"></span>
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pagados</h3>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            {{ paidProducts().length }}
+          </span>
+        </div>
+        <div class="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3">
+          @for (group of paidProducts(); track group.productId) {
+          <app-order-item-card [group]="group"></app-order-item-card>
+          }
+        </div>
       </div>
+      }
+
     </div>
-    }
 
-
-
-    <!-- Footer -->
     <p class="text-center text-[10px] text-gray-300 pb-4">
-      Creado el {{ order()!.createdAt | date:'dd/MM/yyyy HH:mm' }} · Válido hasta {{ order()!.expiresAt |
-      date:'dd/MM/yyyy HH:mm' }}
+      Creado el {{ ord.createdAt | date:'dd/MM/yyyy HH:mm' }} · Válido hasta {{ ord.expiresAt | date:'dd/MM/yyyy HH:mm' }}
     </p>
 
   </div>
+
+<!-- Carrito flotante: solo mobile -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <div class="mx-auto max-w-2xl">
+
+      <!-- Panel expandido: info del cliente + acciones -->
+      @if (isCartExpanded()) {
+      <div class="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3">
+        <div>
+          <p class="text-xs text-gray-400 mb-0.5">Orden #{{ ord.id }} · {{ ord.orderCode || '—' }}</p>
+          <p class="text-sm font-semibold text-gray-800">{{ ord.customerAddress }}</p>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          @if (ord.orderStatus) {
+          <div class="inline-flex items-center gap-2 rounded-full border px-3 py-1"
+            [style.border-color]="ord.orderStatus.hexColor"
+            [style.background-color]="ord.orderStatus.hexColor + '15'">
+            <span class="h-2 w-2 rounded-full animate-pulse"
+              [style.background-color]="ord.orderStatus.hexColor"></span>
+            <span class="text-xs font-semibold" [style.color]="ord.orderStatus.hexColor">
+              {{ ord.orderStatus.code }}
+            </span>
+          </div>
+          }
+
+          <div class="flex items-center gap-2">
+            @if (authService.isAuthenticated()) {
+            <button type="button" (click)="goToManagerOrder()"
+              class="flex items-center gap-1 rounded-full border border-[#FF8DA1] px-2.5 py-1 text-[10px] text-[#FF8DA1]">
+              Ver en admin
+            </button>
+            }
+            <button type="button" (click)="refresh()" [disabled]="isLoading()"
+              class="flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-500 disabled:opacity-40">
+              <svg class="h-3 w-3" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        @if (lastUpdated()) {
+        <p class="text-[10px] text-gray-300">Actualizado {{ lastUpdated() | date:'HH:mm:ss' }}</p>
+        }
+      </div>
+      }
+
+      <!-- Barra siempre visible: toggle + totales -->
+      <button type="button" (click)="toggleCart()"
+        class="w-full px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] text-left">
+
+        <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mb-2.5">
+          <div class="h-full rounded-full bg-amber-400 transition-all"
+            [style.width.%]="ord.total > 0 ? (totalPaid() / ord.total) * 100 : 0"></div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5">
+            <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" [class.rotate-180]="isCartExpanded()"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            <div>
+              <p class="text-[10px] text-gray-400 font-medium">Pagado</p>
+              <p class="text-sm font-bold text-amber-600">S/ {{ totalPaid() | number:'1.2-2' }}</p>
+            </div>
+          </div>
+
+          <div class="text-right">
+            @if (totalDiscount() > 0) {
+              <p class="text-[10px] font-semibold text-red-400 line-through">
+                S/ {{ totalOriginal() | number:'1.2-2' }}
+              </p>
+            }
+            <p class="text-lg font-extrabold text-gray-900 leading-tight">
+              S/ {{ ord.total | number:'1.2-2' }}
+            </p>
+            @if (totalDiscount() > 0) {
+              <p class="text-[10px] font-bold text-emerald-600">
+                Ahorras S/ {{ totalDiscount() | number:'1.2-2' }}
+              </p>
+            }
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+
 </div>
 }

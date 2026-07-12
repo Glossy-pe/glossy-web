@@ -7,6 +7,7 @@ import { OrderItemResponseFull } from '../../../order-items/models/order-item-re
 import { finalize } from 'rxjs';
 import { OrderItemCard } from "../../../order-items/components/order-item-card/order-item-card";
 import { AuthService } from '../../../../manager-features/authentication/services/auth.service';
+import { OrderCustomerHeader } from '../order-customer-header/order-customer-header';
 
 export interface LightboxImage {
   url: string;
@@ -19,6 +20,7 @@ export interface VariantGroup {
   toneCode?: string;
   quantity: number;
   unitPrice: number;
+  currentPrice: number;
   totalAmount: number;
   amountPaid: number;
   isPaid: boolean;
@@ -31,11 +33,12 @@ export interface ProductGroup {
   variants: VariantGroup[];
   totalAmount: number;
   amountPaid: number;
+  originalTotal: number;
 }
 
 @Component({
   selector: 'app-order-detail',
-  imports: [CommonModule, OrderItemCard],
+  imports: [CommonModule, OrderItemCard, OrderCustomerHeader],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
@@ -46,7 +49,7 @@ export class OrderDetail implements OnInit {
   hasError = signal(false);
   isExpired = signal(false);
   lastUpdated = signal<Date | null>(null);
-
+isCartExpanded = signal(false);
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -134,6 +137,7 @@ export class OrderDetail implements OnInit {
           toneCode: item.variant?.toneCode,
           quantity: 0,
           unitPrice: item.unitPrice ?? 0,
+          currentPrice: item.variant?.price ?? 0,
           totalAmount: 0,
           amountPaid: 0,
           isPaid: false,
@@ -168,6 +172,7 @@ export class OrderDetail implements OnInit {
         images: entry.images,
         variants: pending,
         totalAmount: pending.reduce((s, v) => s + v.totalAmount, 0),
+        originalTotal: pending.reduce((s, v) => s + v.currentPrice * v.quantity, 0),
         amountPaid: pending.reduce((s, v) => s + v.amountPaid, 0),
       });
     });
@@ -186,6 +191,7 @@ export class OrderDetail implements OnInit {
         images: entry.images,
         variants: paid,
         totalAmount: paid.reduce((s, v) => s + v.totalAmount, 0),
+        originalTotal: paid.reduce((s, v) => s + v.currentPrice * v.quantity, 0),
         amountPaid: paid.reduce((s, v) => s + v.amountPaid, 0),
       });
     });
@@ -199,4 +205,18 @@ export class OrderDetail implements OnInit {
   totalPending = computed<number>(() =>
     (this.order()?.items ?? []).reduce((sum, item) => sum + ((item.unitPrice ?? 0) * item.quantity - (item.amountPaid ?? 0)), 0)
   );
+
+    totalOriginal = computed<number>(() =>
+    [...this.unpaidProducts(), ...this.paidProducts()]
+      .reduce((sum, g) => sum + g.originalTotal, 0)
+  );
+
+  totalDiscount = computed<number>(() => {
+    const diff = this.totalOriginal() - (this.order()?.total ?? 0);
+    return diff > 0 ? diff : 0;
+  });
+
+  toggleCart(): void {
+    this.isCartExpanded.update(v => !v);
+  }
 }

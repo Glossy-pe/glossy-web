@@ -69,7 +69,7 @@
             <div class="border-t border-gray-100 px-3 pb-3 pt-2">
               <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">Variantes</p>
               <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                @for (variant of product.variants; track variant.id) {
+                @for (variant of sortedVariants(product); track variant.id) {
                   <div
                     (click)="$event.stopPropagation(); selectVariant(variant)"
                     class="cursor-pointer rounded-lg border p-2 transition"

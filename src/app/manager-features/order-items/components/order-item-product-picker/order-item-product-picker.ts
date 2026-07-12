@@ -51,6 +51,10 @@ export class OrderItemProductPicker implements OnDestroy {
     this.search$.next(value);
   }
 
+  sortedVariants(product: ProductResponseFull): VariantResponseFull[] {
+    return [...(product.variants ?? [])].sort((a, b) => a.position - b.position);
+  }
+
   private doSearch(q: string): void {
     if (!q.trim()) {
       this.results.set([]);

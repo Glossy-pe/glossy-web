@@ -51,4 +51,10 @@ export class OrderItemCard {
       : {};
     this.router.navigate(['/guest/products', this.group.productId], { queryParams });
   }
+
+
+  hasProductDiscount(): boolean {
+    return this.group.totalAmount < this.group.originalTotal;
+  }
+  
 }
