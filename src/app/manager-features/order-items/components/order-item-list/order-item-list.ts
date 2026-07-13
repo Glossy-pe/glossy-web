@@ -12,6 +12,7 @@ import { OrderService } from '../../../orders/services/order.service';
 import { ProductResponseFull } from '../../../products/models/product-response-full.model';
 import { VariantQueryProjection } from '../../../variants/models/variant-query-projection.model';
 
+export type TriState = boolean | null;
 
 export interface EditableOrderItem extends OrderItemResponseFull {
   dirty: boolean;
@@ -33,12 +34,16 @@ export class OrderItemList implements OnInit {
 
   items = signal<EditableOrderItem[]>([]);
   originalItems: OrderItemResponseFull[] = [];
+  filterSeparated = signal<TriState>(null);
+  filterPacked = signal<TriState>(null);
+  filterPaid = signal<TriState>(null);
 
   isEditMode = signal(false);
   isLoading = signal(false);
   hasError = signal(false);
   isSaving = signal(false);
   showPicker = signal(false);
+  
 
   toastMessage = signal<string | null>(null);
   private toastTimer: any;
@@ -52,15 +57,46 @@ export class OrderItemList implements OnInit {
     this.items().filter(i => i.pendingDelete && !i.isNew).length
   );
 
-  sortedItems = computed(() =>
-    [...this.items()].sort((a, b) => {
-      if (a.isNew && !b.isNew) return -1;
-      if (!a.isNew && b.isNew) return 1;
-      const productA = a.variant?.productId ?? 0;
-      const productB = b.variant?.productId ?? 0;
-      return productA - productB;
-    })
-  );
+hasActiveFilters = computed(() =>
+  this.filterSeparated() !== null ||
+  this.filterPacked() !== null ||
+  this.filterPaid() !== null
+);
+
+filteredItems = computed(() => {
+  const sep = this.filterSeparated();
+  const pack = this.filterPacked();
+  const paid = this.filterPaid();
+
+  if (sep === null && pack === null && paid === null) {
+    return this.items();
+  }
+
+  return this.items().filter(item => {
+    // los items pendientes de borrar o nuevos siempre se muestran
+    if (item.pendingDelete || item.isNew) return true;
+
+    const isSeparated = item.separatedQuantity >= item.quantity;
+    const isPacked = item.packedQuantity >= item.quantity;
+    const isPaid = item.paidQuantity >= item.quantity;
+
+    if (sep !== null && isSeparated !== sep) return false;
+    if (pack !== null && isPacked !== pack) return false;
+    if (paid !== null && isPaid !== paid) return false;
+    return true;
+  });
+});
+
+sortedItems = computed(() =>
+  [...this.filteredItems()].sort((a, b) => {
+    if (a.isNew && !b.isNew) return -1;
+    if (!a.isNew && b.isNew) return 1;
+    const productA = a.variant?.productId ?? 0;
+    const productB = b.variant?.productId ?? 0;
+    return productA - productB;
+  })
+);
+
 
   constructor(
     private orderItemService: OrderItemService,
@@ -269,4 +305,29 @@ export class OrderItemList implements OnInit {
   item.dirty = true;
   this.items.update(items => [...items]);
 }
+
+private cycleFilter(current: TriState): TriState {
+  if (current === null) return true;
+  if (current === true) return false;
+  return null;
+}
+
+toggleFilterSeparated(): void {
+  this.filterSeparated.update(v => this.cycleFilter(v));
+}
+
+toggleFilterPacked(): void {
+  this.filterPacked.update(v => this.cycleFilter(v));
+}
+
+toggleFilterPaid(): void {
+  this.filterPaid.update(v => this.cycleFilter(v));
+}
+
+clearFilters(): void {
+  this.filterSeparated.set(null);
+  this.filterPacked.set(null);
+  this.filterPaid.set(null);
+}
+
 }

@@ -25,6 +25,59 @@
   }
 
 
+  <div class="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+  <span class="text-xs text-gray-400 mr-1">Filtros:</span>
+
+  <button (click)="toggleFilterSeparated()"
+    class="rounded-md border px-2.5 py-1 text-xs font-medium transition"
+    [class.border-blue-300]="filterSeparated() === true"
+    [class.bg-blue-50]="filterSeparated() === true"
+    [class.text-blue-700]="filterSeparated() === true"
+    [class.border-red-300]="filterSeparated() === false"
+    [class.bg-red-50]="filterSeparated() === false"
+    [class.text-red-700]="filterSeparated() === false"
+    [class.border-gray-200]="filterSeparated() === null"
+    [class.bg-white]="filterSeparated() === null"
+    [class.text-gray-500]="filterSeparated() === null">
+    {{ filterSeparated() === true ? '✓ Separado' : filterSeparated() === false ? '✕ No separado' : 'Separación' }}
+  </button>
+
+  <button (click)="toggleFilterPacked()"
+    class="rounded-md border px-2.5 py-1 text-xs font-medium transition"
+    [class.border-green-300]="filterPacked() === true"
+    [class.bg-green-50]="filterPacked() === true"
+    [class.text-green-700]="filterPacked() === true"
+    [class.border-red-300]="filterPacked() === false"
+    [class.bg-red-50]="filterPacked() === false"
+    [class.text-red-700]="filterPacked() === false"
+    [class.border-gray-200]="filterPacked() === null"
+    [class.bg-white]="filterPacked() === null"
+    [class.text-gray-500]="filterPacked() === null">
+    {{ filterPacked() === true ? '✓ Empacado' : filterPacked() === false ? '✕ No empacado' : 'Empaque' }}
+  </button>
+
+  <button (click)="toggleFilterPaid()"
+    class="rounded-md border px-2.5 py-1 text-xs font-medium transition"
+    [class.border-amber-300]="filterPaid() === true"
+    [class.bg-amber-50]="filterPaid() === true"
+    [class.text-amber-700]="filterPaid() === true"
+    [class.border-red-300]="filterPaid() === false"
+    [class.bg-red-50]="filterPaid() === false"
+    [class.text-red-700]="filterPaid() === false"
+    [class.border-gray-200]="filterPaid() === null"
+    [class.bg-white]="filterPaid() === null"
+    [class.text-gray-500]="filterPaid() === null">
+    {{ filterPaid() === true ? '✓ Pagado' : filterPaid() === false ? '✕ No pagado' : 'Pago' }}
+  </button>
+
+  @if (hasActiveFilters()) {
+  <button (click)="clearFilters()"
+    class="ml-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 underline hover:text-gray-600">
+    Limpiar filtros
+  </button>
+  }
+</div>
+
   @if (isEditMode()) {
   <div class="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
     <span class="text-xs text-gray-400 mr-1">Marcar todos:</span>
