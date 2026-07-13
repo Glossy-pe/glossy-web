@@ -29,7 +29,7 @@ export class OrderList implements OnInit {
   showCreateConfirm = signal(false);
   newCustomerName = signal('');
 
-  statuses = signal<OrderStatusResponse[]>([]);          // 👈
+  statuses = signal<OrderStatusResponse[]>([]);
   selectedStatusId = signal<number | undefined>(2);
 
   isPaid = signal<boolean | undefined>(undefined);
@@ -38,6 +38,9 @@ export class OrderList implements OnInit {
 
   @Input() variantId: number | undefined;
 
+  // 👈 evita que la primera carga (leída de la URL) dispare otra navegación innecesaria
+  private isRestoringFromUrl = false;
+
   constructor(
     private orderService: OrderService,
     private router: Router,
@@ -45,55 +48,104 @@ export class OrderList implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadStatuses();   // 👈
+    this.loadStatuses();
 
     this.searchSubject
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe(value => {
         this.search.set(value);
         this.currentPage.set(0);
-        this.loadOrders();
+        this.syncUrlAndLoad();
       });
 
+    this.restoreFromUrl();   // 👈 lee el estado inicial desde la URL
     this.loadOrders();
   }
 
-  loadStatuses(): void {   // 👈
+  // 👈 Lee query params y setea signals sin volver a navegar
+  private restoreFromUrl(): void {
+    this.isRestoringFromUrl = true;
+    const qp = this.route.snapshot.queryParamMap;
+
+    const page = qp.get('page');
+    const search = qp.get('search');
+    const statusId = qp.get('statusId');
+
+    this.currentPage.set(page ? +page : 0);
+    this.search.set(search ?? '');
+    this.selectedStatusId.set(statusId ? +statusId : undefined);
+    this.isPaid.set(this.parseBool(qp.get('isPaid')));
+    this.isSeparated.set(this.parseBool(qp.get('isSeparated')));
+    this.isPacked.set(this.parseBool(qp.get('isPacked')));
+
+    this.isRestoringFromUrl = false;
+  }
+
+  private parseBool(value: string | null): boolean | undefined {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return undefined;
+  }
+
+  // 👈 Centraliza: actualiza la URL (sin recargar la página) y luego pide los datos
+private syncUrlAndLoad(): void {
+  if (this.isRestoringFromUrl) return;
+
+  const queryParams: Record<string, string | number | boolean | null> = {
+    page: this.currentPage() || null,
+    search: this.search() || null,
+    statusId: this.selectedStatusId() ?? null,
+    isPaid: this.isPaid() ?? null,
+    isSeparated: this.isSeparated() ?? null,
+    isPacked: this.isPacked() ?? null,
+  };
+
+  this.router.navigate([], {
+    relativeTo: this.route,
+    queryParams,
+    queryParamsHandling: '',
+    replaceUrl: true,
+  });
+
+  this.loadOrders();
+}
+
+  loadStatuses(): void {
     this.orderService.getStatuses().subscribe(res => {
       this.statuses.set(res);
     });
   }
 
-  onStatusChange(value: string): void {   // 👈
+  onStatusChange(value: string): void {
     this.selectedStatusId.set(value ? +value : undefined);
     this.currentPage.set(0);
-    this.loadOrders();
+    this.syncUrlAndLoad();
   }
 
-toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
-  const map = {
-    isPaid: this.isPaid,
-    isSeparated: this.isSeparated,
-    isPacked: this.isPacked,
-  };
+  toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
+    const map = {
+      isPaid: this.isPaid,
+      isSeparated: this.isSeparated,
+      isPacked: this.isPacked,
+    };
 
-  const signal = map[filter];
-  const current = signal();
+    const signal = map[filter];
+    const current = signal();
 
-  let next: boolean | undefined;
+    let next: boolean | undefined;
 
-  if (current === undefined) {
-    next = true;
-  } else if (current === true) {
-    next = false;
-  } else {
-    next = undefined;
+    if (current === undefined) {
+      next = true;
+    } else if (current === true) {
+      next = false;
+    } else {
+      next = undefined;
+    }
+
+    signal.set(next);
+    this.currentPage.set(0);
+    this.syncUrlAndLoad();
   }
-
-  signal.set(next);
-  this.currentPage.set(0);
-  this.loadOrders();
-}
 
   loadOrders(): void {
     this.isLoading.set(true);
@@ -105,7 +157,7 @@ toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
         this.pageSize,
         this.search(),
         this.variantId,
-        this.selectedStatusId(),   // 👈
+        this.selectedStatusId(),
         this.isPaid(),
         this.isSeparated(),
         this.isPacked()
@@ -151,7 +203,7 @@ toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
   prevPage(): void {
     if (this.currentPage() > 0) {
       this.currentPage.update(p => p - 1);
-      this.loadOrders();
+      this.syncUrlAndLoad();
     }
   }
 
@@ -159,21 +211,17 @@ toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
     const p = this.page();
     if (p && !p.last) {
       this.currentPage.update(p => p + 1);
-      this.loadOrders();
+      this.syncUrlAndLoad();
     }
   }
 
   onSearch(value: string): void {
     this.selectedStatusId.set(undefined);
-    // this.isPaid.set(undefined);
-    // this.isSeparated.set(undefined);
-    // this.isPacked.set(undefined);
     if (this.statusSelect) {
       this.statusSelect.nativeElement.value = '';
     }
     this.searchSubject.next(value.trim());
   }
-
 
   confirmCreate(): void {
     this.showCreateConfirm.set(true);
@@ -192,28 +240,28 @@ toggleFilter(filter: 'isPaid' | 'isSeparated' | 'isPacked'): void {
   }
 
   createDefaultWithName(customerName: string): void {
-  this.isCreating.set(true);
+    this.isCreating.set(true);
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
-  this.orderService
-    .create({
-      customerName,
-      customerAddress: 'NA',
-      description: 'NA',
-      orderCode: '',
-      orderStatusId: 1,
-      costTotal: 0,
-      total: 0,
-      expiresAt: expiresAt.toISOString(),
-    })
-    .pipe(finalize(() => this.isCreating.set(false)))
-    .subscribe({
-      next: (order) => this.router.navigate(['/manager/orders', order.id]),
-      error: (err) => console.error(err),
-    });
-}
+    this.orderService
+      .create({
+        customerName,
+        customerAddress: 'NA',
+        description: 'NA',
+        orderCode: '',
+        orderStatusId: 1,
+        costTotal: 0,
+        total: 0,
+        expiresAt: expiresAt.toISOString(),
+      })
+      .pipe(finalize(() => this.isCreating.set(false)))
+      .subscribe({
+        next: (order) => this.router.navigate(['/manager/orders', order.id]),
+        error: (err) => console.error(err),
+      });
+  }
 
   getTotalQuantity(order: OrderResponseFull): number {
     return order.items.reduce((sum, i) => sum + i.quantity, 0);
