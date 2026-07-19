@@ -1,0 +1,23 @@
+/* Keyframe Animations */
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 20s linear infinite;
+    }
+    
+    /* Scrollbar Aesthetics */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFFBF8;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #F3C6D3;
+      border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #EAA9B8;
+    }

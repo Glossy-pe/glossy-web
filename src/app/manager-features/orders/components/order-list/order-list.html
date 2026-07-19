@@ -182,10 +182,16 @@
 </div>
 
       <!-- Footer -->
+<!-- Footer -->
       <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-        <span class="text-xs text-gray-400">
-          {{ order.createdAt | date:'dd/MM/yy HH:mm' }}
-        </span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-gray-400">
+            {{ order.createdAt | date:'dd/MM/yy HH:mm' }}
+          </span>
+          <span class="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">
+            {{ getDaysElapsed(order) === 0 ? 'Hoy' : getDaysElapsed(order) === 1 ? '1 día' : getDaysElapsed(order) + ' días' }}
+          </span>
+        </div>
         <button (click)="goToDetail(order.id); $event.stopPropagation()"
           class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-100">
           Ver detalle →

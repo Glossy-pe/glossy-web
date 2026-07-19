@@ -275,7 +275,20 @@ private syncUrlAndLoad(): void {
     return order.items.reduce((sum, i) => sum + i.packedQuantity, 0);
   }
 
+  
   getPaidAmount(order: OrderResponseFull): number {
     return order.items.reduce((sum, i) => sum + (i.amountPaid ?? 0), 0);
   }
+getDaysElapsed(order: OrderResponseFull): number {
+    if (!order.createdAt) return 0;
+    const created = new Date(order.createdAt);
+    const now = new Date();
+    // normalizamos a medianoche para que cuente "días calendario"
+    // y no se vea afectado por la hora exacta de creación
+    const createdMidnight = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffMs = nowMidnight.getTime() - createdMidnight.getTime();
+    return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+  }
+  
 }

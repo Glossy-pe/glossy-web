@@ -105,6 +105,10 @@ export const routes: Routes = [
     path: 'orders/:token',
     loadComponent: () => import('./public-features/orders/components/order-detail/order-detail').then(m => m.OrderDetail)
   },
+  {
+    path: 'ordersv2',
+    loadComponent: () => import('./public-features/orders/components/order-detailv2/order-detailv2').then(m => m.OrderDetailv2)
+  },
   { path: 'tracking-agencies', loadComponent: () => import('./public-features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },
   { path: '**', redirectTo: 'guest/products' }
 ];

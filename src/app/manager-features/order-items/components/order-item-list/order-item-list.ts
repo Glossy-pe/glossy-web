@@ -2,7 +2,7 @@ import { Component, Input, OnInit, signal, computed, Output, EventEmitter } from
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { finalize, catchError } from 'rxjs/operators';
+import { finalize, catchError, map } from 'rxjs/operators';
 import { OrderItemService } from '../../services/order-item.service';
 import { OrderItemProductPicker } from '../order-item-product-picker/order-item-product-picker';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
@@ -154,10 +154,16 @@ sortedItems = computed(() =>
     this.items.update(items => [...items]);
   }
 
-  saveAll(): void {
+saveAll(): void {
     const toCreate = this.items().filter(i => i.isNew && !i.pendingDelete);
-    const toUpdate = this.items().filter(i => i.dirty && !i.isNew && !i.pendingDelete);
     const toDelete = this.items().filter(i => i.pendingDelete && !i.isNew);
+
+    const toUpdate = this.items().filter(i => {
+      if (i.isNew || i.pendingDelete) return false;
+      if (!i.dirty) return false;
+      const original = this.originalItems.find(o => o.id === i.id);
+      return !original || this.hasRealChanges(i, original);
+    });
 
     if (toCreate.length === 0 && toUpdate.length === 0 && toDelete.length === 0) {
       this.isEditMode.set(false);
@@ -165,53 +171,64 @@ sortedItems = computed(() =>
       return;
     }
 
-    const createOps$ = toCreate.map(i =>
-      this.orderItemService.create({
-        productVariantId: i.productVariantId,
-        orderId: i.orderId,
-        quantity: i.quantity,
-        paidQuantity: i.paidQuantity,
-        separatedQuantity: i.separatedQuantity,
-        packedQuantity: i.packedQuantity,
-        amountPaid: i.amountPaid,
-        unitPrice: i.unitPrice,
-      }).pipe(catchError(err => { console.error(err); return of(null); }))
+    const wrap = (obs: any) => obs.pipe(
+      map(() => ({ ok: true as const })),
+      catchError((err: any) => { console.error(err); return of({ ok: false as const }); }),
     );
 
     this.isSaving.set(true);
 
-    const updateOps$ = toUpdate.map(i =>
-      this.orderItemService.update(i.id, {
-        productVariantId: i.productVariantId,
-        orderId: i.orderId,
-        quantity: i.quantity,
-        paidQuantity: i.paidQuantity,
-        separatedQuantity: i.separatedQuantity,
-        packedQuantity: i.packedQuantity,
-        amountPaid: i.amountPaid,
-        unitPrice: i.unitPrice,
-      }).pipe(catchError(err => { console.error(err); return of(null); }))
-    );
+    const createOps$ = toCreate.map(i => wrap(this.orderItemService.create({
+      productVariantId: i.productVariantId,
+      orderId: i.orderId,
+      quantity: i.quantity,
+      paidQuantity: i.paidQuantity,
+      separatedQuantity: i.separatedQuantity,
+      packedQuantity: i.packedQuantity,
+      amountPaid: i.amountPaid,
+      unitPrice: i.unitPrice,
+    })));
 
-    const deleteOps$ = toDelete.map(i =>
-      this.orderItemService.delete(i.id)
-        .pipe(catchError(err => { console.error(err); return of(null); }))
-    );
+    const updateOps$ = toUpdate.map(i => wrap(this.orderItemService.update(i.id, {
+      productVariantId: i.productVariantId,
+      orderId: i.orderId,
+      quantity: i.quantity,
+      paidQuantity: i.paidQuantity,
+      separatedQuantity: i.separatedQuantity,
+      packedQuantity: i.packedQuantity,
+      amountPaid: i.amountPaid,
+      unitPrice: i.unitPrice,
+    })));
+
+    const deleteOps$ = toDelete.map(i => wrap(this.orderItemService.delete(i.id)));
 
     const all$ = [...createOps$, ...updateOps$, ...deleteOps$];
 
-    forkJoin(all$.length ? all$ : [of(null)])
+    forkJoin(all$.length ? all$ : [of({ ok: true as const })])
       .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe({
-        next: () => {
-          this.isEditMode.set(false);
-          this.showPicker.set(false);
-          this.loadItems();
+      .subscribe(results => {
+        const failCount = results.filter((r: { ok: boolean }) => !r.ok).length;
+        this.isEditMode.set(false);
+        this.showPicker.set(false);
+        this.loadItems();
+        if (failCount > 0) {
+          this.showToast(`${failCount} cambio(s) no se pudieron guardar. Revisa e intenta de nuevo.`);
+        } else {
           this.showToast('Cambios guardados');
           this.itemsSaved.emit();
-        },
-        error: (err) => console.error(err),
+        }
       });
+  }
+
+  private hasRealChanges(item: EditableOrderItem, original: OrderItemResponseFull): boolean {
+    return (
+      item.quantity !== original.quantity ||
+      item.paidQuantity !== original.paidQuantity ||
+      item.separatedQuantity !== original.separatedQuantity ||
+      item.packedQuantity !== original.packedQuantity ||
+      item.amountPaid !== original.amountPaid ||
+      item.unitPrice !== original.unitPrice
+    );
   }
 
   showToast(msg: string): void {

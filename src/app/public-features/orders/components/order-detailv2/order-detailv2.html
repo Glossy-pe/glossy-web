@@ -1,0 +1,524 @@
+    <div class="min-h-screen bg-[#FFFBF8] text-[#5E4A42] font-sans antialiased selection:bg-[#F3D1D5] selection:text-[#5E4A42]">
+      
+      <!-- Toast Notification for Interactions -->
+      @if (toastMessage()) {
+        <div class="fixed top-6 right-6 z-50 transform translate-y-0 transition-all duration-300">
+          <div class="bg-[#FFF0F2] border border-[#F3C6D3] text-[#8C5265] px-5 py-4 rounded-2xl shadow-xl flex items-center space-x-3">
+            <span class="text-xl">✨</span>
+            <span class="font-medium text-sm">{{ toastMessage() }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Invoice Modal -->
+      @if (showInvoiceModal()) {
+        <div class="fixed inset-0 bg-[#3A2D28]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-[#F5E6E1] transform scale-100 transition-all">
+            <div class="flex justify-between items-center pb-4 border-b border-[#F5E6E1]">
+              <div>
+                <h3 class="text-lg font-bold text-[#5E4A42]">Invoice #LVN-2024-0523</h3>
+                <p class="text-xs text-[#A38E86]">Luvienne Korean Beauty</p>
+              </div>
+              <button (click)="toggleInvoiceModal()" class="text-[#A38E86] hover:text-[#5E4A42] transition-colors p-2 rounded-full hover:bg-[#FAF0ED]">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div class="py-6 space-y-4">
+              <div class="flex justify-between text-sm">
+                <span class="text-[#A38E86]">Order Date</span>
+                <span class="font-medium">May 23, 2024</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-[#A38E86]">Payment Method</span>
+                <span class="font-medium">KakaoPay</span>
+              </div>
+              <div class="border-t border-dashed border-[#F5E6E1] my-4"></div>
+              @for (item of orderedItems(); track item.id) {
+                <div class="flex justify-between text-sm">
+                  <span class="text-[#5E4A42] max-w-[200px] truncate">{{ item.brand }} - {{ item.name }}</span>
+                  <span class="text-[#A38E86]">Qty: {{ item.qty }} <span class="ml-2 font-medium text-[#5E4A42]">₩{{ item.price.toLocaleString() }}</span></span>
+                </div>
+              }
+              <div class="border-t border-[#F5E6E1] pt-4 mt-4 flex justify-between items-center">
+                <span class="font-bold text-[#5E4A42]">Total Amount</span>
+                <span class="text-xl font-bold text-[#C97B8F]">₩{{ totalAmount().toLocaleString() }}</span>
+              </div>
+            </div>
+            
+            <button (click)="printSimulatedInvoice()" class="w-full py-3 bg-[#EAA9B8] hover:bg-[#DF98A7] text-white font-medium rounded-xl shadow-md shadow-[#EAA9B8]/20 transition-all hover:scale-[1.02]">
+              Print Receipt
+            </button>
+          </div>
+        </div>
+      }
+
+      <div class="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-6">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-full lg:w-[280px] shrink-0 space-y-6">
+          
+          <!-- Profile Card -->
+          <div class="bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] flex flex-col items-center text-center">
+            <h2 class="text-2xl font-serif tracking-widest text-[#B5828D] font-semibold mb-6">Luvienne</h2>
+            
+            <!-- Avatar Frame with elegant rose border -->
+            <div class="relative w-28 h-28 mb-4">
+              <div class="absolute inset-0 rounded-full border-2 border-dashed border-[#F3C6D3] animate-spin-slow"></div>
+              <div class="absolute inset-1.5 rounded-full overflow-hidden bg-[#FAF0ED] flex items-center justify-center">
+                <!-- Illustrated Avatar styling to match Korean Beauty Aesthetic -->
+                <svg viewBox="0 0 100 100" class="w-full h-full object-cover">
+                  <defs>
+                    <linearGradient id="skin" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFF3F0" />
+                      <stop offset="100%" stop-color="#FEDCD5" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="50" fill="#FFF2F4"/>
+                  <!-- Hair back -->
+                  <path d="M25,50 C25,20 75,20 75,50 C75,50 82,75 80,85 C78,95 22,95 20,85 C18,75 25,50 25,50 Z" fill="#3D302A"/>
+                  <!-- Face -->
+                  <circle cx="50" cy="48" r="28" fill="url(#skin)"/>
+                  <!-- Cheeks Blush -->
+                  <circle cx="34" cy="52" r="6" fill="#F3C6D3" opacity="0.8"/>
+                  <circle cx="66" cy="52" r="6" fill="#F3C6D3" opacity="0.8"/>
+                  <!-- Eyes -->
+                  <circle cx="42" cy="44" r="2" fill="#3D302A"/>
+                  <circle cx="58" cy="44" r="2" fill="#3D302A"/>
+                  <path d="M40,40 Q42,39 44,41" stroke="#3D302A" stroke-width="1.5" fill="none"/>
+                  <path d="M60,40 Q58,39 56,41" stroke="#3D302A" stroke-width="1.5" fill="none"/>
+                  <!-- Mouth -->
+                  <path d="M47,56 Q50,58 53,56" stroke="#C97B8F" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <!-- Hair front/bangs -->
+                  <path d="M22,46 C28,26 72,26 78,46 C74,28 26,28 22,46 Z" fill="#4E3E37"/>
+                  <path d="M42,28 C48,36 52,36 58,28" stroke="#3D302A" stroke-width="1" fill="none"/>
+                  <!-- Flower in hair -->
+                  <circle cx="28" cy="35" r="5" fill="#EAA9B8"/>
+                  <circle cx="28" cy="35" r="2" fill="#FFF"/>
+                </svg>
+              </div>
+              <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md">
+                <span class="text-xs">🌸</span>
+              </div>
+            </div>
+
+            <h3 class="text-lg font-medium text-[#5E4A42] flex items-center gap-1">
+              Hello, Serin <span class="text-[#EAA9B8]">♡</span>
+            </h3>
+            <span class="text-xs font-semibold text-[#B5828D] bg-[#FFF0F2] px-3 py-1 rounded-full mt-1.5 tracking-wider uppercase">Luvienne Club 👑</span>
+            <p class="text-xs text-[#A38E86] mt-3 flex items-center justify-center gap-1">
+              You're so special to us <span class="animate-bounce">✨</span>
+            </p>
+          </div>
+
+          <!-- Navigation Menu -->
+          <nav class="bg-white rounded-[32px] p-4 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)]">
+            <ul class="space-y-1">
+              @for (item of menuItems(); track item.id) {
+                <li>
+                  <button 
+                    (click)="setActiveMenu(item.id)"
+                    [class]="activeMenu() === item.id 
+                      ? 'w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-[#FFF0F2] text-[#8C5265] font-semibold transition-all duration-300' 
+                      : 'w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-[#7A665E] hover:bg-[#FAF3F1] hover:text-[#5E4A42] transition-all duration-300'"
+                  >
+                    <div class="flex items-center space-x-3.5">
+                      <span class="text-lg" [innerHTML]="item.icon"></span>
+                      <span class="text-sm font-medium">{{ item.label }}</span>
+                    </div>
+                    @if (item.id === 'wishlist' && wishlistCount() > 0) {
+                      <span class="bg-[#EAA9B8] text-white text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse">
+                        {{ wishlistCount() }}
+                      </span>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          </nav>
+
+          <!-- Club Points Card -->
+          <div class="bg-gradient-to-br from-[#FCF5F3] to-[#FFF0F2] rounded-[32px] p-6 border border-[#FDF2F0] relative overflow-hidden group">
+            <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-[#FDF2F0]/50 group-hover:scale-125 transition-transform duration-500"></div>
+            <div class="relative flex items-start gap-4">
+              <div class="p-3 bg-white rounded-2xl shadow-sm">
+                <span class="text-2xl">🍯</span>
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs font-semibold text-[#B5828D] tracking-wider uppercase">Luvienne Club</p>
+                <h4 class="text-base font-bold text-[#5E4A42]">Gold Blossom</h4>
+                <p class="text-lg font-extrabold text-[#C97B8F]">2,450 <span class="text-xs font-medium text-[#A38E86]">Points</span></p>
+                <button (click)="triggerToast('Rewards catalogue coming soon!')" class="text-xs font-semibold text-[#8C5265] underline hover:text-[#5E4A42] transition-colors pt-1 block">
+                  View Benefits
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Special Moments Promo -->
+          <div class="bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] relative overflow-hidden">
+            <h5 class="text-xs font-bold text-[#C97B8F] tracking-wide uppercase">Special Moments</h5>
+            <h4 class="text-base font-serif font-bold text-[#5E4A42] mt-1 leading-tight">Deserve Special Beauty</h4>
+            <p class="text-xs text-[#A38E86] mt-2">Discover our handpicked collections customized for you.</p>
+            
+            <div class="mt-4 flex justify-between items-end">
+              <button (click)="triggerToast('Redirecting to handpicked collection!')" class="px-4 py-2 bg-[#FAF0ED] hover:bg-[#F3E2DE] text-[#8C5265] font-semibold text-xs rounded-xl transition-all hover:scale-105">
+                Shop Now
+              </button>
+              
+              <!-- Aesthetic compact mirror graphic mockup -->
+              <div class="w-14 h-14 relative transform rotate-12">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#FDE2E4] to-[#FFCAD4] border-2 border-white shadow-md flex items-center justify-center">
+                  <span class="text-sm">🧴</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- MAIN DASHBOARD CONTENT -->
+        <main class="flex-1 space-y-6">
+          
+          <!-- Top Bar / Header -->
+          <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-[24px] p-5 border border-[#FDF2F0] shadow-sm">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🌸</span>
+                <h1 class="text-2xl font-serif font-bold text-[#5E4A42]">Order Details</h1>
+              </div>
+              <p class="text-xs text-[#A38E86] italic">Every order is prepared with love, just for you.</p>
+            </div>
+
+            <!-- Header Action Utilities -->
+            <div class="flex items-center space-x-3 self-end md:self-auto">
+              <!-- Search bar simulated -->
+              <div class="relative">
+                <input 
+                  type="text" 
+                  placeholder="Search orders..." 
+                  class="bg-[#FAF0ED] text-xs text-[#5E4A42] placeholder-[#A38E86] pl-9 pr-4 py-2.5 rounded-full border-none focus:outline-none focus:ring-1 focus:ring-[#EAA9B8] w-40 md:w-52 transition-all"
+                >
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[#A38E86]">🔍</span>
+              </div>
+              <button (click)="triggerToast('Notification Center coming soon!')" class="p-2.5 bg-[#FAF0ED] hover:bg-[#F3E2DE] text-[#8C5265] rounded-full transition-all relative">
+                <span>🔔</span>
+                <span class="absolute top-1 right-1 w-2 h-2 bg-[#EAA9B8] rounded-full"></span>
+              </button>
+              <button (click)="triggerToast('Your shopping cart is empty!')" class="p-2.5 bg-[#FAF0ED] hover:bg-[#F3E2DE] text-[#8C5265] rounded-full transition-all relative">
+                <span>👜</span>
+              </button>
+            </div>
+          </header>
+
+          <!-- First Row: Order Summary & Delivery Progress -->
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            
+            <!-- Order Summary Card -->
+            <div class="xl:col-span-5 bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] flex flex-col justify-between space-y-6">
+              <div>
+                <div class="flex items-center justify-between pb-4 border-b border-[#FAF0ED]">
+                  <h3 class="font-serif font-bold text-[#5E4A42] text-lg">Order Summary</h3>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-[#8C5265] bg-[#FFF0F2] px-3 py-1 rounded-full border border-[#F3C6D3]/50">
+                      Order #LVN-2024-0523
+                    </span>
+                    <button (click)="copyOrderNumber()" class="p-1.5 hover:bg-[#FAF0ED] rounded-lg text-[#A38E86] hover:text-[#8C5265] transition-colors" title="Copy Order Number">
+                      📋
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mt-5 space-y-3">
+                  <div class="flex justify-between items-center text-sm">
+                    <span class="text-[#A38E86]">Order Date</span>
+                    <span class="font-medium text-[#5E4A42]">May 23, 2024</span>
+                  </div>
+                  <div class="flex justify-between items-center text-sm">
+                    <span class="text-[#A38E86]">Total Amount</span>
+                    <span class="font-bold text-[#C97B8F]">₩ {{ totalAmount().toLocaleString() }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-sm">
+                    <span class="text-[#A38E86]">Payment Method</span>
+                    <span class="font-medium text-[#5E4A42] flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-[#FEE500]"></span> KakaoPay
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                (click)="toggleInvoiceModal()"
+                class="w-full py-3 bg-[#FFF0F2] hover:bg-[#F3C6D3] text-[#8C5265] hover:text-white font-semibold text-xs rounded-xl tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <span>View Invoice</span>
+                <span>➔</span>
+              </button>
+            </div>
+
+            <!-- Delivery Progress Card -->
+            <div class="xl:col-span-7 bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-start pb-4 border-b border-[#FAF0ED]">
+                  <div>
+                    <h3 class="font-serif font-bold text-[#5E4A42] text-lg">Delivery Progress</h3>
+                    <p class="text-xs text-[#A38E86] mt-0.5">Your beauty is on the way! 🎀</p>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs bg-[#EAFBF3] text-[#2D6A4F] font-bold px-3 py-1 rounded-full">
+                      On Transit
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Custom Elegant Stepper -->
+                <div class="mt-8 grid grid-cols-4 relative">
+                  <!-- Stepper Progress Line Base -->
+                  <div class="absolute top-5 left-[12.5%] right-[12.5%] h-[2px] bg-[#FAF0ED] -z-0"></div>
+                  <!-- Active colored line fill -->
+                  <div class="absolute top-5 left-[12.5%] right-[37.5%] h-[2px] bg-gradient-to-r from-[#F3C6D3] to-[#EAA9B8] -z-0 transition-all duration-500"></div>
+
+                  <!-- Step 1: Confirmed -->
+                  <div class="flex flex-col items-center text-center relative z-10 group cursor-pointer" (click)="triggerToast('Confirmed on May 23!')">
+                    <div class="w-10 h-10 rounded-full bg-[#FFF0F2] border border-[#F3C6D3] flex items-center justify-center transition-all group-hover:scale-110 shadow-sm">
+                      <span class="text-xs">📜</span>
+                    </div>
+                    <span class="text-[11px] font-bold text-[#5E4A42] mt-3 block">Order Confirmed</span>
+                    <span class="text-[10px] text-[#A38E86]">May 23</span>
+                  </div>
+
+                  <!-- Step 2: Packed -->
+                  <div class="flex flex-col items-center text-center relative z-10 group cursor-pointer" (click)="triggerToast('Packed with extra care on May 24!')">
+                    <div class="w-10 h-10 rounded-full bg-[#FFF0F2] border border-[#F3C6D3] flex items-center justify-center transition-all group-hover:scale-110 shadow-sm">
+                      <span class="text-xs">🎁</span>
+                    </div>
+                    <span class="text-[11px] font-bold text-[#5E4A42] mt-3 block">Packed with Care</span>
+                    <span class="text-[10px] text-[#A38E86]">May 24</span>
+                  </div>
+
+                  <!-- Step 3: On the Way -->
+                  <div class="flex flex-col items-center text-center relative z-10 group cursor-pointer" (click)="triggerToast('Shipped with Express Courier!')">
+                    <div class="w-10 h-10 rounded-full bg-[#EAA9B8] text-white flex items-center justify-center transition-all group-hover:scale-110 shadow-md">
+                      <span class="text-xs">🚚</span>
+                    </div>
+                    <span class="text-[11px] font-bold text-[#8C5265] mt-3 block">On the Way</span>
+                    <span class="text-[10px] text-[#A38E86]">May 25</span>
+                  </div>
+
+                  <!-- Step 4: Delivered (Inactive) -->
+                  <div class="flex flex-col items-center text-center relative z-10 group opacity-50 cursor-pointer" (click)="triggerToast('Estimated delivery is May 26.')">
+                    <div class="w-10 h-10 rounded-full bg-[#FAF0ED] border border-[#EBE0DD] flex items-center justify-center transition-all group-hover:scale-110">
+                      <span class="text-xs">🏠</span>
+                    </div>
+                    <span class="text-[11px] font-bold text-[#A38E86] mt-3 block">Delivered</span>
+                    <span class="text-[10px] text-[#A38E86]">May 26</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Extra Note with soft decorative icon -->
+              <div class="mt-6 p-3 bg-[#FFFBF8] rounded-2xl border border-[#FAF0ED] flex items-center space-x-3">
+                <span class="text-lg">💖</span>
+                <p class="text-[11px] text-[#8C6B5E] leading-snug">
+                  Your order is on the way and will be delivered soon! We can't wait for you to enjoy your new beauty rituals!
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Second Row: Ordered Items & Your Gift Details -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Ordered Items List -->
+            <div class="lg:col-span-7 bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] flex flex-col justify-between">
+              <div>
+                <h3 class="font-serif font-bold text-[#5E4A42] text-lg mb-4 pb-2 border-b border-[#FAF0ED] flex items-center gap-2">
+                  <span>💄</span> Ordered Items
+                </h3>
+                
+                <div class="divide-y divide-[#FAF0ED] max-h-[360px] overflow-y-auto pr-1">
+                  @for (item of orderedItems(); track item.id) {
+                    <div class="py-3.5 flex items-center justify-between group hover:bg-[#FFFBFB] px-2 rounded-2xl transition-colors">
+                      <div class="flex items-center space-x-4">
+                        <!-- Simulated Product Image container with elegant aesthetics -->
+                        <div class="w-14 h-14 rounded-2xl relative flex items-center justify-center shadow-inner overflow-hidden border border-[#FFF0F2]" [style.background-color]="item.imageColor">
+                          <span class="text-2xl z-10">{{ item.emoji }}</span>
+                          <div class="absolute bottom-0 inset-x-0 h-4 bg-white/20 backdrop-blur-xs"></div>
+                        </div>
+                        
+                        <div class="space-y-0.5">
+                          <p class="text-xs font-bold text-[#C97B8F] uppercase tracking-wide">{{ item.brand }}</p>
+                          <h4 class="text-sm font-semibold text-[#5E4A42] leading-tight">{{ item.name }}</h4>
+                          <p class="text-xs text-[#A38E86] italic">{{ item.shade }}</p>
+                        </div>
+                      </div>
+
+                      <div class="text-right">
+                        <span class="text-sm font-bold text-[#5E4A42] block">₩ {{ item.price.toLocaleString() }}</span>
+                        <span class="text-xs text-[#A38E86]">Qty: {{ item.qty }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Buy Again button -->
+              <button 
+                (click)="simulateBuyAgain()" 
+                [disabled]="isProcessingBuyAgain()"
+                class="mt-6 w-full py-3 bg-[#EAA9B8] hover:bg-[#DF98A7] disabled:bg-[#F3D1D5] text-white font-bold text-xs rounded-xl tracking-wider uppercase shadow-md shadow-[#EAA9B8]/20 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+              >
+                @if (isProcessingBuyAgain()) {
+                  <span class="animate-spin text-sm">⌛</span>
+                  <span>Adding back to cart...</span>
+                } @else {
+                  <span>Buy Again</span>
+                  <span>🔄</span>
+                }
+              </button>
+            </div>
+
+            <!-- Gift Details Card -->
+            <div class="lg:col-span-5 bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)] flex flex-col justify-between">
+              <div>
+                <h3 class="font-serif font-bold text-[#5E4A42] text-lg mb-4 pb-2 border-b border-[#FAF0ED] flex items-center gap-2">
+                  <span>🎁</span> Your Gift Details
+                </h3>
+
+                <!-- Gift Mockup Presentation -->
+                <div class="p-4 bg-[#FFF6F6] rounded-2xl border border-[#F3C6D3]/30 relative overflow-hidden group">
+                  <div class="absolute right-2 top-2 w-16 h-16 bg-[#FFF]/40 rounded-full blur-xl"></div>
+                  
+                  <div class="flex items-center space-x-4 relative z-10">
+                    <div class="w-16 h-16 bg-white rounded-xl shadow-sm flex items-center justify-center text-3xl border border-[#FDF2F0] transform group-hover:rotate-6 transition-transform">
+                      💝
+                    </div>
+                    <div>
+                      <span class="text-[10px] font-bold text-white bg-[#EAA9B8] px-2 py-0.5 rounded-full uppercase">Thank You Gift</span>
+                      <h4 class="text-sm font-serif font-bold text-[#5E4A42] mt-1">Luvienne Special Gift</h4>
+                      <p class="text-xs text-[#A38E86]">Mini skincare besties for you 💕</p>
+                    </div>
+                  </div>
+
+                  <ul class="mt-4 space-y-1.5 text-xs text-[#7A665E] border-t border-[#F3C6D3]/30 pt-3">
+                    <li class="flex items-center gap-2">
+                      <span class="text-[#EAA9B8]">✦</span> Beauty of Joseon Cleanser (Mini)
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="text-[#EAA9B8]">✦</span> Isntree Toner (Mini)
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="text-[#EAA9B8]">✦</span> Luvienne Beauty Pouch
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Dedicated Handwritten Thank You Note -->
+              <div class="mt-6 p-4 bg-[#FAF0ED]/50 rounded-2xl border border-dashed border-[#F3C6D3] relative">
+                <div class="absolute -top-3 right-4 bg-white border border-[#F3C6D3] px-2.5 py-0.5 rounded-full text-[9px] text-[#B5828D] font-bold uppercase tracking-wider">
+                  Dear Serin
+                </div>
+                <p class="text-xs text-[#7A665E] italic leading-relaxed pt-1 font-serif">
+                  "Thank you for choosing Luvienne. May your skin always be glowing and your days as bright as your smile. You mean the world to us!"
+                </p>
+                <div class="mt-3 flex justify-between items-center text-[10px] font-semibold tracking-wider text-[#B5828D] uppercase">
+                  <span>- Luvienne Team</span>
+                  <span class="text-base text-[#EAA9B8]">💌</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Recommendations Section -->
+          <div class="bg-white rounded-[32px] p-6 border border-[#FDF2F0] shadow-[0_8px_30px_rgb(253,242,240,0.4)]">
+            <div class="flex justify-between items-center mb-6 pb-2 border-b border-[#FAF0ED]">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">✨</span>
+                <h3 class="font-serif font-bold text-[#5E4A42] text-lg">You Might Also Love</h3>
+              </div>
+              <button 
+                (click)="setActiveMenu('wishlist')"
+                class="text-xs font-bold text-[#8C5265] hover:text-[#5E4A42] transition-colors flex items-center gap-1.5"
+              >
+                <span>View Wishlist</span>
+                <span>➔</span>
+              </button>
+            </div>
+
+            <!-- Carousel Wrapper -->
+            <div class="relative group">
+              <!-- Grid Layout for Carousel/List of Recommendations -->
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                @for (prod of recommendedProducts(); track prod.id) {
+                  <div class="bg-[#FCF7F5] rounded-2xl p-3.5 border border-[#FDF2F0] hover:border-[#FFF0F2] hover:bg-white hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group/item">
+                    
+                    <!-- Favorite Button triggers state signal to increment wishlist -->
+                    <button 
+                      (click)="toggleLike(prod)"
+                      class="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 hover:bg-white backdrop-blur-sm flex items-center justify-center shadow-sm transition-all hover:scale-110"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        [class]="prod.isLiked ? 'w-4.5 h-4.5 fill-[#EAA9B8] stroke-[#EAA9B8]' : 'w-4.5 h-4.5 stroke-[#A38E86] fill-none hover:stroke-[#EAA9B8]'"
+                        viewBox="0 0 24 24" 
+                        stroke-width="2"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </button>
+
+                    <!-- Cosmetic product presentation styling -->
+                    <div class="aspect-square rounded-xl flex items-center justify-center relative overflow-hidden mb-3.5 border border-[#FAF0ED]" [style.background-color]="prod.imageColor">
+                      <span class="text-3xl z-10 transform group-hover/item:scale-115 transition-transform duration-300">{{ prod.emoji }}</span>
+                      <div class="absolute -bottom-2 inset-x-0 h-8 bg-white/10 blur-xs"></div>
+                    </div>
+
+                    <div class="space-y-1">
+                      <span class="text-[9px] font-bold text-[#B5828D] uppercase tracking-wider block">{{ prod.brand }}</span>
+                      <h4 class="text-xs font-bold text-[#5E4A42] line-clamp-2 min-h-[32px] leading-tight">{{ prod.name }}</h4>
+                      <p class="text-[10px] text-[#A38E86] italic truncate">{{ prod.shade }}</p>
+                    </div>
+
+                    <div class="mt-3 pt-2.5 border-t border-[#FAF0ED] flex items-center justify-between">
+                      <span class="text-xs font-extrabold text-[#5E4A42]">₩{{ prod.price.toLocaleString() }}</span>
+                      <button 
+                        (click)="addRecommendedToCart(prod)"
+                        class="p-1.5 bg-[#FFF0F2] hover:bg-[#EAA9B8] text-[#8C5265] hover:text-white rounded-lg transition-colors text-xs"
+                        title="Add to cart"
+                      >
+                        ➕
+                      </button>
+                    </div>
+
+                  </div>
+                }
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Footer Banner -->
+          <footer class="bg-gradient-to-r from-[#FCF5F3] via-[#FFF0F2] to-[#FCF5F3] rounded-[32px] p-6 text-center border border-[#FDF2F0] relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="absolute left-6 top-1/2 -translate-y-1/2 opacity-10">
+              <span class="text-6xl">💖</span>
+            </div>
+            
+            <div class="text-left space-y-1 relative z-10">
+              <h4 class="text-sm font-bold text-[#5E4A42]">Thank you for being a part of Luvienne ♥</h4>
+              <p class="text-xs text-[#8C6B5E]">Your personal beauty journey inspires us to deliver the premium skincare you deserve.</p>
+            </div>
+
+            <button (click)="triggerToast('Fetching the newest arrivals! Please wait...')" class="shrink-0 px-6 py-3 bg-[#EAA9B8] hover:bg-[#DF98A7] text-white font-bold text-xs rounded-2xl tracking-wider uppercase shadow-md shadow-[#EAA9B8]/10 transition-all hover:scale-105">
+              Explore New Arrivals 🛍
+            </button>
+          </footer>
+
+        </main>
+
+      </div>
+    </div>

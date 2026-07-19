@@ -30,12 +30,23 @@ export class ProductDetail {
   product   = signal<ProductResponseFull | null>(null);
   isLoading = signal(true);
   hasError  = signal(false);
-
+// nuevo signal
+mediaError = signal(false);
   categories = signal<CategoryResponse[]>([]);
 
   selectedVariant    = signal<VariantResponseFull | null>(null);
   selectedImageIndex = signal(0);
   quantity           = signal(1);
+
+private lastShownUrl: string | null = null;
+  // Se activa cada vez que la imagen/video activo cambia, y se apaga
+  // cuando el <img>/<video> dispara (load)/(error)/(loadeddata).
+  // Tiene un pequeño delay antes de mostrarse: si el recurso ya está
+  // en caché del navegador y carga casi al instante, el spinner ni
+  // llega a aparecer (evita el "flash" molesto).
+  imageLoading = signal(false);
+  private static readonly LOADING_SPINNER_DELAY_MS = 150;
+  private loadingSpinnerTimeout: ReturnType<typeof setTimeout> | null = null;
 
   showToast = signal(false);
   private toastTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -67,6 +78,7 @@ export class ProductDetail {
 
   ngOnDestroy(): void {
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.clearLoadingSpinnerTimeout();
   }
 
   loadProduct(): void {
@@ -104,7 +116,7 @@ export class ProductDetail {
     this.quantity.set(1);
 
     // Arranca en la primera imagen propia de la variante, saltando las generales del producto
-    this.selectedImageIndex.set(product.images?.length ?? 0);
+    this.setActiveImageIndex(product.images?.length ?? 0);
   }
 
   // ── Selección de tono ─────────────────────────────────────────────
@@ -119,7 +131,7 @@ export class ProductDetail {
       replaceUrl: true,
     });
 
-    this.selectedImageIndex.set(this.product()?.images?.length ?? 0);
+    this.setActiveImageIndex(this.product()?.images?.length ?? 0);
 
     if (variant.stock > 0 && this.quantity() > variant.stock) {
       this.quantity.set(variant.stock);
@@ -127,53 +139,104 @@ export class ProductDetail {
   }
 
   selectImage(index: number): void {
-    this.selectedImageIndex.set(index);
+    this.setActiveImageIndex(index);
   }
 
   isVariantSelected(variant: VariantResponseFull): boolean {
     return this.selectedVariant()?.id === variant.id;
   }
 
-  sortedVariants = computed<VariantResponseFull[]>(() =>
-    this.sortByPosition(this.product()?.variants ?? [])
-  );
+sortedVariants = computed<VariantResponseFull[]>(() =>
+  this.sortByPosition(this.product()?.variants ?? []).filter(v => v.stock > 0)
+);
 
   private sortByPosition<T extends { position: number }>(items: T[]): T[] {
     return [...items].sort((a, b) => a.position - b.position);
   }
 
   // ── Galería combinada: imágenes del producto + de la variante ─────
-  galleryImages = computed<GalleryImage[]>(() => {
-    const product = this.product();
-    const variant = this.selectedVariant();
-    const isOutOfStock = (variant?.stock ?? 0) === 0;
+galleryImages = computed<GalleryImage[]>(() => {
+  const product = this.product();
+  const variant = this.selectedVariant();
+  const isOutOfStock = (variant?.stock ?? 0) === 0;
 
-    const productImages: GalleryImage[] = this.sortByPosition(product?.images ?? [])
-      .map(img => ({
-        url: img.url,
-        grayscale: false,
-        type: this.resolveType(img.resourceType),
-      }));
+  const productImages: GalleryImage[] = this.sortByPosition(product?.images ?? [])
+    .filter(img => !!img.url)
+    .map(img => ({
+      url: img.url,
+      grayscale: false,
+      type: this.resolveType(img.resourceType),
+    }));
 
-    const variantImages: GalleryImage[] = this.sortByPosition(variant?.images ?? [])
-      .map(img => ({
-        url: img.url,
-        grayscale: isOutOfStock,
-        type: this.resolveType(img.resourceType),
-      }));
+  const rawVariantImages = this.sortByPosition(variant?.images ?? [])
+    .filter(img => !!img.url);
 
-    const combined = [...productImages, ...variantImages];
-    return combined.length ? combined : [PLACEHOLDER_IMAGE];
-  });
+  // Si la variante seleccionada no tiene imágenes propias, mostramos
+  // explícitamente un placeholder para ESE tono, en vez de caer
+  // silenciosamente a las fotos generales del producto (que podrían
+  // confundir, mostrando otro tono como si fuera el seleccionado).
+  const variantImages: GalleryImage[] = variant
+    ? (rawVariantImages.length
+        ? rawVariantImages.map(img => ({
+            url: img.url,
+            grayscale: isOutOfStock,
+            type: this.resolveType(img.resourceType),
+          }))
+        : [{ ...PLACEHOLDER_IMAGE, grayscale: isOutOfStock }])
+    : [];
+
+  const combined = [...productImages, ...variantImages];
+  return combined.length ? combined : [PLACEHOLDER_IMAGE];
+});
 
   private resolveType(resourceType?: string): 'image' | 'video' {
     return resourceType?.toLowerCase() === 'video' ? 'video' : 'image';
   }
 
-  activeImage = computed<GalleryImage>(() => {
-    const images = this.galleryImages();
-    return images[this.selectedImageIndex()] ?? images[0];
-  });
+activeImage = computed<GalleryImage>(() => {
+  if (this.mediaError()) return PLACEHOLDER_IMAGE;
+  const images = this.galleryImages();
+  return images[this.selectedImageIndex()] ?? images[0];
+});
+
+  // ── Carga de imagen/video activo ───────────────────────────────────
+private setActiveImageIndex(index: number): void {
+  this.clearLoadingSpinnerTimeout();
+  this.mediaError.set(false);
+  this.selectedImageIndex.set(index);
+
+  const images = this.galleryImages();
+  const targetUrl = (images[index] ?? images[0])?.url ?? null;
+
+  if (targetUrl === this.lastShownUrl) {
+    this.imageLoading.set(false);
+    return;
+  }
+
+  this.lastShownUrl = targetUrl;
+  this.loadingSpinnerTimeout = setTimeout(() => {
+    this.imageLoading.set(true);
+    this.loadingSpinnerTimeout = null;
+  }, ProductDetail.LOADING_SPINNER_DELAY_MS);
+}
+
+onMediaLoaded(): void {
+  this.clearLoadingSpinnerTimeout();
+  this.imageLoading.set(false);
+}
+
+onMediaError(): void {                   // 👈 nuevo
+  this.clearLoadingSpinnerTimeout();
+  this.imageLoading.set(false);
+  this.mediaError.set(true);
+}
+
+  private clearLoadingSpinnerTimeout(): void {
+    if (this.loadingSpinnerTimeout) {
+      clearTimeout(this.loadingSpinnerTimeout);
+      this.loadingSpinnerTimeout = null;
+    }
+  }
 
   // ── Lightbox ─────────────────────────────────────────────────────
   openLightbox(): void {
@@ -186,12 +249,12 @@ export class ProductDetail {
 
   nextImage(): void {
     const total = this.galleryImages().length;
-    this.selectedImageIndex.update(i => (i + 1) % total);
+    this.setActiveImageIndex((this.selectedImageIndex() + 1) % total);
   }
 
   prevImage(): void {
     const total = this.galleryImages().length;
-    this.selectedImageIndex.update(i => (i - 1 + total) % total);
+    this.setActiveImageIndex((this.selectedImageIndex() - 1 + total) % total);
   }
 
   @HostListener('document:keydown', ['$event'])

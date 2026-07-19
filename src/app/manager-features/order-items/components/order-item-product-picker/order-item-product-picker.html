@@ -81,12 +81,12 @@
                     [class.pointer-events-none]="variant.stock === 0">
 
                     <div class="flex items-center gap-2 mb-1">
-                      @if (variant.images?.[0]?.url) {
+                      <!-- @if (variant.images?.[0]?.url) {
                         <img [src]="variant.images[0].url" class="h-7 w-7 rounded object-cover flex-shrink-0"/>
                       } @else {
                         <div class="h-7 w-7 rounded bg-gray-200 flex-shrink-0"
                           [style.background-color]="variant.toneCode"></div>
-                      }
+                      } -->
                       <p class="truncate text-xs font-medium">{{ variant.toneName }}</p>
                     </div>
                     <p class="text-xs" [class]="selectedVariant()?.id === variant.id ? 'text-gray-300' : 'text-gray-500'">

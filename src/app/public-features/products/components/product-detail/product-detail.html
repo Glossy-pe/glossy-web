@@ -46,17 +46,51 @@
         <!-- ============ GALERÍA (única, sirve para ambos breakpoints) ============ -->
         <div>
           <div class="relative aspect-[3/4] bg-white border-2 border-[#FFDDE4] overflow-hidden shadow-[6px_6px_0px_#F0FAFF] md:shadow-[8px_8px_0px_#F0FAFF]">
-            @if (activeImage().type === 'video') {
-              <video [src]="activeImage().url" controls playsinline
-                class="w-full h-full object-cover" [class.grayscale]="activeImage().grayscale"></video>
-            } @else {
-              <img [src]="activeImage().url" [alt]="p.name" (click)="openLightbox()"
-                class="w-full h-full object-cover cursor-pointer" [class.grayscale]="activeImage().grayscale">
+@if (activeImage().type === 'video') {
+  <video [src]="activeImage().url" controls playsinline
+    (loadeddata)="onMediaLoaded()" (error)="onMediaError()"
+    class="w-full h-full object-cover" [class.grayscale]="activeImage().grayscale"></video>
+} @else {
+  <img [src]="activeImage().url" [alt]="p.name" (click)="openLightbox()"
+    (load)="onMediaLoaded()" (error)="onMediaError()"
+    class="w-full h-full object-cover cursor-pointer" [class.grayscale]="activeImage().grayscale">
+}
+
+            <!-- ============ SPINNER DE CARGA AL CAMBIAR DE IMAGEN/TONO ============ -->
+            @if (imageLoading()) {
+              <div class="absolute inset-0 z-20 bg-white/50 flex items-center justify-center">
+                <div class="w-8 h-8 md:w-9 md:h-9 border-[3px] border-[#FFDDE4] border-t-[#FF8DA1] rounded-full animate-spin"></div>
+              </div>
             }
 
-            @if (currentStock() === 0 && selectedVariant()) {
-              <div class="absolute inset-x-0 bottom-0 bg-[#FF8DA1]/90 py-2.5 flex justify-center border-t-2 border-white">
-                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Tono Agotado ☁️</span>
+            <!-- ============ ÍNDICE DE TONOS (overlay vertical scrolleable, abajo-izquierda) ============ -->
+            @if (sortedVariants().length > 0) {
+              <div
+                class="absolute bottom-14 md:bottom-16 left-2.5 md:left-3 z-10 flex flex-col gap-1.5 md:gap-2 max-h-[62%] overflow-y-auto pl-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                @for (variant of sortedVariants(); track variant.id) {
+                  <button type="button" (click)="selectVariant(variant)" [title]="variant.toneName"
+                    class="relative w-6 h-6 md:w-7 md:h-7 shrink-0 border bg-white cursor-pointer transition-transform"
+                    [class]="isVariantSelected(variant) ? 'border-[#FF8DA1] scale-105 shadow-[2px_2px_0px_rgba(0,0,0,0.15)]' : 'border-white/80 shadow-sm'"
+                    [style.background-color]="variant.toneCode || '#e5e7eb'">
+                    <!-- @if (variant.stock === 0) {
+                      <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <div class="w-full h-[1.5px] bg-red-400 rotate-45 absolute"></div>
+                        <div class="w-full h-[1.5px] bg-red-400 -rotate-45 absolute"></div>
+                      </div>
+                    } -->
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- ============ FOOTER: nombre del tono seleccionado ============ -->
+            @if (selectedVariant()) {
+              <div class="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/55 via-black/10 to-transparent px-3 pt-7 pb-2.5 flex items-center justify-center">
+                @if (currentStock() === 0) {
+                  <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Tono Agotado ☁️</span>
+                } @else {
+                  <span class="text-[10px] font-black uppercase tracking-[0.25em] text-white">{{ selectedVariant()!.toneName }}</span>
+                }
               </div>
             }
           </div>
@@ -84,64 +118,18 @@
         <!-- ============ INFO (única) ============ -->
         <div class="px-4 md:px-0 pt-3 md:pt-0">
 
-          <span class="inline-block bg-[#E5F9FF] text-[#49B6D6] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest mb-2">
-            {{ categoryName() }}
-          </span>
-
           <h1 class="text-2xl md:text-4xl font-black text-gray-800 tracking-tighter italic leading-tight mb-3">
             {{ p.name }}
           </h1>
 
-          <div class="flex items-center gap-3 mb-5">
+          <div class="flex items-center gap-3 mb-4">
             <p class="text-2xl md:text-3xl font-black text-[#FF8DA1]">
               {{ selectedVariant()?.price != null ? (selectedVariant()!.price | currency:'PEN':'symbol-narrow') : 'S/ ---' }}
             </p>
             <div class="h-0.5 md:h-1 w-8 md:w-12 bg-[#A7E9FF]"></div>
           </div>
 
-          @if (sortedVariants().length > 0) {
-            <div class="mb-5 pb-5 border-b border-[#F0FAFF]">
-              <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Elige tu tono</span>
-                <span class="text-[10px] font-bold text-[#FF8DA1] uppercase">{{ selectedVariant()?.toneName }}</span>
-              </div>
-              <div class="flex flex-wrap gap-2.5">
-                @for (variant of sortedVariants(); track variant.id) {
-                  <button type="button" (click)="selectVariant(variant)" [title]="variant.toneName"
-                    class="relative w-9 h-9 md:w-10 md:h-10 border-2 cursor-pointer"
-                    [class]="isVariantSelected(variant) ? 'border-[#FF8DA1]' : 'border-transparent'"
-                    [style.background-color]="variant.toneCode || '#e5e7eb'">
-                    @if (variant.stock === 0) {
-                      <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
-                        <div class="w-full h-[2px] bg-red-400 rotate-45 absolute"></div>
-                        <div class="w-full h-[2px] bg-red-400 -rotate-45 absolute"></div>
-                      </div>
-                    }
-                  </button>
-                }
-              </div>
-            </div>
-          }
-
-          <div class="text-xs md:text-sm text-gray-500 leading-relaxed mb-5 pb-5 border-b border-[#F0FAFF] md:max-w-md">
-            <p>{{ p.fullDescription || p.description }}</p>
-          </div>
-
-          <!-- Cantidad + CTA: fijo en mobile, en flujo normal en desktop -->
-          <!-- <div class="fixed inset-x-0 bottom-0 z-30 bg-white border-t-2 border-[#FFDDE4] px-4 py-3
-                      md:static md:border-0 md:p-0 md:max-w-md flex gap-3 mb-0 md:mb-6">
-            <div class="flex items-center border-2 border-[#F0FAFF] bg-white h-12 md:h-14 w-28 md:w-36 shrink-0">
-              <button (click)="decreaseQuantity()" class="flex-1 h-full text-xl font-black text-[#A7E9FF] hover:text-[#FF8DA1] cursor-pointer">−</button>
-              <span class="flex-1 text-center font-black text-sm text-gray-700">{{ quantity() }}</span>
-              <button (click)="increaseQuantity()" class="flex-1 h-full text-xl font-black text-[#A7E9FF] hover:text-[#FF8DA1] cursor-pointer">+</button>
-            </div>
-            <button (click)="addToCart()" [disabled]="!canAddToCart()"
-              class="flex-grow h-12 md:h-14 bg-[#FF8DA1] text-white text-[11px] md:text-xs font-black uppercase tracking-[0.15em] shadow-[4px_4px_0px_#FFDDE4] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed">
-              {{ canAddToCart() ? 'Añadir a la bolsa ✦' : 'Agotado' }}
-            </button>
-          </div> -->
-
-          <div class="flex gap-3">
+          <div class="flex gap-3 mb-5 pb-5 border-b border-[#F0FAFF]">
             <div class="flex items-center gap-2 flex-1 bg-[#E5F9FF] px-3 py-2.5">
               <span class="text-[#49B6D6] font-bold text-base leading-none">✓</span>
               <span class="text-[9px] font-black uppercase tracking-widest text-[#49B6D6]">Envío Flash</span>
@@ -150,6 +138,10 @@
               <span class="text-[#FF8DA1] font-bold text-base leading-none">✧</span>
               <span class="text-[9px] font-black uppercase tracking-widest text-[#FF8DA1]">Original K-Beauty</span>
             </div>
+          </div>
+
+          <div class="text-xs md:text-sm text-gray-500 leading-relaxed md:max-w-md">
+            <p>{{ p.fullDescription || p.description }}</p>
           </div>
         </div>
       </div>
