@@ -1,4 +1,5 @@
 import { OrderItemResponseFull } from "../../order-items/models/order-item-response-full.model";
+import { ManagerOrderItemResponseStructured } from "../../order-items/models/order-item-response-structured.model";
 import { OrderStatusResponse } from "./order-status-response.model";
 
 export interface OrderResponseFull {
@@ -18,5 +19,5 @@ export interface OrderResponseFull {
   expiresAt: string | null;
   createdAt: string | null;
   updatedAt: string | null;
-  items: OrderItemResponseFull[];
+  items: ManagerOrderItemResponseStructured[];
 }

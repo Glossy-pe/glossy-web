@@ -88,7 +88,9 @@
         <svg class="mb-3 h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9l-8.25 4.5m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9l8.25 4.5" />
         </svg>
-        <p class="text-sm font-medium text-gray-700">No hay productos disponibles</p>
+        <p class="text-sm font-medium text-gray-700">
+          {{ query().trim() ? 'Sin resultados para "' + query().trim() + '"' : 'No hay productos disponibles' }}
+        </p>
       </div>
     }
 

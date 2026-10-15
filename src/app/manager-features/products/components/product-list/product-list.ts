@@ -11,6 +11,8 @@ import { PageResponse } from '../../../../../shared/models/page-response.model';
 import { ProductCard } from '../product-card/product-card';
 import { CategoryResponse } from '../../../category/models/category-response.model';
 import { CategoryService } from '../../../category/services/category.service';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-list',
@@ -38,6 +40,7 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   private page = 0;
   private observer?: IntersectionObserver;
   private search$ = new Subject<string>();
+  private request$ = new Subject<{ reset: boolean }>();
 
   // ── Modal creación ───────────────────────────────────────────────
   showModal   = signal(false);
@@ -55,62 +58,55 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.categoryService.getAll().subscribe(cats => this.categories.set(cats));
+  this.categoryService.getAll().subscribe(cats => this.categories.set(cats));
 
-    // Búsqueda con debounce
-    this.search$.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(q => {
-        this.reset();
-        if (!q.trim()) return this.loadPage();
-        return this.productService.search(q, this.categoryId() ?? undefined).pipe(
-          map(results => ({
-            content: results,
-            page: 0,
-            size: results.length,
-            totalElements: results.length,
-            totalPages: 1,
-            first: true,
-            last: true,
-          } as PageResponse<ProductResponseFull>))
-        );
-      })
-    ).subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
+  this.request$.pipe(
+    switchMap(({ reset }) => {
+      if (reset) this.reset();
+      this.loading.set(true);
+      this.error.set(false);
 
-    // Carga inicial
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+      const q = this.query().trim();
+      const source$ = q
+        ? this.productService.search(q, this.categoryId() ?? undefined).pipe(
+            map(results => ({
+              content: results, page: 0, size: results.length,
+              totalElements: results.length, totalPages: 1, first: true, last: true,
+            } as PageResponse<ProductResponseFull>)))
+        : this.productService.getAllProducts(
+            this.page, 12, this.categoryId() ?? undefined, this.sort() || undefined);
+
+      return source$.pipe(
+        map(res => ({ res, ok: true })),
+        catchError(() => of({ res: null, ok: false })),
+        finalize(() => this.loading.set(false)),
+      );
+    }),
+  ).subscribe(({ res, ok }) => (ok ? this.handleResponse(res!) : this.error.set(true)));
+
+  this.search$.pipe(
+    debounceTime(400),
+    map(q => q.trim()),
+    distinctUntilChanged(),
+  ).subscribe(() => this.request$.next({ reset: true }));
+
+  this.request$.next({ reset: true }); // carga inicial
+}
 
   ngAfterViewInit(): void {
-    this.observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && !this.loading() && this.hasMore()) {
-        this.loadPage().subscribe({
-          next: res => this.handleResponse(res),
-          error: () => this.error.set(true),
-        });
-      }
-    }, { rootMargin: '300px' });
-  }
+  this.observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && !this.loading() && this.hasMore()) {
+      this.request$.next({ reset: false });
+    }
+  }, { rootMargin: '300px' });
+}
 
   ngOnDestroy(): void {
-    this.observer?.disconnect();
-    this.search$.complete();
-  }
+  this.observer?.disconnect();
+  this.search$.complete();
+  this.request$.complete();
+}
 
-  private loadPage() {
-    this.loading.set(true);
-    this.error.set(false);
-    return this.productService
-      .getAllProducts(this.page, 12, this.categoryId() ?? undefined, this.sort() || undefined)
-      .pipe(finalize(() => this.loading.set(false)));
-  }
 
   private handleResponse(res: PageResponse<ProductResponseFull>) {
     this.products.update(prev => [...prev, ...res.content]);
@@ -132,30 +128,19 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSortChange(value: string): void {
-    this.sort.set(value);
-    this.reset();
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+  this.sort.set(value);
+  this.request$.next({ reset: true });
+}
 
   selectCategory(id: number | null): void {
-    if (this.categoryId() === id) return;
-    this.categoryId.set(id);
-    this.reset();
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+  if (this.categoryId() === id) return;
+  this.categoryId.set(id);
+  this.request$.next({ reset: true });
+}
 
   retry(): void {
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+  this.request$.next({ reset: false });
+}
 
   goToDetail(id: number): void {
     this.router.navigate(['/manager/products', id]);

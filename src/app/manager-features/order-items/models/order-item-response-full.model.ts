@@ -5,9 +5,11 @@ export interface OrderItemResponseFull {
   productVariantId: number;
   orderId: number;
   quantity: number;
-  paidQuantity: number;
-  separatedQuantity: number;
-  packedQuantity: number;
+
+  isPaid: Boolean;
+  isSeparated: Boolean;
+  isPacked: Boolean;
+
   amountPaid: number | null;
   unitPrice: number | null;
   variant: VariantQueryProjection | null;

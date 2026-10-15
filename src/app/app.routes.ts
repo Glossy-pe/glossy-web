@@ -56,23 +56,7 @@ export const routes: Routes = [
       {
         path: 'orders/:id/order-items',          // estático antes que :id
         loadComponent: () => import('./manager-features/order-items/components/order-item-list/order-item-list').then(m => m.OrderItemList)
-      },
-      {
-        path: 'orders/:id/order-items/new',
-        loadComponent: () => import('./manager-features/order-items/components/order-item-form/order-item-form').then(m => m.OrderItemForm)
-      },
-      {
-        path: 'orders/:id/order-items/:itemId/detail',
-        loadComponent: () => import('./manager-features/order-items/components/order-item-detail/order-item-detail').then(m => m.OrderItemDetail)
-      },
-      {
-        path: 'orders/:id/order-items/:itemId/edit',
-        loadComponent: () => import('./manager-features/order-items/components/order-item-form/order-item-form').then(m => m.OrderItemForm)
-      },
-      {
-        path: 'order-items',
-        loadComponent: () => import('./manager-features/order-items/components/order-item-full-list/order-item-full-list').then(m => m.OrderItemFullList)
-      },
+      }
       
     ]
   },

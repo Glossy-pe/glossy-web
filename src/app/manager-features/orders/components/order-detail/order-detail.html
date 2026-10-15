@@ -1,11 +1,10 @@
 @if (order(); as o) {
   <div class="product-container">
     <app-order-main-detail [orderId]="o.id" />
+
     <app-order-item-list
-      [orderId]="order()!.id"
-      (itemsSaved)="reloadOrder()"/>
+      [orderItems]="o.items"
+      [orderId]="o.id"
+      (changed)="reloadOrder()" />
   </div>
 }
-
-    
-

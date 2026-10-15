@@ -6,6 +6,7 @@ import { OrderItemResponse } from '../models/order-item-response.model';
 import { OrderItemRequest } from '../models/order-item-request.model';
 import { PageResponse } from '../../../../shared/models/page-response.model';
 import { OrderItemResponseFull } from '../models/order-item-response-full.model';
+import { ProductOrder } from '../../products/models/product-order.model';
 
 @Injectable({
   providedIn: 'root',
@@ -45,5 +46,11 @@ export class OrderItemService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  getOrdersByProduct(productId: number, name: string, page = 0, size = 10) {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (name) params = params.set('name', name);
+    return this.http.get<PageResponse<ProductOrder>>(`${this.baseUrl}/by-product/${productId}`, { params });
   }
 }

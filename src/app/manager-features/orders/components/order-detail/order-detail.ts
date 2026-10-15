@@ -7,7 +7,12 @@ import { OrderService } from '../../services/order.service';
 import { OrderResponseFull } from '../../models/order-response-full.model';
 import { OrderStatusResponse } from '../../models/order-status-response.model';
 import { OrderItemList } from '../../../order-items/components/order-item-list/order-item-list';
-import { OrderMainDetail } from "../order-main-detail/order-main-detail";
+import { OrderMainDetail } from "./order-main-detail/order-main-detail";
+// import { OrderItemProductPicker } from "../../../order-items/components/order-item-product-picker/order-item-product-picker";
+import { OrderItemService } from '../../../order-items/services/order-item.service';
+import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
+import { ProductResponseFull } from '../../../products/models/product-response-full.model';
+
 
 @Component({
   selector: 'app-order-detail',
@@ -25,6 +30,8 @@ export class OrderDetail implements OnInit {
   hasError   = signal(false);
   isEditing  = signal(false);
   showDeleteConfirm = signal(false);
+  isAddingItem = signal(false);
+  addItemError = signal<string | null>(null);
 
   currentStatus = computed(() =>
     this.statuses().find(s => s.id === this.order()?.orderStatusId) ?? null
@@ -37,6 +44,7 @@ export class OrderDetail implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private orderService: OrderService,
+    private orderItemService: OrderItemService,
     private fb: FormBuilder
   ) {}
 
@@ -64,24 +72,54 @@ export class OrderDetail implements OnInit {
     });
   }
 
-  loadOrder(): void {
-    this.isLoading.set(true);
-    this.hasError.set(false);
-    this.orderService
-      .getFullById(this.orderId)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: o => this.order.set(o),
-        error: err => { console.error(err); this.hasError.set(true); },
-      });
-  }
+  onVariantSelected(event: { variant: VariantResponseFull; product: ProductResponseFull; quantity: number }): void {
+  this.isAddingItem.set(true);
+  this.addItemError.set(null);  
+
+  this.orderItemService.create({
+    productVariantId: event.variant.id,
+    orderId: this.orderId,
+    quantity: event.quantity,
+    isPaid: false,
+    isSeparated: false,
+    isPacked: false,
+    amountPaid: 0,
+    unitPrice: event.variant.price,
+  }).pipe(finalize(() => this.isAddingItem.set(false)))
+    .subscribe({
+      next: () => this.reloadOrder(),
+      error: err => {
+        console.error('Error agregando item', err);
+        this.addItemError.set('No se pudo agregar el producto.');
+      },
+    });
+}
+
+loadOrder(): void {
+  this.isLoading.set(true);
+  this.hasError.set(false);
+
+  this.orderService
+    .getFullById(this.orderId)
+    .pipe(finalize(() => this.isLoading.set(false)))
+    .subscribe({
+      next: o => {
+        console.log('Respuesta de getFullById:', o);
+        this.order.set(o);
+      },
+      error: err => {
+        console.error('Error en getFullById:', err);
+        this.hasError.set(true);
+      },
+    });
+}
 
   reloadOrder(): void {
     this.orderService.getFullById(this.orderId).subscribe({
       next: o => this.order.set(o),
+      error: err => console.error('Error recargando orden', err),
     });
   }
-
   startEdit(): void {
     const o = this.order();
     if (!o) return;

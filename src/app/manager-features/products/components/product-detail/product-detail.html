@@ -40,6 +40,10 @@
       <app-variant-list [productId]="p.id" />
     </div>
 
+    <div class="mt-6">
+    <app-product-orders [productId]="p.id" />
+  </div>
+
   } @else {
     <!-- Skeleton mientras carga el producto -->
     <div class="animate-pulse space-y-6">

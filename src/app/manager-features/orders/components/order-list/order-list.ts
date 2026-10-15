@@ -266,15 +266,17 @@ private syncUrlAndLoad(): void {
   getTotalQuantity(order: OrderResponseFull): number {
     return order.items.reduce((sum, i) => sum + i.quantity, 0);
   }
-
   getSeparatedQuantity(order: OrderResponseFull): number {
-    return order.items.reduce((sum, i) => sum + i.separatedQuantity, 0);
+    return order.items
+      .filter(i => i.isSeparated)
+      .reduce((sum, i) => sum + i.quantity, 0);
   }
 
   getPackedQuantity(order: OrderResponseFull): number {
-    return order.items.reduce((sum, i) => sum + i.packedQuantity, 0);
+    return order.items
+      .filter(i => i.isPacked)
+      .reduce((sum, i) => sum + i.quantity, 0);
   }
-
   
   getPaidAmount(order: OrderResponseFull): number {
     return order.items.reduce((sum, i) => sum + (i.amountPaid ?? 0), 0);

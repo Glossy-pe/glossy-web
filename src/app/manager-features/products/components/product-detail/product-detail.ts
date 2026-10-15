@@ -9,10 +9,11 @@ import { VariantList } from '../../../variants/components/variant-list/variant-l
 import { ProductCard } from '../product-card/product-card';
 import { ProductImagesList } from "../product-images-list/product-images-list";
 import { ProductMainDetail } from "../product-main-detail/product-main-detail";
+import { ProductOrders } from '../product-orders/product-orders';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail],
+  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail, ProductOrders],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })

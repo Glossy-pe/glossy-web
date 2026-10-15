@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { OrderService } from '../../services/order.service';
-import { OrderResponseFull } from '../../models/order-response-full.model';
-import { OrderStatusResponse } from '../../models/order-status-response.model';
-import { PdfService } from '../../services/pdf.service';
+import { OrderService } from '../../../services/order.service';
+import { OrderResponseFull } from '../../../models/order-response-full.model';
+import { OrderStatusResponse } from '../../../models/order-status-response.model';
 
 @Component({
   selector: 'app-order-main-detail',
@@ -52,7 +51,6 @@ export class OrderMainDetail {
     private route: ActivatedRoute,
     private router: Router,
     private orderService: OrderService,
-    private pdfService: PdfService,
     private fb: FormBuilder
   ) {}
 
@@ -61,17 +59,6 @@ export class OrderMainDetail {
     this.orderId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadStatuses();
     if (this.orderId) this.loadOrder();
-  }
-
-  async generatePdf(): Promise<void> {
-    this.isGeneratingPdf.set(true);
-    try {
-      await this.pdfService.generateProforma(this.orderId);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      this.isGeneratingPdf.set(false);
-    }
   }
 
   deleteConfirmInput = signal('');

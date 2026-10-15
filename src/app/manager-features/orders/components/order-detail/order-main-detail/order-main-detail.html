@@ -1,0 +1,284 @@
+@if (order(); as ord) {
+
+<div class="mb-3 flex items-center justify-between">
+    <button (click)="goBack()" class="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-900">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver al listado
+    </button>
+</div>
+
+<div>
+    <!-- Loading -->
+    @if (isLoading()) {
+    <div class="animate-pulse rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="mb-4 h-6 w-1/3 rounded bg-gray-200"></div>
+        <div class="space-y-3">
+            @for (i of [1,2,3,4]; track i) {
+            <div class="h-4 w-full rounded bg-gray-200"></div>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Error -->
+    @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+        <span class="mb-3 text-4xl">⚠️</span>
+        <p class="text-lg font-medium text-gray-700">No se pudo cargar la orden</p>
+        <button (click)="loadOrder()"
+            class="mt-4 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
+            Reintentar
+        </button>
+    </div>
+    }
+
+    <!-- Content -->
+    @if (!isLoading() && !hasError() && order()) {
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 sm:px-5">
+            <div class="min-w-0">
+                <h1 class="truncate font-mono text-lg font-bold text-gray-900">{{ order()!.orderCode }}</h1>
+                <p class="truncate text-xs text-gray-400">{{ order()!.customerName }}</p>
+            </div>
+
+            @if (!isEditing()) {
+            <div class="flex gap-2">
+                <button (click)="startEdit()"
+                    class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50">
+                    Editar
+                </button>
+                <button (click)="confirmDelete()"
+                    class="rounded-lg bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-100">
+                    Eliminar
+                </button>
+            </div>
+            } @else {
+            <div class="flex gap-2">
+                <button (click)="cancelEdit()" [disabled]="isSaving()"
+                    class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50">
+                    Cancelar
+                </button>
+                <button (click)="save()" [disabled]="isSaving()"
+                    class="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-60">
+                    @if (isSaving()) {
+                    <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Guardando...
+                    } @else {
+                    Guardar cambios
+                    }
+                </button>
+            </div>
+            }
+        </div>
+
+        <!-- Campos: 1 col móvil, 2 tablet, 4 escritorio -->
+        <div class="grid grid-cols-1 gap-x-4 gap-y-3 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-4">
+
+            <!-- Cliente -->
+            <div>
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Cliente</span>
+                @if (isEditing()) {
+                <input type="text" [formControl]="$any(form.get('customerName'))"
+                    class="w-full rounded-lg border px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                    [class.border-red-300]="isInvalid('customerName')"
+                    [class.border-gray-200]="!isInvalid('customerName')" />
+                @if (isInvalid('customerName')) {
+                <p class="mt-1 text-xs text-red-500">El nombre del cliente es requerido.</p>
+                }
+                } @else {
+                <span class="text-sm text-gray-800">{{ order()!.customerName }}</span>
+                }
+            </div>
+
+            <!-- Dirección -->
+            <div>
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Dirección</span>
+                @if (isEditing()) {
+                <input type="text" [formControl]="$any(form.get('customerAddress'))"
+                    class="w-full rounded-lg border px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                    [class.border-red-300]="isInvalid('customerAddress')"
+                    [class.border-gray-200]="!isInvalid('customerAddress')" />
+                @if (isInvalid('customerAddress')) {
+                <p class="mt-1 text-xs text-red-500">La dirección es requerida.</p>
+                }
+                } @else {
+                <span class="text-sm text-gray-800">{{ order()!.customerAddress }}</span>
+                }
+            </div>
+
+            <!-- Estado -->
+            <div>
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Estado</span>
+                @if (isEditing()) {
+                <select [formControl]="$any(form.get('orderStatusId'))"
+                    class="w-full rounded-lg border bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                    [class.border-red-300]="isInvalid('orderStatusId')"
+                    [class.border-gray-200]="!isInvalid('orderStatusId')">
+                    <option [ngValue]="null" disabled>Selecciona un estado</option>
+                    @for (status of statuses(); track status.id) {
+                    <option [ngValue]="status.id">{{ status.description }}</option>
+                    }
+                </select>
+                @if (isInvalid('orderStatusId')) {
+                <p class="mt-1 text-xs text-red-500">El estado es requerido.</p>
+                }
+                } @else {
+                @if (currentStatus()) {
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    {{ currentStatus()!.code }}
+                </span>
+                <span class="ml-1.5 text-xs text-gray-500">{{ currentStatus()!.description }}</span>
+                } @else {
+                <span class="text-sm text-gray-800">{{ order()!.orderStatusId }}</span>
+                }
+                }
+            </div>
+
+            <!-- Expira -->
+            <div>
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Expira</span>
+                @if (isEditing()) {
+                <input type="datetime-local" [formControl]="$any(form.get('expiresAt'))"
+                    class="w-full rounded-lg border px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                    [class.border-red-300]="isInvalid('expiresAt')"
+                    [class.border-gray-200]="!isInvalid('expiresAt')" />
+                } @else {
+                <span class="text-sm text-gray-800">{{ order()!.expiresAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                }
+            </div>
+
+            <!-- Token público (fila completa) -->
+            <div class="sm:col-span-2 lg:col-span-4">
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Token público</span>
+                <div class="flex items-center gap-2 rounded-lg bg-gray-50 px-2.5 py-1.5">
+                    <a [href]="orderUrl()" target="_blank"
+                        class="min-w-0 flex-1 truncate font-mono text-xs text-blue-600 hover:underline">
+                        {{ orderUrl() }}
+                    </a>
+                    <button (click)="copyOrderUrl()" class="flex shrink-0 items-center gap-1 transition-colors"
+                        [class]="copied() ? 'text-green-500' : 'text-gray-400 hover:text-gray-600'"
+                        title="Copiar URL">
+                        @if (copied()) {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span class="text-xs font-medium">Copiado</span>
+                        } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <!-- Descripción (fila completa) -->
+            <div class="sm:col-span-2 lg:col-span-4">
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Descripción</span>
+                @if (isEditing()) {
+                <textarea [formControl]="$any(form.get('description'))" rows="3"
+                    class="w-full resize-y rounded-lg border px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+                    [class.border-red-300]="isInvalid('description')"
+                    [class.border-gray-200]="!isInvalid('description')"></textarea>
+                @if (isInvalid('description')) {
+                <p class="mt-1 text-xs text-red-500">La descripción es requerida.</p>
+                }
+                } @else {
+                <div class="whitespace-pre-wrap text-sm text-gray-800">{{ order()!.description }}</div>
+                }
+            </div>
+        </div>
+
+        <!-- Totales y fechas: 2 col móvil, 4 desde sm -->
+        <div class="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-100 bg-gray-50/50 px-4 py-3 sm:grid-cols-4 sm:px-5">
+            <div>
+                <span class="block text-[11px] font-medium uppercase tracking-wide text-gray-400">Total</span>
+                <span class="text-sm font-semibold text-gray-900">S/ {{ order()!.total | number:'1.2-2' }}</span>
+            </div>
+            <div>
+                <span class="block text-[11px] font-medium uppercase tracking-wide text-gray-400">Costo total</span>
+                <span class="text-sm text-gray-800">S/ {{ order()!.costTotal | number:'1.2-2' }}</span>
+            </div>
+            <div>
+                <span class="block text-[11px] font-medium uppercase tracking-wide text-gray-400">Creado</span>
+                <span class="text-xs text-gray-500">
+                    {{ order()!.createdAt ? (order()!.createdAt | date:'dd/MM/yy HH:mm') : '—' }}
+                </span>
+            </div>
+            <div>
+                <span class="block text-[11px] font-medium uppercase tracking-wide text-gray-400">Actualizado</span>
+                <span class="text-xs text-gray-500">
+                    {{ order()!.updatedAt ? (order()!.updatedAt | date:'dd/MM/yy HH:mm') : '—' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal confirm delete (sin cambios) -->
+    @if (showDeleteConfirm()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+        <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+
+            <div class="mb-4 flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                    <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Eliminar orden</h2>
+            </div>
+
+            <p class="mb-1 text-sm text-gray-500">
+                Esta acción es <strong class="text-gray-700">permanente e irreversible</strong>.
+                Para confirmar, escribe el código de la orden:
+            </p>
+            <p class="mb-4 font-mono text-sm font-semibold text-gray-900">{{ order()!.orderCode }}</p>
+
+            <input type="text" [value]="deleteConfirmInput()"
+                (input)="deleteConfirmInput.set($any($event.target).value)" placeholder="Escribe el código aquí"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-sm text-gray-800 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100" />
+
+            <div class="mt-5 flex justify-end gap-2">
+                <button (click)="cancelDelete()" [disabled]="isDeleting()"
+                    class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50">
+                    Cancelar
+                </button>
+                <button (click)="deleteOrder()" [disabled]="isDeleting() || deleteConfirmInput() !== order()!.orderCode"
+                    class="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40">
+                    @if (isDeleting()) {
+                    <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Eliminando...
+                    } @else {
+                    Sí, eliminar orden
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+    }
+</div>
+
+} @else {
+<div class="flex flex-col gap-3 rounded-xl border border-gray-200 p-6">
+    <div class="h-3.5 w-3/5 animate-pulse rounded-md bg-gray-100"></div>
+    <div class="h-3.5 w-2/5 animate-pulse rounded-md bg-gray-100"></div>
+    <div class="h-3.5 w-1/4 animate-pulse rounded-md bg-gray-100"></div>
+</div>
+}
