@@ -46,6 +46,7 @@ interface EditableManagerOrderItem extends ManagerOrderItemResponseStructured {
 
 type ItemStatus = 'new' | 'deleted' | 'modified' | null;
 type FlagKey = 'isSeparated' | 'isPacked' | 'paid';
+type ItemFilter = 'all' | 'unpaid' | 'unpacked';
 
 @Component({
   selector: 'app-order-item-list',
@@ -65,6 +66,8 @@ export class OrderItemList implements OnChanges {
   readonly paymentInput = signal<number | null>(null);
   readonly paymentLeftover = signal<number | null>(null);
   readonly paymentOpen = signal(false);
+
+  readonly failedImages = signal<ReadonlySet<string>>(new Set());
 
   /** Deuda pendiente de los items activos. */
   readonly pendingDebt = computed(() =>
@@ -101,6 +104,61 @@ export class OrderItemList implements OnChanges {
     const s = this.summary();
     return s.added + s.removed + s.modified > 0;
   });
+
+
+
+  // ── Filtro y orden ───────────────────────────────────────────────
+  readonly filter = signal<ItemFilter>('all');
+  readonly filterOptions: { key: ItemFilter; label: string }[] = [
+    { key: 'all', label: 'Todos' },
+    { key: 'unpaid', label: 'Sin pagar' },
+    { key: 'unpacked', label: 'Sin empacar' },
+  ];
+
+  private productKey(item: ManagerOrderItemResponseStructured): number {
+    return (item as { productId?: number }).productId ?? item.productVariantId ?? 0;
+  }
+
+  /** Nuevos (locales) primero, el más reciente arriba; luego los guardados por productId. */
+  readonly orderedItems = computed(() => {
+    const list = this.items();
+    const added = list.filter((i) => i.isNew).reverse();
+    const saved = list
+      .filter((i) => !i.isNew)
+      .sort((a, b) => this.productKey(a) - this.productKey(b) || a.id - b.id);
+    return [...added, ...saved];
+  });
+
+  isUnpaid(item: ManagerOrderItemResponseStructured): boolean {
+    return this.totalOwed(item) > 0 && !this.isFullyPaid(item);
+  }
+
+  readonly visibleItems = computed(() => {
+  const f = this.filter();
+  return this.orderedItems().filter((i) => {
+    if (f === 'all') return true;
+    return f === 'unpaid' ? this.isUnpaid(i) : !i.isPacked;
+  });
+});
+
+  readonly counts = computed(() => {
+    const active = this.items().filter((i) => !i.pendingDelete);
+    return {
+      all: active.length,
+      unpaid: active.filter((i) => this.isUnpaid(i)).length,
+      unpacked: active.filter((i) => !i.isPacked).length,
+    };
+  });
+
+  onImageError(url: string): void {
+    this.failedImages.update((s) => new Set(s).add(url));
+  }
+
+  imageOf(item: ManagerOrderItemResponseStructured): string | null {
+    const withImages = item as { images?: { url: string; type?: string }[] };
+    const first = withImages.images?.find((i) => i.type !== 'video') ?? withImages.images?.[0];
+    return first?.url ?? item.image ?? null;
+  }
 
   /** Ids temporales (negativos) para items nuevos. */
   private nextTempId = -1;

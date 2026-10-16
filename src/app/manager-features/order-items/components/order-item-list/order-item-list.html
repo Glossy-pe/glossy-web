@@ -1,80 +1,110 @@
-<div class="mt-6">
+<div class="mt-3">
 
-  <!-- Barra superior -->
-  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+  <!-- ═══ Barra fija ═══ -->
+  <div class="sticky top-0 z-20 mb-3 space-y-2 border-b border-gray-200 bg-white/95 pb-2 pt-1 backdrop-blur">
+
     <div class="flex flex-wrap items-center gap-2">
-      <button type="button" class="rounded-full border px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
-        [disabled]="saving()" (click)="editMode() ? cancelEditMode() : startEditMode()">
-        {{ editMode() ? 'Cancelar edición' : 'Editar' }}
+
+      <!-- Filtros -->
+      <div class="flex gap-1 rounded-lg bg-gray-100 p-1">
+        @for (o of filterOptions; track o.key) {
+        <button type="button" class="h-8 rounded-md px-3 text-sm font-medium transition"
+          [class]="filter() === o.key ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:bg-white'"
+          [attr.aria-pressed]="filter() === o.key" (click)="filter.set(o.key)">
+          {{ o.label }}
+          <span class="ml-0.5 text-xs opacity-70">{{ counts()[o.key] }}</span>
+        </button>
+        }
+      </div>
+
+      <!-- Acción principal -->
+      <div class="ml-auto flex gap-2">
+        @if (editMode()) {
+        <button type="button"
+          class="h-9 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          [disabled]="saving()" (click)="cancelEditMode()">
+          Cancelar
+        </button>
+        <button type="button"
+          class="h-9 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+          [disabled]="saving() || !hasChanges()" (click)="saveChanges()">
+          @if (saving()) { Guardando... }
+          @else if (hasChanges()) { Guardar ({{ summary().added + summary().modified + summary().removed }}) }
+          @else { Sin cambios }
+        </button>
+        } @else {
+        <button type="button"
+          class="h-9 rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-700"
+          (click)="startEditMode()">
+          Editar
+        </button>
+        }
+      </div>
+    </div>
+
+    @if (editMode()) {
+    <!-- Acciones masivas -->
+    <div class="flex flex-wrap gap-1.5">
+      @for (f of flags; track f.key) {
+      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition"
+        [class]="allOn(f.key)
+          ? 'border-emerald-600 bg-emerald-600 text-white'
+          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'"
+        [attr.aria-pressed]="allOn(f.key)" (click)="toggleAll(f.key)">
+        {{ allOn(f.key) ? f.bulkOff : f.bulkOn }}
+      </button>
+      }
+      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition"
+        [class]="paymentOpen()
+          ? 'border-gray-900 bg-gray-900 text-white'
+          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'"
+        [attr.aria-expanded]="paymentOpen()" (click)="togglePayment()">
+        Registrar pago {{ paymentOpen() ? '▴' : '▾' }}
       </button>
 
-      @if (editMode() && hasChanges()) {
-      <div class="flex flex-wrap gap-1 text-[10px] font-medium">
+      @if (hasChanges()) {
+      <div class="ml-auto flex flex-wrap items-center gap-1 text-xs font-medium">
         @if (summary().added) {
-        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">{{ summary().added }} nuevo(s)</span>
+        <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">{{ summary().added }} nuevo(s)</span>
         }
         @if (summary().modified) {
-        <span class="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">{{ summary().modified }} modificado(s)</span>
+        <span class="rounded bg-amber-100 px-1.5 py-0.5 text-amber-700">{{ summary().modified }} modificado(s)</span>
         }
         @if (summary().removed) {
-        <span class="rounded-full bg-red-100 px-2 py-0.5 text-red-700">{{ summary().removed }} por eliminar</span>
+        <span class="rounded bg-red-100 px-1.5 py-0.5 text-red-700">{{ summary().removed }} por eliminar</span>
         }
       </div>
       }
     </div>
-
-    @if (editMode() && hasChanges()) {
-    <button type="button"
-      class="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-      [disabled]="saving()" (click)="saveChanges()">
-      {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
-    </button>
     }
   </div>
 
   @if (saveError()) {
-  <p class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{{ saveError() }}</p>
+  <p class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ saveError() }}</p>
   }
 
   @if (editMode()) {
-  <!-- Acciones globales (interruptor) + botón de pago -->
-  <div class="mb-3 flex flex-wrap items-center gap-1.5">
-    @for (f of flags; track f.key) {
-    <button type="button" class="rounded-full border px-3 py-1 text-xs font-medium transition" [class]="allOn(f.key)
-      ? 'border-emerald-600 bg-emerald-600 text-white'
-      : 'border-gray-300 text-gray-600 hover:bg-gray-50'" [attr.aria-pressed]="allOn(f.key)"
-      (click)="toggleAll(f.key)">
-      {{ allOn(f.key) ? f.bulkOff : f.bulkOn }}
-    </button>
-    }
 
-    <button type="button" class="rounded-full border px-3 py-1 text-xs font-medium transition" [class]="paymentOpen()
-      ? 'border-gray-900 bg-gray-900 text-white'
-      : 'border-gray-300 text-gray-600 hover:bg-gray-50'" [attr.aria-expanded]="paymentOpen()"
-      (click)="togglePayment()">
-      Registrar pago {{ paymentOpen() ? '▴' : '▾' }}
-    </button>
-  </div>
-
-  <!-- Pago general (desplegable, compacto) -->
+  <!-- Pago general -->
   @if (paymentOpen()) {
-  <div class="mb-3 max-w-sm rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
-    <div class="flex items-center gap-2">
+  <div class="mb-3 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+    <div class="flex flex-wrap items-center gap-2">
       <input #paymentEl type="number" min="0" step="0.01" inputmode="decimal" aria-label="Monto pagado por el cliente"
         [value]="paymentInput() ?? ''" (input)="onPaymentInput(paymentEl.value)" (keydown.enter)="applyGeneralPayment()"
-        placeholder="Monto pagado"
-        class="w-32 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-sm outline-none focus:border-gray-400 focus:bg-white" />
-      <button type="button" class="rounded-md bg-gray-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-40"
+        placeholder="Monto pagado (S/)"
+        class="h-9 w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm outline-none focus:border-gray-400 focus:bg-white" />
+      <button type="button"
+        class="h-9 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white disabled:opacity-40"
         [disabled]="!paymentInput()" (click)="applyGeneralPayment()">
         Distribuir
       </button>
-      <span class="ml-auto text-[11px] text-gray-500">
-        Debe: <strong class="text-gray-800">S/ {{ pendingDebt() | number:'1.2-2' }}</strong>
+      <span class="ml-auto text-sm text-gray-500">
+        Debe: <strong class="text-gray-900">S/ {{ pendingDebt() | number:'1.2-2' }}</strong>
       </span>
     </div>
 
     @if (paymentLeftover() !== null) {
-    <p class="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-700">
+    <p class="mt-2 rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-700">
       Sobraron S/ {{ paymentLeftover() | number:'1.2-2' }} (saldo a favor, no se asignó).
     </p>
     }
@@ -82,33 +112,33 @@
   }
 
   <!-- Buscador -->
-  <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-    <h3 class="mb-3 text-sm font-semibold text-gray-800">Agregar producto</h3>
-
-    <div class="relative mb-4">
+  <div class="mb-3 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+    <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span>
       <input #searchInput type="text" autocomplete="off" aria-label="Buscar producto" [value]="query()"
-        (input)="onQueryChange(searchInput.value)" placeholder="Buscar por nombre o código..."
-        class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none transition focus:border-gray-400 focus:bg-white focus:ring-1 focus:ring-gray-200" />
+        (input)="onQueryChange(searchInput.value)" placeholder="Agregar producto: nombre o código..."
+        class="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm outline-none transition focus:border-gray-400 focus:bg-white" />
     </div>
 
     @if (isSearching()) {
-    <div class="space-y-2">
-      @for (i of [1, 2, 3]; track i) {
+    <div class="mt-2 grid gap-1.5 sm:grid-cols-2">
+      @for (i of [1, 2, 3, 4]; track i) {
       <div class="h-12 animate-pulse rounded-lg bg-gray-100"></div>
       }
     </div>
     } @else if (searchError()) {
-    <p class="text-center text-sm text-red-500">Error al buscar. Intenta de nuevo.</p>
+    <p class="mt-2 text-center text-sm text-red-500">Error al buscar. Intenta de nuevo.</p>
     } @else if (results().length > 0) {
-    <div class="space-y-2">
+    <div class="mt-2 grid gap-1.5 sm:grid-cols-2">
       @for (product of results(); track product.id) {
       @let isOpen = selectedProduct()?.id === product.id;
 
       <div class="rounded-lg border transition"
-        [class]="isOpen ? 'border-gray-400 bg-gray-50' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'">
+        [class]="isOpen
+          ? 'border-gray-400 bg-gray-50 sm:col-span-2'
+          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'">
 
-        <button type="button" class="flex w-full items-center gap-3 px-3 py-2.5 text-left" [attr.aria-expanded]="isOpen"
+        <button type="button" class="flex w-full items-center gap-2 p-1.5 text-left" [attr.aria-expanded]="isOpen"
           (click)="selectProduct(product)">
           <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
             @if (product.images?.[0]?.url; as imageUrl) {
@@ -121,40 +151,37 @@
 
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium text-gray-800">{{ product.name }}</p>
-            <p class="text-xs text-gray-400">{{ product.variants?.length ?? 0 }} variante(s)</p>
+            <p class="text-xs text-gray-500">{{ product.variants?.length ?? 0 }} variante(s)</p>
           </div>
 
-          <span class="text-gray-400 transition-transform" [class.rotate-180]="isOpen" aria-hidden="true">▾</span>
+          <span class="pr-1 text-gray-400 transition-transform" [class.rotate-180]="isOpen" aria-hidden="true">▾</span>
         </button>
 
         @if (isOpen) {
-        <div class="border-t border-gray-100 px-3 pb-3 pt-2">
-          <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">Variantes</p>
-
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div class="border-t border-gray-200 p-2">
+          <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
             @for (variant of sortedVariants(); track variant.id) {
             @let isSelected = selectedVariant()?.id === variant.id;
 
             <button type="button"
-              class="rounded-lg border p-2 text-left transition disabled:cursor-not-allowed disabled:opacity-40"
+              class="rounded-lg border px-2 py-1.5 text-left transition disabled:cursor-not-allowed disabled:opacity-40"
               [class]="isSelected
-                        ? 'border-gray-900 bg-gray-900 text-white'
-                        : 'border-gray-200 enabled:hover:border-gray-400'" [disabled]="variant.stock === 0"
-              [attr.aria-pressed]="isSelected" (click)="selectVariant(variant)">
-              <p class="mb-1 truncate text-xs font-medium">{{ variant.toneName }}</p>
+                ? 'border-gray-900 bg-gray-900 text-white'
+                : 'border-gray-200 bg-white enabled:hover:border-gray-400'"
+              [disabled]="variant.stock === 0" [attr.aria-pressed]="isSelected" (click)="selectVariant(variant)">
+              <p class="truncate text-sm font-medium">{{ variant.toneName }}</p>
               <p class="text-xs" [class]="isSelected ? 'text-gray-300' : 'text-gray-500'">
-                S/ {{ variant.price | number: '1.2-2' }}
+                S/ {{ variant.price | number: '1.2-2' }} · Stock {{ variant.stock }}
               </p>
-              <p class="text-xs" [class]="isSelected ? 'text-gray-300' : 'text-gray-400'">Stock: {{ variant.stock }}</p>
             </button>
             }
           </div>
 
           @if (selectedVariant()) {
           <button type="button"
-            class="mt-3 flex w-full items-center justify-center rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-gray-700"
+            class="mt-2 h-9 w-full rounded-lg bg-gray-900 text-sm font-semibold text-white hover:bg-gray-700"
             (click)="addItem()">
-            Agregar a la orden
+            + Agregar a la orden
           </button>
           }
         </div>
@@ -163,26 +190,29 @@
       }
     </div>
     } @else if (query().trim()) {
-    <p class="text-center text-sm text-gray-400">No se encontraron productos.</p>
+    <p class="mt-2 text-center text-sm text-gray-400">No se encontraron productos.</p>
     }
   </div>
   }
 
-  <!-- Lista de items -->
+  <!-- ═══ Lista de items ═══ -->
   @if (items().length === 0) {
   <p class="py-6 text-center text-sm text-gray-400">Esta orden aún no tiene items.</p>
+  } @else if (visibleItems().length === 0) {
+  <p class="py-6 text-center text-sm text-gray-400">Ningún item coincide con el filtro.</p>
   } @else {
-  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
 
-    @for (item of items(); track item.id) {
+    @for (item of visibleItems(); track item.id) {
     <div class="overflow-hidden rounded-xl border bg-white transition" [class]="cardClass(item)">
 
       <div class="relative">
-        @if (item.image) {
-        <img [src]="item.image" [alt]="item.productName" class="h-28 w-full object-cover"
-          [class.grayscale]="item.pendingDelete" />
+        @let img = imageOf(item);
+        @if (img && !failedImages().has(img)) {
+        <img [src]="img" [alt]="item.productName" loading="lazy" class="h-28 w-full object-cover"
+          [class.grayscale]="item.pendingDelete" (error)="onImageError(img)" />
         } @else {
-        <div class="h-28 w-full bg-gray-100"></div>
+        <div class="flex h-28 w-full items-center justify-center bg-gray-100 text-2xl text-gray-300">🖼️</div>
         }
 
         @switch (statusOf(item)) {
@@ -213,17 +243,17 @@
 
           @if (hasDiscount(item)) {
           <div class="flex flex-shrink-0 items-baseline gap-1">
-            <span class="text-[10px] text-gray-400 line-through">${{ item.price | number:'1.2-2' }}</span>
-            <span class="text-sm font-bold text-red-600">${{ item.definedPrice | number:'1.2-2' }}</span>
+            <span class="text-[10px] text-gray-400 line-through">S/ {{ item.price | number:'1.2-2' }}</span>
+            <span class="text-sm font-bold text-red-600">S/ {{ item.definedPrice | number:'1.2-2' }}</span>
           </div>
           } @else {
-          <p class="flex-shrink-0 text-sm font-bold text-gray-800">${{ totalOwed(item) | number:'1.2-2' }}</p>
+          <p class="flex-shrink-0 text-sm font-bold text-gray-800">S/ {{ totalOwed(item) | number:'1.2-2' }}</p>
           }
         </div>
 
         @if (editMode() && item.pendingDelete) {
         <button type="button"
-          class="mt-2 w-full rounded-full border border-red-200 py-1 text-[10px] font-medium text-red-600 hover:bg-red-50"
+          class="mt-2 h-8 w-full rounded-lg border border-red-200 text-xs font-medium text-red-600 hover:bg-red-50"
           (click)="toggleDelete(item)">
           Deshacer eliminación
         </button>
@@ -233,7 +263,8 @@
         <div class="mt-2 grid grid-cols-2 gap-1">
           <label class="text-[10px] text-gray-500">
             Precio def.
-            <input type="number" min="0" step="0.01" class="mt-0.5 w-full rounded border px-1 py-0.5 text-right text-xs"
+            <input type="number" min="0" step="0.01" inputmode="decimal"
+              class="mt-0.5 h-8 w-full rounded-md border px-1 text-right text-xs"
               [class.border-amber-400]="fieldChanged(item, 'definedPrice')"
               [class.bg-amber-50]="fieldChanged(item, 'definedPrice')" [(ngModel)]="item.definedPrice"
               (change)="onDefinedPriceChange(item)" />
@@ -241,8 +272,8 @@
 
           <label class="text-[10px] text-gray-500">
             Pagado
-            <input type="number" min="0" [max]="totalOwed(item)" step="0.01"
-              class="mt-0.5 w-full rounded border px-1 py-0.5 text-right text-xs"
+            <input type="number" min="0" [max]="totalOwed(item)" step="0.01" inputmode="decimal"
+              class="mt-0.5 h-8 w-full rounded-md border px-1 text-right text-xs"
               [class.border-amber-400]="fieldChanged(item, 'amountPaid')"
               [class.bg-amber-50]="fieldChanged(item, 'amountPaid')" [(ngModel)]="item.amountPaid"
               (change)="onAmountPaidChange(item)" />
@@ -253,7 +284,7 @@
           <div class="flex justify-between text-[10px] text-gray-400">
             <span>Pagado</span>
             <span class="font-semibold text-gray-700">
-              ${{ item.amountPaid | number:'1.2-2' }} / ${{ totalOwed(item) | number:'1.2-2' }}
+              S/ {{ item.amountPaid | number:'1.2-2' }} / {{ totalOwed(item) | number:'1.2-2' }}
             </span>
           </div>
           <div class="h-1 w-full overflow-hidden rounded-full bg-gray-100">
@@ -266,9 +297,9 @@
         <div class="mt-1.5 flex gap-1">
           @for (f of flags; track f.key) {
           <button type="button"
-            class="flex-1 rounded-full py-0.5 text-center text-[10px] font-medium transition disabled:cursor-default"
+            class="h-8 flex-1 rounded-lg text-center text-[11px] font-semibold transition disabled:cursor-default sm:h-7"
             [class]="flagOn(item, f.key) ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'"
-            [class.ring-1]="flagChanged(item, f.key)" [class.ring-amber-400]="flagChanged(item, f.key)"
+            [class.ring-2]="flagChanged(item, f.key)" [class.ring-amber-400]="flagChanged(item, f.key)"
             [disabled]="!editMode()" [attr.aria-pressed]="flagOn(item, f.key)" (click)="toggleFlag(item, f.key)">
             {{ f.label }}
           </button>
@@ -276,7 +307,8 @@
         </div>
 
         @if (editMode()) {
-        <button type="button" class="mt-1.5 text-[10px] font-medium text-red-600 hover:underline"
+        <button type="button"
+          class="mt-1.5 h-8 w-full rounded-lg border border-red-200 text-[11px] font-medium text-red-600 hover:bg-red-50 sm:h-7"
           (click)="toggleDelete(item)">
           {{ item.isNew ? 'Quitar' : 'Eliminar' }}
         </button>
