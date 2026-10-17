@@ -1,0 +1,248 @@
+:host {
+  --ink: #B5586B;
+  --cream: #FFF8F3;
+  --line: #F0CFD3;
+  --pink: #F9D3D9;
+  --rose: #E58A94;
+  --mint: #CFE8D5;
+  --sage: #8FBF9F;
+  --sky: #CDE3F5;
+  --gold: #FFE08A;
+  display: block;
+}
+
+.hdr {
+  position: relative;
+  z-index: 20;
+}
+
+/* ---------- Navbar ---------- */
+.nav {
+  position: relative;
+  background: var(--cream);
+  padding: 12px 24px 14px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 6px 18px -8px rgba(181, 88, 107, 0.35);
+
+  /* costura punteada interior */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 14px; right: 14px; bottom: 6px;
+    border-bottom: 1.5px dashed var(--line);
+    pointer-events: none;
+  }
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Logo a la izquierda, acciones a la derecha */
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- Logo + destellos ---------- */
+.logo {
+  position: relative;
+  display: inline-flex;
+  padding: 2px 6px;
+}
+.spark {
+  position: absolute;
+  pointer-events: none;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+.s1 { top: -9px;   right: -12px; width: 18px; height: 18px; background: var(--gold); }
+.s2 { bottom: -7px; left: -10px; width: 12px; height: 12px; background: var(--rose); animation-delay: 0.9s; }
+.s3 { top: -4px;   left: 2px;    width: 9px;  height: 9px;  background: var(--sage); animation-delay: 1.6s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.65) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1.1)  rotate(25deg); }
+}
+
+/* ---------- Botón Calendario de Adviento (Korean Cute Style) ---------- */
+.advent-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--pink);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: 1.5px dashed var(--rose);
+  box-shadow: 0 2px 8px rgba(229, 138, 148, 0.25);
+  transition: all 0.25s ease-in-out;
+  overflow: hidden;
+
+  /* Destello suave que pasa periódicamente */
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.65),
+      transparent
+    );
+    transform: rotate(25deg);
+    animation: softGlint 4.5s infinite ease-in-out;
+  }
+
+  &:hover {
+    background: #FCE1E5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(181, 88, 107, 0.3);
+
+    .cute-sparkle {
+      transform: scale(1.25) rotate(15deg);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.cute-sparkle {
+  font-size: 11px;
+  display: inline-block;
+  transition: transform 0.25s ease;
+  animation: floatPulse 2.5s infinite ease-in-out;
+}
+
+.mini-star {
+  font-size: 9px;
+  color: var(--rose);
+  animation: starTwinkle 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes softGlint {
+  0%, 75% { left: -75%; }
+  100%    { left: 150%; }
+}
+
+@keyframes floatPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+@keyframes starTwinkle {
+  0%   { opacity: 0.3; transform: scale(0.8); }
+  100% { opacity: 1;   transform: scale(1.2); }
+}
+
+/* ---------- Switch de nieve ---------- */
+.snow-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--ink);
+
+  &:focus-visible { outline: 2px solid var(--rose); outline-offset: 4px; border-radius: 999px; }
+}
+.snow-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: #EDE3E3;
+  border: 1.5px solid var(--line);
+  transition: background 0.25s, border-color 0.25s;
+
+  &.on { background: var(--sky); border-color: #9CC4E6; }
+}
+.knob {
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 17px; height: 17px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 10px;
+  line-height: 1;
+  color: #9CC4E6;
+  box-shadow: 0 1px 3px rgba(181, 88, 107, 0.3);
+  transition: transform 0.25s;
+}
+.track.on .knob { transform: translateX(16px); }
+
+/* ---------- Nieve ---------- */
+.snow {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 30;
+}
+.flake {
+  position: absolute;
+  top: 0;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--sky);
+  box-sizing: border-box;
+  will-change: transform;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+
+  &.star {
+    border: 0;
+    border-radius: 0;
+    background: var(--sky);
+    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+
+    &:nth-child(10n + 1) { background: var(--pink); }
+    &:nth-child(10n + 6) { background: var(--mint); }
+  }
+  &[data-d="0"] { animation-name: fall-left; }
+  &[data-d="1"] { animation-name: fall-straight; }
+  &[data-d="2"] { animation-name: fall-right; }
+}
+@keyframes fall-left     { from { transform: translate3d(0, -8vh, 0) rotate(0); } to { transform: translate3d(-40px, 108vh, 0) rotate(160deg); } }
+@keyframes fall-straight { from { transform: translate3d(0, -8vh, 0) rotate(0); } to { transform: translate3d(0, 108vh, 0) rotate(120deg); } }
+@keyframes fall-right    { from { transform: translate3d(0, -8vh, 0) rotate(0); } to { transform: translate3d(40px, 108vh, 0) rotate(200deg); } }
+
+/* ---------- Móvil ---------- */
+@media (max-width: 640px) {
+  .nav { padding: 12px 16px 14px; }
+  .snow-label { display: none; }
+  .btn-text { font-size: 10px; }
+}
+
+/* ---------- Accesibilidad ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .snow { display: none; }
+  .spark, .cute-sparkle, .mini-star { animation: none; opacity: 1; }
+  .advent-btn::after { animation: none; }
+}

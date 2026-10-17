@@ -94,5 +94,6 @@ export const routes: Routes = [
     loadComponent: () => import('./public-features/orders/components/order-detailv2/order-detailv2').then(m => m.OrderDetailv2)
   },
   { path: 'tracking-agencies', loadComponent: () => import('./public-features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },
+  { path: 'advent-calendar', loadComponent: () => import('./public-features/campaigns/components/advent-calendar/advent-calendar').then(m => m.AdventCalendar) },
   { path: '**', redirectTo: 'guest/products' }
 ];
