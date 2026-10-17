@@ -74,7 +74,7 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
     9, // día 1
     4, // día 2
     17, // día 3
-    16, // día 4
+    55, // día 4
     13, // día 5
     312, // día 6
     98, // día 7
