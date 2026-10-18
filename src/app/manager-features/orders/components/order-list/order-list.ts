@@ -75,7 +75,6 @@ export class OrderList implements OnInit {
     this.search.set(search ?? '');
     this.selectedStatusId.set(statusId ? +statusId : undefined);
     this.isPaid.set(this.parseBool(qp.get('isPaid')));
-    this.isSeparated.set(this.parseBool(qp.get('isSeparated')));
     this.isPacked.set(this.parseBool(qp.get('isPacked')));
 
     this.isRestoringFromUrl = false;
@@ -96,7 +95,6 @@ private syncUrlAndLoad(): void {
     search: this.search() || null,
     statusId: this.selectedStatusId() ?? null,
     isPaid: this.isPaid() ?? null,
-    isSeparated: this.isSeparated() ?? null,
     isPacked: this.isPacked() ?? null,
   };
 
@@ -159,7 +157,6 @@ private syncUrlAndLoad(): void {
         this.variantId,
         this.selectedStatusId(),
         this.isPaid(),
-        this.isSeparated(),
         this.isPacked()
       )
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -264,23 +261,20 @@ private syncUrlAndLoad(): void {
   }
 
   getTotalQuantity(order: OrderResponseFull): number {
-    return order.items.reduce((sum, i) => sum + i.quantity, 0);
-  }
-  getSeparatedQuantity(order: OrderResponseFull): number {
-    return order.items
-      .filter(i => i.isSeparated)
-      .reduce((sum, i) => sum + i.quantity, 0);
+    return order.items.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
   }
 
   getPackedQuantity(order: OrderResponseFull): number {
     return order.items
-      .filter(i => i.isPacked)
-      .reduce((sum, i) => sum + i.quantity, 0);
+      .filter(i => i.isPacked === true)
+      .reduce((sum, i) => sum + (i.quantity ?? 0), 0);
   }
   
   getPaidAmount(order: OrderResponseFull): number {
     return order.items.reduce((sum, i) => sum + (i.amountPaid ?? 0), 0);
   }
+
+  
 getDaysElapsed(order: OrderResponseFull): number {
     if (!order.createdAt) return 0;
     const created = new Date(order.createdAt);

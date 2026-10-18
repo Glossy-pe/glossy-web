@@ -6,9 +6,9 @@ export interface OrderItemResponseFull {
   orderId: number;
   quantity: number;
 
-  isPaid: Boolean;
-  isSeparated: Boolean;
-  isPacked: Boolean;
+  isPaid: boolean;
+  isSeparated: boolean;
+  isPacked: boolean;
 
   amountPaid: number | null;
   unitPrice: number | null;

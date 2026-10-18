@@ -25,7 +25,6 @@ export class OrderService {
     variantId?: number,
     orderStatusId?: number,   // 👈
     isPaid?: boolean,
-    isSeparated?: boolean,
     isPacked?: boolean
   ): Observable<PageResponse<OrderResponseFull>> {
 
@@ -47,10 +46,6 @@ export class OrderService {
 
     if (isPaid != null) {
       params = params.set('isPaid', isPaid);
-    }
-
-    if (isSeparated != null) {
-      params = params.set('isSeparated', isSeparated);
     }
 
     if (isPacked != null) {
