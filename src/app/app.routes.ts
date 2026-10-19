@@ -82,9 +82,6 @@ export const routes: Routes = [
       },
     ]
   },
-
-
-  
   {
     path: 'orders/:token',
     loadComponent: () => import('./public-features/orders/components/order-detail/order-detail').then(m => m.OrderDetail)
