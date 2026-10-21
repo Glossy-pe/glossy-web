@@ -301,7 +301,16 @@
                 <!-- Imagen principal -->
                 <div class="w-full h-44 mb-2 rounded-xl overflow-hidden bg-[#FAF5EF] border border-[#E8D0D8] flex items-center justify-center">
                   @if (previewImage(); as img) {
-                    <img [src]="img" [alt]="product.name" class="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      (click)="openFullImage(img)"
+                      class="relative w-full h-full group cursor-zoom-in focus:outline-none"
+                      aria-label="Ver imagen completa">
+                      <img [src]="img" [alt]="product.name" class="w-full h-full object-cover" />
+                      <span class="absolute bottom-1.5 right-1.5 bg-white/90 text-[#B85B75] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#F0C4D0] shadow-xs opacity-90 group-hover:opacity-100">
+                        🔍 Ver completa
+                      </span>
+                    </button>
                   } @else {
                     <div class="w-10 h-10 text-[#B85B75]">
                       <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: slot.iconType }"></ng-container>
@@ -377,6 +386,29 @@
           </div>
         </div>
       }
+
+      <!-- LIGHTBOX: IMAGEN COMPLETA -->
+@if (fullImage(); as full) {
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#3D1D28]/80 backdrop-blur-sm animate-fade-in cursor-zoom-out"
+    (click)="closeFullImage()">
+
+    <button
+      type="button"
+      (click)="closeFullImage(); $event.stopPropagation()"
+      class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white text-[#B85B75] font-bold text-sm flex items-center justify-center shadow-lg border border-[#F0C4D0] hover:bg-[#FFDDE5]"
+      aria-label="Cerrar imagen">
+      ✕
+    </button>
+
+    <img
+      [src]="full"
+      alt=""
+      (click)="$event.stopPropagation()"
+      class="max-w-full max-h-full object-contain rounded-xl shadow-2xl border border-white/20 cursor-default" />
+  </div>
+}
+
 
       <!-- DRAWER: ORDER SUMMARY & WHATSAPP RESERVATION -->
       @if (showOrderDrawer()) {

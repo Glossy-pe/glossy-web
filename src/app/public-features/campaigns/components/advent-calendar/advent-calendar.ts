@@ -15,8 +15,10 @@ import { catchError } from 'rxjs/operators';
 import { ProductResponseFull } from '../../../products/models/product-response-full.model';
 import { ProductService } from '../../../products/services/product.service';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
+import { HostListener } from '@angular/core';
 
 // Ajusta estas rutas a la ubicación real de este componente en tu proyecto
+
 
 export interface BoxItem {
   id: number; // día del calendario (1..24)
@@ -52,6 +54,8 @@ function pickMainImage(images?: ImageLike[]): string | null {
   const list = sortedImages(images);
   return (list.find((i) => i.mainImage) ?? list[0])?.url ?? null;
 }
+
+
 
 @Component({
   selector: 'app-advent-calendar',
@@ -103,6 +107,9 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
 
   private audioCtx: AudioContext | null = null;
   private animFrameId: number | null = null;
+
+  /** Imagen mostrada a pantalla completa (lightbox) */
+  fullImage = signal<string | null>(null);
 
   openedCount = computed(() => this.openedIds().size);
   selectedCount = computed(() => Object.keys(this.selectedVariants()).length);
@@ -160,6 +167,14 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
   /** Cajas de una sola fila: se maquetan en horizontal para que quepa el contenido */
   isCompact(item: BoxItem): boolean {
     return item.h === 1;
+  }
+
+  openFullImage(url: string | null) {
+    if (url) this.fullImage.set(url);
+  }
+
+  closeFullImage() {
+    this.fullImage.set(null);
   }
 
   /** Cajas grandes: números y sellos más grandes */
@@ -229,6 +244,15 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
       this.loadError.set(byId.size === 0);
       this.loading.set(false);
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.fullImage()) {
+      this.closeFullImage();
+    } else if (this.activeModal()) {
+      this.closeModal();
+    }
   }
 
   // ── Helpers de datos / imágenes (usados en el template) ──
@@ -311,6 +335,7 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
   closeModal() {
     this.activeModal.set(null);
     this.previewImage.set(null);
+    this.fullImage.set(null);
   }
 
   openOrderDrawer() {
