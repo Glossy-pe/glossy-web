@@ -57,7 +57,7 @@ export const routes: Routes = [
         path: 'orders/:id/order-items',          // estático antes que :id
         loadComponent: () => import('./manager-features/order-items/components/order-item-list/order-item-list').then(m => m.OrderItemList)
       }
-      
+
     ]
   },
 
@@ -69,8 +69,8 @@ export const routes: Routes = [
 
   {
     path: 'guest',
-  loadComponent: () => import('./layout/guest-layout/guest-layout')
-    .then(m => m.GuestLayout),   // ← no NavBar
+    loadComponent: () => import('./layout/guest-layout/guest-layout')
+      .then(m => m.GuestLayout),   // ← no NavBar
     children: [
       {
         path: 'products',
@@ -80,6 +80,7 @@ export const routes: Routes = [
         path: 'products/:id',
         loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
       },
+      { path: 'calendario-de-adviento', loadComponent: () => import('./public-features/campaigns/components/advent-calendar/advent-calendar').then(m => m.AdventCalendar) },
     ]
   },
   {
@@ -91,6 +92,5 @@ export const routes: Routes = [
     loadComponent: () => import('./public-features/orders/components/order-detailv2/order-detailv2').then(m => m.OrderDetailv2)
   },
   { path: 'tracking-agencies', loadComponent: () => import('./public-features/tracking/components/agencies-map/agencies-map').then(m => m.AgenciesMap) },
-  { path: 'advent-calendar', loadComponent: () => import('./public-features/campaigns/components/advent-calendar/advent-calendar').then(m => m.AdventCalendar) },
   { path: '**', redirectTo: 'guest/products' }
 ];
