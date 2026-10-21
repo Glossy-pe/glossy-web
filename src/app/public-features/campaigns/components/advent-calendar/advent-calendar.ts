@@ -258,7 +258,7 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
   // ── Helpers de datos / imágenes (usados en el template) ──
   activeVariants(product: ProductResponseFull): VariantResponseFull[] {
     return [...(product.variants ?? [])]
-      .filter((v) => v.active)
+      .filter((v) => v.active && v.stock > 0)
       .sort((a, b) => a.position - b.position);
   }
 

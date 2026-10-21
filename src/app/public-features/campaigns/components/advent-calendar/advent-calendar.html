@@ -1,483 +1,517 @@
-<div class="min-h-screen bg-[#FAF5EF] text-[#4A2633] font-sans relative overflow-x-hidden p-4 sm:p-8 select-none flex flex-col justify-center items-center">
+<div
+  class="min-h-screen bg-[#FAF5EF] text-[#4A2633] font-sans relative overflow-x-hidden p-4 sm:p-8 select-none flex flex-col justify-center items-center">
 
-      <!-- BACKGROUND CANVAS FOR SNOW & GLITTER -->
-      <canvas #snowCanvas class="fixed inset-0 pointer-events-none z-0 opacity-70"></canvas>
+  <!-- BACKGROUND CANVAS FOR SNOW & GLITTER -->
+  <canvas #snowCanvas class="fixed inset-0 pointer-events-none z-0 opacity-70"></canvas>
 
-      <!-- FLOATING SHADE DRAWER BUTTON -->
-      <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
-        <button
-          (click)="openOrderDrawer()"
-          class="bg-[#B85B75] hover:bg-[#A04A62] text-white p-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg font-bold text-xs sm:text-sm flex items-center gap-2 border border-[#FFDDE5] transition-all transform hover:scale-105 active:scale-95">
-          <span class="text-base">🎀</span>
-          <span class="hidden sm:inline">Mis Tonos Elegidos</span>
-          <span class="bg-white text-[#B85B75] px-2.5 py-0.5 rounded-full text-[11px] font-extrabold shadow-inner">
-            {{ selectedCount() }}/12 Tonos
-          </span>
-        </button>
+  <!-- FLOATING SHADE DRAWER BUTTON -->
+  <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+    <button (click)="openOrderDrawer()"
+      class="bg-[#B85B75] hover:bg-[#A04A62] text-white p-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg font-bold text-xs sm:text-sm flex items-center gap-2 border border-[#FFDDE5] transition-all transform hover:scale-105 active:scale-95">
+      <span class="text-base">🎀</span>
+      <span class="hidden sm:inline">Mis Tonos Elegidos</span>
+      <span class="bg-white text-[#B85B75] px-2.5 py-0.5 rounded-full text-[11px] font-extrabold shadow-inner">
+        {{ selectedCount() }}/12 Tonos
+      </span>
+    </button>
+  </div>
+
+  <!-- MAIN CALENDAR CONTAINER -->
+  <main class="relative z-10 w-full max-w-4xl mx-auto space-y-6">
+
+    <!-- HEADER TITLE -->
+    <div class="text-center">
+      <span class="text-[11px] font-serif font-bold text-[#B85B75] uppercase tracking-widest block mb-1">
+        ❀ Soft Aesthetic K-Beauty ❀
+      </span>
+      <h1 class="text-2xl sm:text-4xl font-serif font-bold text-[#3D1D28]">
+        Calendario de Adviento Glossy 2026 🎄
+      </h1>
+      <p class="text-xs text-[#7A4052] max-w-lg mx-auto mt-1">
+        Abre las cajitas del 01 al 12 para personalizar tus tonos. Las cajitas del 13 al 24 guardan sorpresas secretas.
+      </p>
+    </div>
+
+    <!-- ESTADO DE CARGA / ERROR -->
+    @if (loading()) {
+    <div
+      class="max-w-2xl mx-auto text-center text-xs text-[#7A4052] bg-white border border-[#E8D0D8] rounded-xl p-3 animate-pulse">
+      Cargando productos del calendario… 🌸
+    </div>
+    } @else if (loadError()) {
+    <div class="max-w-2xl mx-auto text-center text-xs text-[#B85B75] bg-white border border-[#F0C4D0] rounded-xl p-3">
+      No pudimos cargar los productos. Intenta recargar la página.
+    </div>
+    }
+
+    <!-- PROGRESS BAR & CONTROLS -->
+    <div
+      class="bg-white rounded-xl p-3.5 border border-[#E8D0D8] shadow-xs max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="text-center sm:text-left">
+        <span class="text-[10px] text-[#7A4052] uppercase font-bold tracking-wider block">Progreso de Selección</span>
+        <span class="text-sm font-serif font-bold text-[#3D1D28]">
+          {{ openedCount() }} de 12 Cajas Personalizadas
+        </span>
       </div>
 
-      <!-- MAIN CALENDAR CONTAINER -->
-      <main class="relative z-10 w-full max-w-4xl mx-auto space-y-6">
+      <div class="w-full sm:w-48 bg-[#FFDDE5] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#F0C4D0]">
+        <div class="bg-[#B85B75] h-full rounded-full transition-all duration-300"
+          [style.width.%]="(openedCount() / 12) * 100"></div>
+      </div>
 
-        <!-- HEADER TITLE -->
-        <div class="text-center">
-          <span class="text-[11px] font-serif font-bold text-[#B85B75] uppercase tracking-widest block mb-1">
-            ❀ Soft Aesthetic K-Beauty ❀
-          </span>
-          <h1 class="text-2xl sm:text-4xl font-serif font-bold text-[#3D1D28]">
-            Calendario de Adviento Glossy 2026 🎄
-          </h1>
-          <p class="text-xs text-[#7A4052] max-w-lg mx-auto mt-1">
-            Abre las cajitas del 01 al 12 para personalizar tus tonos. Las cajitas del 13 al 24 guardan sorpresas secretas.
-          </p>
-        </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button (click)="openOrderDrawer()"
+          class="px-3 py-1.5 bg-[#B85B75] hover:bg-[#A04A62] text-white text-xs font-bold rounded-lg shadow-xs transition-all flex items-center gap-1">
+          <span>🛍️</span> Ver Tonos
+        </button>
+        <button (click)="resetCalendar()"
+          class="px-2.5 py-1.5 bg-[#FAF5EF] hover:bg-[#FFDDE5] text-[#5C2736] text-xs font-medium rounded-lg border border-[#E8D0D8] transition-all">
+          🔄 Reiniciar
+        </button>
+      </div>
+    </div>
 
-        <!-- ESTADO DE CARGA / ERROR -->
-        @if (loading()) {
-          <div class="max-w-2xl mx-auto text-center text-xs text-[#7A4052] bg-white border border-[#E8D0D8] rounded-xl p-3 animate-pulse">
-            Cargando productos del calendario… 🌸
-          </div>
-        } @else if (loadError()) {
-          <div class="max-w-2xl mx-auto text-center text-xs text-[#B85B75] bg-white border border-[#F0C4D0] rounded-xl p-3">
-            No pudimos cargar los productos. Intenta recargar la página.
-          </div>
-        }
+    <!-- CALENDAR BOOK CONTAINER -->
+    <div class="bg-[#F7EBEF] p-3 sm:p-5 rounded-2xl border border-[#D4AF37] shadow-md relative">
 
-        <!-- PROGRESS BAR & CONTROLS -->
-        <div class="bg-white rounded-xl p-3.5 border border-[#E8D0D8] shadow-xs max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div class="text-center sm:text-left">
-            <span class="text-[10px] text-[#7A4052] uppercase font-bold tracking-wider block">Progreso de Selección</span>
-            <span class="text-sm font-serif font-bold text-[#3D1D28]">
-              {{ openedCount() }} de 12 Cajas Personalizadas
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-[#FFDDE5] p-3 sm:p-4 rounded-xl border border-[#F0C4D0]">
+
+        <!-- PANEL 1: LEFT PANEL (DAYS 01 - 12) -->
+        <div
+          class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
+          <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
+            <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
+              ❀ Panel Izquierdo (Días 01 - 12) ❀
             </span>
           </div>
 
-          <div class="w-full sm:w-48 bg-[#FFDDE5] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#F0C4D0]">
-            <div class="bg-[#B85B75] h-full rounded-full transition-all duration-300" [style.width.%]="(openedCount() / 12) * 100"></div>
-          </div>
+          <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
+          <div class="grid gap-1.5 h-[500px]"
+            style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
+            @for (item of leftPanelItems(); track item.id) {
+            <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
+              <button (click)="handleBoxClick(item)" [disabled]="!item.product"
+                class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden disabled:opacity-60 disabled:cursor-wait">
 
-          <div class="flex items-center gap-2 shrink-0">
-            <button
-              (click)="openOrderDrawer()"
-              class="px-3 py-1.5 bg-[#B85B75] hover:bg-[#A04A62] text-white text-xs font-bold rounded-lg shadow-xs transition-all flex items-center gap-1">
-              <span>🛍️</span> Ver Tonos
-            </button>
-            <button
-              (click)="resetCalendar()"
-              class="px-2.5 py-1.5 bg-[#FAF5EF] hover:bg-[#FFDDE5] text-[#5C2736] text-xs font-medium rounded-lg border border-[#E8D0D8] transition-all">
-              🔄 Reiniciar
-            </button>
-          </div>
-        </div>
+                <div
+                  class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden transition-all duration-300"
+                  [class.bg-white]="isOpened(item.id)" [class.bg-[#FFDDE5]]="!isOpened(item.id)">
 
-        <!-- CALENDAR BOOK CONTAINER -->
-        <div class="bg-[#F7EBEF] p-3 sm:p-5 rounded-2xl border border-[#D4AF37] shadow-md relative">
+                  <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none"
+                      stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+                  </svg>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-[#FFDDE5] p-3 sm:p-4 rounded-xl border border-[#F0C4D0]">
+                  @if (!isOpened(item.id)) {
+                  <!-- CLOSED BOX STATE -->
+                  <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
+                    class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden group-hover:bg-[#FFDDE5] transition-colors">
 
-            <!-- PANEL 1: LEFT PANEL (DAYS 01 - 12) -->
-            <div class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
-              <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
-                <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
-                  ❀ Panel Izquierdo (Días 01 - 12) ❀
-                </span>
-              </div>
-
-              <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
-              <div class="grid gap-1.5 h-[500px]"
-                   style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
-                @for (item of leftPanelItems(); track item.id) {
-                  <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
-                    <button
-                      (click)="handleBoxClick(item)"
-                      [disabled]="!item.product"
-                      class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden disabled:opacity-60 disabled:cursor-wait">
-
-                      <div class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden transition-all duration-300"
-                           [class.bg-white]="isOpened(item.id)"
-                           [class.bg-[#FFDDE5]]="!isOpened(item.id)">
-
-                        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2"/>
-                        </svg>
-
-                        @if (!isOpened(item.id)) {
-                          <!-- CLOSED BOX STATE -->
-                          <div [ngClass]="item.colorBg + ' ' + layoutClass(item)" class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden group-hover:bg-[#FFDDE5] transition-colors">
-
-                            <div class="relative z-10 text-[#B85B75] opacity-90 group-hover:scale-105 transition-transform shrink-0">
-                              <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                            </div>
-
-                            <div class="relative z-10 flex items-center justify-center"
-                                 [ngClass]="isCompact(item) ? 'shrink-0' : 'my-auto w-full'">
-                              @if (item.orientation === 'vertical') {
-                                <span class="text-xs font-serif italic font-bold text-[#5C2736] tracking-widest uppercase writing-mode-vertical">
-                                  {{ item.dayLabel }}
-                                </span>
-                              } @else if (item.isWord) {
-                                <span class="font-serif italic text-[#5C2736] font-bold"
-                                      [ngClass]="isLarge(item) ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'">
-                                  {{ item.dayLabel }}
-                                </span>
-                              } @else {
-                                <span class="font-serif text-[#3D1D28] font-light"
-                                      [ngClass]="isCompact(item) ? 'text-lg' : isLarge(item) ? 'text-3xl' : 'text-xl sm:text-2xl'">
-                                  {{ item.dayLabel }}
-                                </span>
-                              }
-                            </div>
-
-                            <div class="relative z-10 text-[#B85B75] text-[9px]">🎀</div>
-                          </div>
-                        } @else {
-                          <!-- OPENED BOX STATE -->
-                          @if (isCompact(item)) {
-                            <!-- Caja de una sola fila: imagen a la izquierda, texto a la derecha -->
-                            <div class="w-full h-full p-1 bg-white flex flex-row items-center gap-1.5 text-left border border-[#B85B75] animate-fade-in overflow-hidden">
-                              @if (openedBoxImage(item); as img) {
-                                <img [src]="img" [alt]="item.product?.name"
-                                     class="h-full aspect-square object-cover rounded-md shrink-0" loading="lazy" />
-                              } @else {
-                                <div class="text-[#B85B75] shrink-0 pl-1">
-                                  <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                                </div>
-                              }
-                              <div class="min-w-0 flex flex-col items-start">
-                                <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 max-w-full">
-                                  {{ item.product?.name }}
-                                </span>
-                                @if (getSavedVariant(item.id); as variant) {
-                                  <span class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
-                                    {{ variant.toneName }}
-                                  </span>
-                                } @else {
-                                  <span class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
-                                    Elegir Tono
-                                  </span>
-                                }
-                              </div>
-                            </div>
-                          } @else {
-                            <div class="w-full h-full p-1.5 bg-white flex flex-col items-center justify-center text-center border border-[#B85B75] animate-fade-in overflow-hidden">
-                              @if (openedBoxImage(item); as img) {
-                                <img [src]="img" [alt]="item.product?.name"
-                                     class="w-full flex-1 min-h-0 object-cover rounded-md mb-1" loading="lazy" />
-                              } @else {
-                                <div class="text-base mb-0.5 text-[#B85B75]">
-                                  <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                                </div>
-                              }
-                              <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 w-full">
-                                {{ item.product?.name }}
-                              </span>
-                              @if (getSavedVariant(item.id); as variant) {
-                                <span class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
-                                  {{ variant.toneName }}
-                                </span>
-                              } @else {
-                                <span class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
-                                  Elegir Tono
-                                </span>
-                              }
-                            </div>
-                          }
-                        }
-
-                      </div>
-                    </button>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- PANEL 2: RIGHT PANEL (DAYS 13 - 24 INCOGNITO) -->
-            <div class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
-              <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
-                <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
-                  ❀ Panel Derecho (Días 13 - 24 Incógnitos) ❀
-                </span>
-              </div>
-
-              <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
-              <div class="grid gap-1.5 h-[500px]"
-                   style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
-                @for (item of rightPanelItems(); track item.id) {
-                  <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
-                    <button
-                      (click)="handleBoxClick(item)"
-                      class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden group">
-
-                      <div class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden bg-[#FFDDE5]">
-
-                        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2"/>
-                        </svg>
-
-                        <div [ngClass]="item.colorBg + ' ' + layoutClass(item)" class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden">
-
-                          <div class="relative z-10 flex items-center justify-center"
-                               [ngClass]="isCompact(item) ? 'shrink-0' : 'pt-0.5 w-full'">
-                            @if (item.orientation === 'vertical') {
-                              <span class="text-[10px] font-serif italic text-[#B85B75] tracking-widest uppercase font-medium writing-mode-vertical">
-                                {{ item.dayLabel }}
-                              </span>
-                            } @else if (item.isWord) {
-                              <span class="font-serif italic text-[#B85B75] font-bold"
-                                    [ngClass]="isLarge(item) ? 'text-base' : 'text-xs'">
-                                {{ item.dayLabel }}
-                              </span>
-                            } @else {
-                              <span class="font-serif text-[#5C2736]"
-                                    [ngClass]="isCompact(item) ? 'text-base' : isLarge(item) ? 'text-2xl' : 'text-sm sm:text-lg'">
-                                {{ item.dayLabel }}
-                              </span>
-                            }
-                          </div>
-
-                          <!-- GOLDEN WAX SEAL -->
-                          <div class="relative z-10 transform group-hover:scale-105 group-hover:rotate-6 transition-all duration-300 shrink-0"
-                               [ngClass]="isCompact(item) ? '' : 'my-auto'">
-                            <div [ngClass]="sealClass(item)" class="rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center shadow-xs text-white font-bold">
-                              ?
-                            </div>
-                          </div>
-
-                          <div class="relative z-10 text-[#B85B75] shrink-0">
-                            <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                          </div>
-
-                        </div>
-
-                      </div>
-                    </button>
-                  </div>
-                }
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </main>
-
-      <!-- MODAL: PRODUCT DETAILS & VARIANT SELECTOR -->
-      @if (activeModal(); as slot) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D1D28]/30 backdrop-blur-xs animate-fade-in">
-          <div class="bg-white rounded-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-5 shadow-xl border border-[#E8D0D8] relative text-center animate-scale-up">
-
-            <button
-              (click)="closeModal()"
-              class="absolute top-3.5 right-3.5 z-10 w-7 h-7 rounded-full bg-[#FFDDE5] border border-[#F0C4D0] text-[#B85B75] font-bold text-xs flex items-center justify-center hover:bg-[#F0C4D0]">
-              ✕
-            </button>
-
-            @if (slot.isIncognito) {
-              <!-- INCOGNITO MYSTERY MODAL -->
-              <div class="py-2">
-                <div class="w-14 h-14 mx-auto rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center text-white font-bold text-xl shadow-xs mb-2 animate-bounce">
-                  ?
-                </div>
-                <span class="text-[10px] font-bold text-[#B85B75] uppercase tracking-wider block mb-0.5">Cajita Incógnita</span>
-                <h3 class="text-lg font-serif font-bold text-[#3D1D28] mb-1.5">Día {{ slot.id }} - Regalo Secreto</h3>
-
-                <div class="bg-[#FFDDE5] p-2.5 rounded-xl border border-[#F0C4D0] mb-3 text-xs text-[#5C2736]">
-                  <span class="font-bold text-[#B85B75] block mb-0.5">🔮 Pista Enigmática:</span>
-                  <p class="italic">"{{ slot.mysteryHint }}"</p>
-                </div>
-
-                <p class="text-xs text-[#7A4052] leading-relaxed mb-3">
-                  Esta cajita contiene un producto sorpresa de maquillaje K-Beauty.
-                </p>
-
-                <button
-                  (click)="closeModal()"
-                  class="w-full py-2 bg-[#B85B75] text-white font-bold rounded-lg text-xs shadow-xs hover:bg-[#A04A62]">
-                  ¡Mantener la Sorpresa! ✨
-                </button>
-              </div>
-            } @else if (slot.product; as product) {
-              <!-- REVEALED PRODUCT MODAL -->
-              <div>
-                <!-- Imagen principal -->
-                <div class="w-full h-44 mb-2 rounded-xl overflow-hidden bg-[#FAF5EF] border border-[#E8D0D8] flex items-center justify-center">
-                  @if (previewImage(); as img) {
-                    <button
-                      type="button"
-                      (click)="openFullImage(img)"
-                      class="relative w-full h-full group cursor-zoom-in focus:outline-none"
-                      aria-label="Ver imagen completa">
-                      <img [src]="img" [alt]="product.name" class="w-full h-full object-cover" />
-                      <span class="absolute bottom-1.5 right-1.5 bg-white/90 text-[#B85B75] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#F0C4D0] shadow-xs opacity-90 group-hover:opacity-100">
-                        🔍 Ver completa
-                      </span>
-                    </button>
-                  } @else {
-                    <div class="w-10 h-10 text-[#B85B75]">
-                      <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: slot.iconType }"></ng-container>
+                    <div
+                      class="relative z-10 text-[#B85B75] opacity-90 group-hover:scale-105 transition-transform shrink-0">
+                      <ng-container
+                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
                     </div>
-                  }
-                </div>
 
-                <!-- Miniaturas (de la variante elegida, o del producto) -->
-                @if (galleryImages().length > 1) {
-                  <div class="flex gap-1.5 justify-center mb-2 overflow-x-auto pb-1">
-                    @for (url of galleryImages(); track url) {
-                      <button
-                        (click)="setPreview(url)"
-                        class="w-10 h-10 shrink-0 rounded-md overflow-hidden border transition-all"
-                        [ngClass]="previewImage() === url ? 'border-[#B85B75] ring-1 ring-[#B85B75]' : 'border-[#E8D0D8]'">
-                        <img [src]="url" alt="" class="w-full h-full object-cover" loading="lazy" />
-                      </button>
+                    <div class="relative z-10 flex items-center justify-center"
+                      [ngClass]="isCompact(item) ? 'shrink-0' : 'my-auto w-full'">
+                      @if (item.orientation === 'vertical') {
+                      <span
+                        class="text-xs font-serif italic font-bold text-[#5C2736] tracking-widest uppercase writing-mode-vertical">
+                        {{ item.dayLabel }}
+                      </span>
+                      } @else if (item.isWord) {
+                      <span class="font-serif italic text-[#5C2736] font-bold"
+                        [ngClass]="isLarge(item) ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'">
+                        {{ item.dayLabel }}
+                      </span>
+                      } @else {
+                      <span class="font-serif text-[#3D1D28] font-light"
+                        [ngClass]="isCompact(item) ? 'text-lg' : isLarge(item) ? 'text-3xl' : 'text-xl sm:text-2xl'">
+                        {{ item.dayLabel }}
+                      </span>
+                      }
+                    </div>
+
+                    <div class="relative z-10 text-[#B85B75] text-[9px]">🎀</div>
+                  </div>
+                  } @else {
+                  <!-- OPENED BOX STATE -->
+                  @if (isCompact(item)) {
+                  <!-- Caja de una sola fila: imagen a la izquierda, texto a la derecha -->
+                  <div
+                    class="w-full h-full p-1 bg-white flex flex-row items-center gap-1.5 text-left border border-[#B85B75] animate-fade-in overflow-hidden">
+                    @if (openedBoxImage(item); as img) {
+                    <img [src]="img" [alt]="item.product?.name"
+                      class="h-full aspect-square object-cover rounded-md shrink-0" loading="lazy" />
+                    } @else {
+                    <div class="text-[#B85B75] shrink-0 pl-1">
+                      <ng-container
+                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+                    </div>
+                    }
+                    <div class="min-w-0 flex flex-col items-start">
+                      <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 max-w-full">
+                        {{ item.product?.name }}
+                      </span>
+                      @if (getSavedVariant(item.id); as variant) {
+                      <span
+                        class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
+                        {{ variant.toneName }}
+                      </span>
+                      } @else {
+                      <span
+                        class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
+                        Elegir Tono
+                      </span>
+                      }
+                    </div>
+                  </div>
+                  } @else {
+                  <div
+                    class="w-full h-full p-1.5 bg-white flex flex-col items-center justify-center text-center border border-[#B85B75] animate-fade-in overflow-hidden">
+                    @if (openedBoxImage(item); as img) {
+                    <img [src]="img" [alt]="item.product?.name"
+                      class="w-full flex-1 min-h-0 object-cover rounded-md mb-1" loading="lazy" />
+                    } @else {
+                    <div class="text-base mb-0.5 text-[#B85B75]">
+                      <ng-container
+                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+                    </div>
+                    }
+                    <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 w-full">
+                      {{ item.product?.name }}
+                    </span>
+                    @if (getSavedVariant(item.id); as variant) {
+                    <span
+                      class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
+                      {{ variant.toneName }}
+                    </span>
+                    } @else {
+                    <span
+                      class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
+                      Elegir Tono
+                    </span>
                     }
                   </div>
-                }
-
-                <span class="text-[9px] font-bold text-[#B85B75] bg-[#FFDDE5] px-2 py-0.5 rounded-full border border-[#F0C4D0] inline-block mb-1">
-                  {{ product.label || 'Glossy' }} • Día {{ slot.id }}
-                </span>
-                <h3 class="text-lg font-serif font-bold text-[#3D1D28] mb-1">{{ product.name }}</h3>
-                <p class="text-xs text-[#7A4052] leading-relaxed mb-3">{{ product.description }}</p>
-
-                @if (activeVariants(product); as variants) {
-                  @if (variants.length > 0) {
-                    <div class="bg-[#FAF5EF] p-3 rounded-xl border border-[#E8D0D8] text-left mb-3">
-                      <label class="text-xs font-bold text-[#B85B75] block mb-1.5">
-                        🎨 Elige tu tono o variante preferida:
-                      </label>
-                      <div class="grid grid-cols-2 gap-1.5">
-                        @for (variant of variants; track variant.id) {
-                          <button
-                            (click)="selectVariant(slot.id, variant, product)"
-                            [disabled]="variant.stock <= 0"
-                            [ngClass]="tempVariant()[slot.id]?.id === variant.id
-                              ? 'bg-[#B85B75] text-white border-[#B85B75]'
-                              : 'bg-white text-[#5C2736] border-[#E8D0D8]'"
-                            class="p-1.5 rounded-lg text-[10px] font-medium border transition-all text-center flex flex-col items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
-
-                            <div class="w-full aspect-square rounded-md overflow-hidden bg-[#FAF5EF] flex items-center justify-center">
-                              @if (variantImage(variant, product); as vimg) {
-                                <img [src]="vimg" [alt]="variant.toneName" class="w-full h-full object-cover" loading="lazy" />
-                              } @else if (isColorCode(variant.toneCode)) {
-                                <span class="w-full h-full" [style.background-color]="variant.toneCode"></span>
-                              } @else {
-                                <span class="text-[#B85B75]">🎨</span>
-                              }
-                            </div>
-
-                            <span class="leading-tight line-clamp-2">{{ variant.toneName }}</span>
-                            @if (variant.stock <= 0) {
-                              <span class="text-[8px] uppercase tracking-wide">Agotado</span>
-                            }
-                          </button>
-                        }
-                      </div>
-                    </div>
                   }
-                }
+                  }
 
-                <button
-                  (click)="saveVariantAndClose(slot.id)"
-                  class="w-full py-2 bg-[#B85B75] text-white font-bold rounded-lg text-xs shadow-xs hover:bg-[#A04A62] transition-all">
-                  Guardar Tono & Continuar ✨
-                </button>
-              </div>
+                </div>
+              </button>
+            </div>
             }
-
           </div>
         </div>
+
+        <!-- PANEL 2: RIGHT PANEL (DAYS 13 - 24 INCOGNITO) -->
+        <div
+          class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
+          <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
+            <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
+              ❀ Panel Derecho (Días 13 - 24 Incógnitos) ❀
+            </span>
+          </div>
+
+          <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
+          <div class="grid gap-1.5 h-[500px]"
+            style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
+            @for (item of rightPanelItems(); track item.id) {
+            <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
+              <button (click)="handleBoxClick(item)"
+                class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden group">
+
+                <div
+                  class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden bg-[#FFDDE5]">
+
+                  <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none"
+                      stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+                  </svg>
+
+                  <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
+                    class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden">
+
+                    <div class="relative z-10 flex items-center justify-center"
+                      [ngClass]="isCompact(item) ? 'shrink-0' : 'pt-0.5 w-full'">
+                      @if (item.orientation === 'vertical') {
+                      <span
+                        class="text-[10px] font-serif italic text-[#B85B75] tracking-widest uppercase font-medium writing-mode-vertical">
+                        {{ item.dayLabel }}
+                      </span>
+                      } @else if (item.isWord) {
+                      <span class="font-serif italic text-[#B85B75] font-bold"
+                        [ngClass]="isLarge(item) ? 'text-base' : 'text-xs'">
+                        {{ item.dayLabel }}
+                      </span>
+                      } @else {
+                      <span class="font-serif text-[#5C2736]"
+                        [ngClass]="isCompact(item) ? 'text-base' : isLarge(item) ? 'text-2xl' : 'text-sm sm:text-lg'">
+                        {{ item.dayLabel }}
+                      </span>
+                      }
+                    </div>
+
+                    <!-- GOLDEN WAX SEAL -->
+                    <div
+                      class="relative z-10 transform group-hover:scale-105 group-hover:rotate-6 transition-all duration-300 shrink-0"
+                      [ngClass]="isCompact(item) ? '' : 'my-auto'">
+                      <div [ngClass]="sealClass(item)"
+                        class="rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center shadow-xs text-white font-bold">
+                        ?
+                      </div>
+                    </div>
+
+                    <div class="relative z-10 text-[#B85B75] shrink-0">
+                      <ng-container
+                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+                    </div>
+
+                  </div>
+
+                </div>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: PRODUCT DETAILS & VARIANT SELECTOR -->
+  @if (activeModal(); as slot) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D1D28]/30 backdrop-blur-xs animate-fade-in">
+    <div
+      class="bg-white rounded-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-5 shadow-xl border border-[#E8D0D8] relative text-center animate-scale-up">
+
+      <button (click)="closeModal()"
+        class="absolute top-3.5 right-3.5 z-10 w-7 h-7 rounded-full bg-[#FFDDE5] border border-[#F0C4D0] text-[#B85B75] font-bold text-xs flex items-center justify-center hover:bg-[#F0C4D0]">
+        ✕
+      </button>
+
+      @if (slot.isIncognito) {
+      <!-- INCOGNITO MYSTERY MODAL -->
+      <div class="py-2">
+        <div
+          class="w-14 h-14 mx-auto rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center text-white font-bold text-xl shadow-xs mb-2 animate-bounce">
+          ?
+        </div>
+        <span class="text-[10px] font-bold text-[#B85B75] uppercase tracking-wider block mb-0.5">Cajita Incógnita</span>
+        <h3 class="text-lg font-serif font-bold text-[#3D1D28] mb-1.5">Día {{ slot.id }} - Regalo Secreto</h3>
+
+        <div class="bg-[#FFDDE5] p-2.5 rounded-xl border border-[#F0C4D0] mb-3 text-xs text-[#5C2736]">
+          <span class="font-bold text-[#B85B75] block mb-0.5">🔮 Pista Enigmática:</span>
+          <p class="italic">"{{ slot.mysteryHint }}"</p>
+        </div>
+
+        <p class="text-xs text-[#7A4052] leading-relaxed mb-3">
+          Esta cajita contiene un producto sorpresa de maquillaje K-Beauty.
+        </p>
+
+        <button (click)="closeModal()"
+          class="w-full py-2 bg-[#B85B75] text-white font-bold rounded-lg text-xs shadow-xs hover:bg-[#A04A62]">
+          ¡Mantener la Sorpresa! ✨
+        </button>
+      </div>
+      } @else if (slot.product; as product) {
+      <!-- REVEALED PRODUCT MODAL -->
+      <div>
+        <!-- Imagen principal -->
+        <div
+          class="w-full h-44 mb-2 rounded-xl overflow-hidden bg-[#FAF5EF] border border-[#E8D0D8] flex items-center justify-center">
+          @if (previewImage(); as img) {
+          <button type="button" (click)="openFullImage(img)"
+            class="relative w-full h-full group cursor-zoom-in focus:outline-none" aria-label="Ver imagen completa">
+            <img [src]="img" [alt]="product.name" class="w-full h-full object-cover" />
+            <span
+              class="absolute bottom-1.5 right-1.5 bg-white/90 text-[#B85B75] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#F0C4D0] shadow-xs opacity-90 group-hover:opacity-100">
+              🔍 Ver completa
+            </span>
+          </button>
+          } @else {
+          <div class="w-10 h-10 text-[#B85B75]">
+            <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: slot.iconType }"></ng-container>
+          </div>
+          }
+        </div>
+
+        <!-- Miniaturas (de la variante elegida, o del producto) -->
+        @if (galleryImages().length > 1) {
+        <div class="flex gap-1.5 justify-center mb-2 overflow-x-auto pb-1">
+          @for (url of galleryImages(); track url) {
+          <button (click)="setPreview(url)" class="w-10 h-10 shrink-0 rounded-md overflow-hidden border transition-all"
+            [ngClass]="previewImage() === url ? 'border-[#B85B75] ring-1 ring-[#B85B75]' : 'border-[#E8D0D8]'">
+            <img [src]="url" alt="" class="w-full h-full object-cover" loading="lazy" />
+          </button>
+          }
+        </div>
+        }
+
+        <span
+          class="text-[9px] font-bold text-[#B85B75] bg-[#FFDDE5] px-2 py-0.5 rounded-full border border-[#F0C4D0] inline-block mb-1">
+          {{ product.label || 'Glossy' }} • Día {{ slot.id }}
+        </span>
+        <h3 class="text-lg font-serif font-bold text-[#3D1D28] mb-1">{{ product.name }}</h3>
+        <p class="text-xs text-[#7A4052] leading-relaxed mb-3">{{ product.description }}</p>
+
+        @if (activeVariants(product); as variants) {
+        @if (variants.length > 0) {
+        <div class="bg-[#FAF5EF] p-3 rounded-xl border border-[#E8D0D8] text-left mb-3">
+          <label class="text-xs font-bold text-[#B85B75] block mb-1.5">
+            🎨 Elige tu tono o variante preferida:
+          </label>
+          <div class="grid grid-cols-2 gap-1.5">
+            @for (variant of variants; track variant.id) {
+            <button (click)="selectVariant(slot.id, variant, product)" [ngClass]="tempVariant()[slot.id]?.id === variant.id
+      ? 'bg-[#B85B75] text-white border-[#B85B75]'
+      : 'bg-white text-[#5C2736] border-[#E8D0D8]'"
+              class="p-1.5 rounded-lg text-[10px] font-medium border transition-all text-center flex flex-col items-center gap-1">
+
+              <div
+                class="w-full aspect-square rounded-md overflow-hidden bg-[#FAF5EF] flex items-center justify-center">
+                @if (variantImage(variant, product); as vimg) {
+                <img [src]="vimg" [alt]="variant.toneName" class="w-full h-full object-cover" loading="lazy" />
+                } @else if (isColorCode(variant.toneCode)) {
+                <span class="w-full h-full" [style.background-color]="variant.toneCode"></span>
+                } @else {
+                <span class="text-[#B85B75]">🎨</span>
+                }
+              </div>
+
+              <span class="leading-tight line-clamp-2">{{ variant.toneName }}</span>
+            </button>
+            }
+          </div>
+        </div>
+        } @else {
+  <p class="text-[11px] text-[#7A4052] bg-[#FAF5EF] border border-[#E8D0D8] rounded-xl p-2.5 mb-3">
+    Por ahora no hay tonos disponibles para este producto. 🌸
+  </p>
+}
+
+        
+        }
+
+        <button (click)="saveVariantAndClose(slot.id)"
+          class="w-full py-2 bg-[#B85B75] text-white font-bold rounded-lg text-xs shadow-xs hover:bg-[#A04A62] transition-all">
+          Guardar Tono & Continuar ✨
+        </button>
+      </div>
       }
 
-      <!-- LIGHTBOX: IMAGEN COMPLETA -->
-@if (fullImage(); as full) {
+    </div>
+  </div>
+  }
+
+  <!-- LIGHTBOX: IMAGEN COMPLETA -->
+  @if (fullImage(); as full) {
   <div
     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#3D1D28]/80 backdrop-blur-sm animate-fade-in cursor-zoom-out"
     (click)="closeFullImage()">
 
-    <button
-      type="button"
-      (click)="closeFullImage(); $event.stopPropagation()"
+    <button type="button" (click)="closeFullImage(); $event.stopPropagation()"
       class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white text-[#B85B75] font-bold text-sm flex items-center justify-center shadow-lg border border-[#F0C4D0] hover:bg-[#FFDDE5]"
       aria-label="Cerrar imagen">
       ✕
     </button>
 
-    <img
-      [src]="full"
-      alt=""
-      (click)="$event.stopPropagation()"
+    <img [src]="full" alt="" (click)="$event.stopPropagation()"
       class="max-w-full max-h-full object-contain rounded-xl shadow-2xl border border-white/20 cursor-default" />
   </div>
-}
+  }
 
 
-      <!-- DRAWER: ORDER SUMMARY & WHATSAPP RESERVATION -->
-      @if (showOrderDrawer()) {
-        <div class="fixed inset-0 z-50 flex justify-end bg-[#3D1D28]/30 backdrop-blur-xs animate-fade-in">
-          <div class="bg-white w-full max-w-sm h-full p-5 border-l border-[#D4AF37] shadow-xl overflow-y-auto flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between pb-3 border-b border-[#E8D0D8] mb-3">
-                <h3 class="font-serif font-bold text-base text-[#3D1D28]">🎀 Resumen de Tonos Elegidos</h3>
-                <button (click)="showOrderDrawer.set(false)" class="text-[#B85B75] font-bold text-xs">✕</button>
-              </div>
-
-              <h4 class="text-xs font-bold text-[#B85B75] uppercase tracking-wider mb-2">
-                Tonos Seleccionados (Días 01 al 12):
-              </h4>
-
-              <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                @for (item of leftPanelItems(); track item.id) {
-                  <div class="bg-[#FAF5EF] p-2 rounded-lg border border-[#E8D0D8] flex items-center justify-between gap-2 text-xs">
-                    <div class="flex items-center gap-2 min-w-0">
-                      @if (openedBoxImage(item); as thumb) {
-                        <img [src]="thumb" alt="" class="w-8 h-8 rounded-md object-cover shrink-0" loading="lazy" />
-                      }
-                      <span class="font-medium text-[#3D1D28] truncate">Día {{ item.id }}: {{ item.product?.name }}</span>
-                    </div>
-                    <span class="bg-[#FFDDE5] text-[#B85B75] px-2 py-0.5 rounded-full font-bold text-[9px] shrink-0">
-                      {{ getSavedVariant(item.id)?.toneName || 'Tono Estándar' }}
-                    </span>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="pt-3 border-t border-[#E8D0D8] space-y-2">
-              <a
-                [href]="whatsappUrl()"
-                target="_blank"
-                class="w-full py-3 bg-[#B85B75] hover:bg-[#A04A62] text-white font-bold rounded-xl text-xs shadow-xs flex items-center justify-center gap-2 text-center">
-                <span>💬 Enviar Reserva por WhatsApp</span>
-              </a>
-            </div>
-          </div>
+  <!-- DRAWER: ORDER SUMMARY & WHATSAPP RESERVATION -->
+  @if (showOrderDrawer()) {
+  <div class="fixed inset-0 z-50 flex justify-end bg-[#3D1D28]/30 backdrop-blur-xs animate-fade-in">
+    <div
+      class="bg-white w-full max-w-sm h-full p-5 border-l border-[#D4AF37] shadow-xl overflow-y-auto flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-[#E8D0D8] mb-3">
+          <h3 class="font-serif font-bold text-base text-[#3D1D28]">🎀 Resumen de Tonos Elegidos</h3>
+          <button (click)="showOrderDrawer.set(false)" class="text-[#B85B75] font-bold text-xs">✕</button>
         </div>
-      }
 
-      <!-- SOFT FLAT VECTOR ICON TEMPLATES -->
-      <ng-template #softIconTemplate let-type="type">
-        @switch (type) {
-          @case ('ribbon') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><path d="M12 11a3 3 0 100-6 3 3 0 000 6zm-7-2c1.5 0 3.5 1.5 5 3-1.5 1.5-3.5 3-5 3-2 0-3-1.5-3-3s1-3 3-3zm14 0c-1.5 0-3.5 1.5-5 3 1.5 1.5 3.5 3 5 3 2 0 3-1.5 3-3s-1-3-3-3z"/></svg>
-          }
-          @case ('cherry') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="16" r="4"/><circle cx="16" cy="15" r="4"/><path d="M8 12C9 8 13 4 17 3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-          }
-          @case ('snowflake') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-          }
-          @case ('bell') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a6 6 0 00-6 6v5l-2 2v1h16v-1l-2-2V8a6 6 0 00-6-6zm-2 17a2 2 0 004 0"/></svg>
-          }
-          @case ('bear') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="14" r="7"/></svg>
-          }
-          @case ('star') {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          }
-          @default {
-            <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/></svg>
-          }
-        }
-      </ng-template>
+        <h4 class="text-xs font-bold text-[#B85B75] uppercase tracking-wider mb-2">
+          Tonos Seleccionados (Días 01 al 12):
+        </h4>
 
+        <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+          @for (item of leftPanelItems(); track item.id) {
+          <div
+            class="bg-[#FAF5EF] p-2 rounded-lg border border-[#E8D0D8] flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              @if (openedBoxImage(item); as thumb) {
+              <img [src]="thumb" alt="" class="w-8 h-8 rounded-md object-cover shrink-0" loading="lazy" />
+              }
+              <span class="font-medium text-[#3D1D28] truncate">Día {{ item.id }}: {{ item.product?.name }}</span>
+            </div>
+            <span class="bg-[#FFDDE5] text-[#B85B75] px-2 py-0.5 rounded-full font-bold text-[9px] shrink-0">
+              {{ getSavedVariant(item.id)?.toneName || 'Tono Estándar' }}
+            </span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-[#E8D0D8] space-y-2">
+        <a [href]="whatsappUrl()" target="_blank"
+          class="w-full py-3 bg-[#B85B75] hover:bg-[#A04A62] text-white font-bold rounded-xl text-xs shadow-xs flex items-center justify-center gap-2 text-center">
+          <span>💬 Enviar Reserva por WhatsApp</span>
+        </a>
+      </div>
     </div>
+  </div>
+  }
+
+  <!-- SOFT FLAT VECTOR ICON TEMPLATES -->
+  <ng-template #softIconTemplate let-type="type">
+    @switch (type) {
+    @case ('ribbon') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <path
+        d="M12 11a3 3 0 100-6 3 3 0 000 6zm-7-2c1.5 0 3.5 1.5 5 3-1.5 1.5-3.5 3-5 3-2 0-3-1.5-3-3s1-3 3-3zm14 0c-1.5 0-3.5 1.5-5 3 1.5 1.5 3.5 3 5 3 2 0 3-1.5 3-3s-1-3-3-3z" />
+    </svg>
+    }
+    @case ('cherry') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="8" cy="16" r="4" />
+      <circle cx="16" cy="15" r="4" />
+      <path d="M8 12C9 8 13 4 17 3" stroke="currentColor" stroke-width="2" fill="none" />
+    </svg>
+    }
+    @case ('snowflake') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" />
+    </svg>
+    }
+    @case ('bell') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2a6 6 0 00-6 6v5l-2 2v1h16v-1l-2-2V8a6 6 0 00-6-6zm-2 17a2 2 0 004 0" />
+    </svg>
+    }
+    @case ('bear') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="18" cy="6" r="3" />
+      <circle cx="12" cy="14" r="7" />
+    </svg>
+    }
+    @case ('star') {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+    }
+    @default {
+    <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z" />
+    </svg>
+    }
+    }
+  </ng-template>
+
+</div>
