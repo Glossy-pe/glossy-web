@@ -22,25 +22,6 @@
       </div>
     }
 
-    <!-- Badges Flotantes Estilo Bloque / Sombra Rígida -->
-    <div class="absolute left-0 top-0 z-20 flex flex-col gap-1">
-      @if (stock <= 0) {
-        <span class="bg-[#49B6D6] px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#E5F9FF]">
-          Sold Out
-        </span>
-      } @else if (stock < 5) {
-        <span class="bg-[#FF8DA1] px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#FFDDE4]">
-          Hot {{ stock }} ud. ✨
-        </span>
-      }
-    </div>
-
-    <!-- Etiqueta de Tipo de Producto Estilo Revista -->
-    @if (product.label) {
-      <span class="absolute right-0 bottom-0 bg-white/90 border-l border-t border-[#F0FAFF] px-2.5 py-1 text-[8px] font-black tracking-widest text-gray-500 uppercase">
-        {{ product.label }}
-      </span>
-    }
 
     <!-- Overlay de color sutil en Hover -->
     <div class="absolute inset-0 bg-[#FF8DA1]/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"></div>

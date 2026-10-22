@@ -38,6 +38,7 @@ mediaError = signal(false);
   selectedImageIndex = signal(0);
   quantity           = signal(1);
 
+
 private lastShownUrl: string | null = null;
   // Se activa cada vez que la imagen/video activo cambia, y se apaga
   // cuando el <img>/<video> dispara (load)/(error)/(loadeddata).
@@ -146,9 +147,29 @@ private lastShownUrl: string | null = null;
     return this.selectedVariant()?.id === variant.id;
   }
 
-sortedVariants = computed<VariantResponseFull[]>(() =>
-  this.sortByPosition(this.product()?.variants ?? []).filter(v => v.stock > 0)
+// Tonos activos: primero los disponibles, luego los agotados (mantiene el orden por posición)
+sortedVariants = computed<VariantResponseFull[]>(() => {
+  const active = this.sortByPosition(this.product()?.variants ?? []).filter(v => v.active);
+  return [
+    ...active.filter(v => v.stock > 0),
+    ...active.filter(v => v.stock <= 0),
+  ];
+});
+
+availableCount = computed(() => this.sortedVariants().filter(v => v.stock > 0).length);
+
+allSoldOut = computed(() =>
+  this.sortedVariants().length > 0 && this.availableCount() === 0
 );
+
+isSoldOut(variant: VariantResponseFull): boolean {
+  return variant.stock <= 0;
+}
+
+selectFirstAvailable(): void {
+  const first = this.sortedVariants().find(v => v.stock > 0);
+  if (first) this.selectVariant(first);
+}
 
   private sortByPosition<T extends { position: number }>(items: T[]): T[] {
     return [...items].sort((a, b) => a.position - b.position);
