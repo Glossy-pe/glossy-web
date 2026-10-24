@@ -270,12 +270,9 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
     return pickMainImage(variant.images) ?? pickMainImage(product.images);
   }
 
-  /** Imagen para la caja ya abierta: la de la variante elegida o la del producto */
+  /** Imagen para la caja ya abierta: siempre la imagen principal del producto */
   openedBoxImage(item: BoxItem): string | null {
-    const product = item.product;
-    if (!product) return null;
-    const chosen = this.selectedVariants()[item.id];
-    return chosen ? this.variantImage(chosen, product) : this.productImage(product);
+    return this.productImage(item.product);
   }
 
   isColorCode(code?: string): boolean {
@@ -343,15 +340,15 @@ export class AdventCalendar implements OnInit, AfterViewInit, OnDestroy {
   }
 
   whatsappUrl = computed(() => {
-    let msg = `¡Hola! 🌸 Quisiera consultar sobre el *Calendario de Adviento Glossy 2026*.\n\n`;
-    msg += `💄 *Mis Tonos Elegidos (Días 01 al 12):*\n`;
+    let msg = `¡Hola! 🌸 Estos son mis tonos elegidos de los 12 productos fijos del *Calendario de Adviento Glossy 2026*:\n\n`;
 
     const chosen = this.selectedVariants();
     this.leftPanelItems().forEach((item) => {
-      const v = chosen[item.id];
-      const tone = v ? `${v.toneName}${v.toneCode ? ' (' + v.toneCode + ')' : ''}` : 'Tono Estándar';
-      msg += `• Día ${item.id} (${item.product?.name ?? 'Producto'}): ${tone}\n`;
+      const tone = chosen[item.id]?.toneName ?? 'Tono Estándar';
+      msg += `• ${item.product?.name ?? 'Producto'}: ${tone}\n`;
     });
+
+    msg += `\n¡Gracias! ✨`;
 
     return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   });

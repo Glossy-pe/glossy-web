@@ -1,5 +1,5 @@
 <div
-  class="min-h-screen bg-[#FAF5EF] text-[#4A2633] font-sans relative overflow-x-hidden p-4 sm:p-8 select-none flex flex-col justify-center items-center">
+  class="min-h-screen bg-[#FAF5EF] text-[#4A2633] font-sans relative overflow-x-hidden select-none flex flex-col justify-center items-center">
 
   <!-- BACKGROUND CANVAS FOR SNOW & GLITTER -->
   <canvas #snowCanvas class="fixed inset-0 pointer-events-none z-0 opacity-70"></canvas>
@@ -17,7 +17,7 @@
   </div>
 
   <!-- MAIN CALENDAR CONTAINER -->
-  <main class="relative z-10 w-full max-w-4xl mx-auto space-y-6">
+  <main class="relative z-10 w-full max-w-6xl mx-auto space-y-6">
 
     <!-- HEADER TITLE -->
     <div class="text-center">
@@ -139,58 +139,51 @@
                   } @else {
                   <!-- OPENED BOX STATE -->
                   @if (isCompact(item)) {
-                  <!-- Caja de una sola fila: imagen a la izquierda, texto a la derecha -->
-                  <div
-                    class="w-full h-full p-1 bg-white flex flex-row items-center gap-1.5 text-left border border-[#B85B75] animate-fade-in overflow-hidden">
-                    @if (openedBoxImage(item); as img) {
-                    <img [src]="img" [alt]="item.product?.name"
-                      class="h-full aspect-square object-cover rounded-md shrink-0" loading="lazy" />
-                    } @else {
-                    <div class="text-[#B85B75] shrink-0 pl-1">
-                      <ng-container
-                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                    </div>
-                    }
-                    <div class="min-w-0 flex flex-col items-start">
-                      <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 max-w-full">
-                        {{ item.product?.name }}
-                      </span>
-                      @if (getSavedVariant(item.id); as variant) {
-                      <span
-                        class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
-                        {{ variant.toneName }}
-                      </span>
-                      } @else {
-                      <span
-                        class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
-                        Elegir Tono
-                      </span>
-                      }
-                    </div>
-                  </div>
-                  } @else {
-                  <div
-                    class="w-full h-full p-1.5 bg-white flex flex-col items-center justify-center text-center border border-[#B85B75] animate-fade-in overflow-hidden">
-                    @if (openedBoxImage(item); as img) {
-                    <img [src]="img" [alt]="item.product?.name"
-                      class="w-full flex-1 min-h-0 object-cover rounded-md mb-1" loading="lazy" />
-                    } @else {
-                    <div class="text-base mb-0.5 text-[#B85B75]">
-                      <ng-container
-                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                    </div>
-                    }
-                    <span class="text-[9px] font-bold text-[#3D1D28] leading-tight line-clamp-1 w-full">
-                      {{ item.product?.name }}
+<!-- Caja de una sola fila: solo imagen con el tono encima -->
+<div class="relative w-full h-full p-1 bg-white border border-[#B85B75] animate-fade-in overflow-hidden">
+  @if (openedBoxImage(item); as img) {
+  <img [src]="img" [alt]="item.product?.name" class="w-full h-full object-cover rounded-md"
+    loading="lazy" />
+  } @else {
+  <div class="w-full h-full flex items-center justify-center text-[#B85B75]">
+    <ng-container
+      *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+  </div>
+  }
+
+  @if (getSavedVariant(item.id); as variant) {
+                  <span
+                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] truncate text-[8px] bg-white/90 text-[#B85B75] px-1.5 py-0.5 rounded-full border border-[#F0C4D0] font-bold shadow-xs">
+                      {{ variant.toneName }}
                     </span>
+  } @else {
+  <span
+    class="absolute bottom-1 inset-x-1 truncate text-center text-[8px] leading-tight bg-white/85 text-[#7A4052] px-1 py-0.5 rounded-b-md font-medium animate-pulse">
+    Elegir Tono
+  </span>
+  }
+</div>
+} @else {
+                  <div
+                    class="relative w-full h-full p-1.5 bg-white border border-[#B85B75] animate-fade-in overflow-hidden">
+                    @if (openedBoxImage(item); as img) {
+                    <img [src]="img" [alt]="item.product?.name" class="w-full h-full object-cover rounded-md"
+                      loading="lazy" />
+                    } @else {
+                    <div class="w-full h-full flex items-center justify-center text-[#B85B75]">
+                      <ng-container
+                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+                    </div>
+                    }
+
                     @if (getSavedVariant(item.id); as variant) {
                     <span
-                      class="text-[8px] bg-[#FFDDE5] text-[#B85B75] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#F0C4D0] font-bold line-clamp-1 max-w-full">
+                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] truncate text-[8px] bg-white/90 text-[#B85B75] px-1.5 py-0.5 rounded-full border border-[#F0C4D0] font-bold shadow-xs">
                       {{ variant.toneName }}
                     </span>
                     } @else {
                     <span
-                      class="text-[8px] bg-[#FAF5EF] text-[#7A4052] px-1.5 py-0.5 rounded-full mt-0.5 border border-[#E8D0D8] font-medium animate-pulse">
+                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[8px] bg-white/90 text-[#7A4052] px-1.5 py-0.5 rounded-full border border-[#E8D0D8] font-medium animate-pulse">
                       Elegir Tono
                     </span>
                     }
@@ -388,12 +381,12 @@
           </div>
         </div>
         } @else {
-  <p class="text-[11px] text-[#7A4052] bg-[#FAF5EF] border border-[#E8D0D8] rounded-xl p-2.5 mb-3">
-    Por ahora no hay tonos disponibles para este producto. 🌸
-  </p>
-}
+        <p class="text-[11px] text-[#7A4052] bg-[#FAF5EF] border border-[#E8D0D8] rounded-xl p-2.5 mb-3">
+          Por ahora no hay tonos disponibles para este producto. 🌸
+        </p>
+        }
 
-        
+
         }
 
         <button (click)="saveVariantAndClose(slot.id)"
