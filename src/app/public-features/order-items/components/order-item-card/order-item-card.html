@@ -1,4 +1,4 @@
-<div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between gap-4 w-full">
+<div class="rounded-xl border border-gray-200 bg-white/60 backdrop-blur-[2px] p-3 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between gap-4 w-full">
   
   <!-- Bloque Izquierdo: Imagen + Información del Producto -->
   <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -54,7 +54,7 @@
 
   <!-- Lightbox (Mantiene su lógica, optimizado visualmente para el layout) -->
   @if (isLightboxOpen()) {
-  <div class="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" (click)="closeLightbox()">
+<div class="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" (click)="closeLightbox()">
     <button type="button" (click)="closeLightbox()"
       class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xl rounded-full transition-colors cursor-pointer">
       ✕

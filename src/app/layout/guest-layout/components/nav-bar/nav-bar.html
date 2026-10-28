@@ -14,17 +14,23 @@
 
   <nav class="nav">
     <div class="nav-content">
-      <!-- Logo alineado a la izquierda -->
-      <a routerLink="/guest/products" class="logo" aria-label="Glossy">
-        <img
-          src="https://res.cloudinary.com/dqyqtgkdk/image/upload/v1782394206/Gemini-Generated-Image-a8qjlfa8qjlfa8qj_zfhhsx.png"
-          alt="Glossy logo"
-          class="h-8 w-auto object-contain"
-        />
-        <span class="spark s1"></span>
-        <span class="spark s2"></span>
-        <span class="spark s3"></span>
-      </a>
+<div class="flex items-center gap-3">
+  <button type="button" (click)="sidebar.toggle()"
+    aria-label="Abrir menú" [attr.aria-expanded]="sidebar.isOpen()"
+    class="flex flex-col gap-1 p-2 rounded-lg bg-white border border-[#FFDDE4] shadow-sm text-[#FF8DA1] hover:bg-[#FFF5F7] transition-colors cursor-pointer">
+    <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+    <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+    <span class="block h-0.5 w-4 bg-current rounded-full"></span>
+  </button>
+
+  <a routerLink="/guest/products" class="logo" aria-label="Glossy">
+    <img src="https://res.cloudinary.com/dqyqtgkdk/image/upload/v1782394206/Gemini-Generated-Image-a8qjlfa8qjlfa8qj_zfhhsx.png" alt="Glossy logo"
+         width="auto" height="32" class="h-8 w-auto object-contain" />
+    <span class="spark s1"></span>
+    <span class="spark s2"></span>
+    <span class="spark s3"></span>
+  </a>
+</div>
 
       <!-- Contenedor derecho: Enlace + Switch de nieve -->
       <div class="nav-actions">

@@ -1,0 +1,103 @@
+:host { display: contents; }
+
+.tree-bg {
+  position: fixed;
+  pointer-events: none;
+  z-index: -10;              // detrás de todo (requiere `isolate` en el div raíz)
+
+  /* Mobile */
+  right: -30vw;              // más cortado por el borde porque ahora es más ancho
+  bottom: 5rem;
+  opacity: 0.5;
+
+  @media (min-width: 768px) {
+    right: -3rem;
+    bottom: 0;
+    opacity: 0.7;
+  }
+}
+
+
+svg {
+  display: block;
+  width: 120vw;              // mobile (antes 85vw)
+  height: auto;
+
+  @media (min-width: 768px) {
+    width: clamp(380px, 50vw, 820px);   // desktop (antes clamp(280px, 36vw, 560px))
+  }
+}
+/* ---------- Gato que se esconde y aparece en distintos lugares ----------
+   Ciclo de 4s por posición × 5 posiciones = 20s en total.
+   Para más posiciones: duración = 4s × N y porcentajes = 100 / N. */
+
+/* 1) Mueve al gato de lugar. step-end = salta de golpe, sin deslizarse */
+#cat-container {
+  animation: cat-hop 20s step-end 2s infinite both;
+}
+
+/* 2) Se asoma, se queda, se esconde y espera (4s, se repite) */
+#cat {
+  animation: cat-peek 4s cubic-bezier(0.165, 0.84, 0.44, 1) 2s infinite both;
+}
+
+@keyframes cat-peek {
+  0%   { transform: translateY(60px); }  /* escondido */
+  12%  { transform: translateY(0); }     /* asomado */
+  65%  { transform: translateY(0); }     /* se queda un rato */
+  80%  { transform: translateY(60px); }  /* se esconde */
+  100% { transform: translateY(60px); }  /* escondido mientras cambia de lugar */
+}
+
+@keyframes cat-hop {
+  0%   { transform: translate(0, 0); }         /* posición original */
+  20%  { transform: translate(50px, -55px); }  /* arriba a la derecha */
+  40%  { transform: translate(-60px, 45px); }  /* abajo a la izquierda */
+  60%  { transform: translate(95px, 45px); }   /* abajo a la derecha */
+  80%  { transform: translate(25px, -100px); } /* cerca de la punta */
+}
+
+
+/* ---------- Árbol que se sacude cuando el gato sale o se esconde ----------
+   Mismo ciclo (4s) y mismo delay (2s) que cat-peek, para que vayan sincronizados.
+   Las luces se mueven junto con el árbol; los regalos y el gato no. */
+#tree, #Lights {
+  transform-box: view-box;
+  transform-origin: 259px 320px;   /* base del árbol: gira desde el "tronco" */
+  animation: tree-rustle 4s ease-in-out 2s infinite both;
+}
+
+@keyframes tree-rustle {
+  /* el gato empieza a asomarse */
+  0%   { transform: rotate(0deg); }
+  2%   { transform: rotate(-1.3deg); }
+  4%   { transform: rotate(1.5deg); }
+  6%   { transform: rotate(-1deg); }
+  8%   { transform: rotate(0.7deg); }
+  10%  { transform: rotate(-0.4deg); }
+  13%  { transform: rotate(0deg); }
+
+  /* quieto mientras el gato está asomado */
+  66%  { transform: rotate(0deg); }
+
+  /* el gato se esconde: sacudida más suave */
+  68%  { transform: rotate(0.9deg); }
+  70%  { transform: rotate(-0.8deg); }
+  72%  { transform: rotate(0.5deg); }
+  75%  { transform: rotate(0deg); }
+
+  100% { transform: rotate(0deg); }
+}
+
+/* ---------- Luces parpadeando (antes: yoyo infinito de 2s) ---------- */
+.shadow-2 { opacity: 0; animation: glow-2 2s ease-in-out 0.5s infinite alternate; }
+.shadow-1 { opacity: 0.25; animation: glow-1 2s ease-in-out infinite alternate; }
+
+@keyframes glow-2 { from { opacity: 0; }    to { opacity: 0.5; } }
+@keyframes glow-1 { from { opacity: 0.25; } to { opacity: 0.5; } }
+
+/* ---------- Accesibilidad: sin animaciones si el usuario lo pide ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #cat, #cat-container, #tree, #Lights, .shadow-1, .shadow-2 { animation: none; }
+  .shadow-1, .shadow-2 { opacity: 0.4; }
+}

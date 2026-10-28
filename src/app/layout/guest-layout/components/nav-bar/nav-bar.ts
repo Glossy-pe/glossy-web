@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SidebarService } from '../side-bar/sidebar.service';
 
 interface Flake {
   x: number;
@@ -20,6 +21,8 @@ const SNOW_KEY = 'glossy-snow';
 })
 export class NavBar {
   readonly snowOn = signal(this.readSnowPref());
+
+  protected readonly sidebar = inject(SidebarService);
 
   readonly flakes: Flake[] = Array.from({ length: 22 }, (_, i) => ({
     x: (i * 37 + 11) % 100,

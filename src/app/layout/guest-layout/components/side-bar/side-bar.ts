@@ -1,40 +1,36 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
 import { CategoryResponse } from '../../../../public-features/categories/models/category-response.model';
 import { CategoryService } from '../../../../public-features/categories/services/category.service';
+import { SidebarService } from './sidebar.service';
 
 @Component({
   selector: 'app-side-bar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [RouterLink],
   templateUrl: './side-bar.html',
   styleUrl: './side-bar.scss',
+  host: { '(document:keydown.escape)': 'sidebar.close()' },
 })
-export class SideBar implements OnInit {
-  categories = signal<CategoryResponse[]>([]);
-  isOpen = signal(false);
-  openSections = signal<Record<string, boolean>>({
-    inicio: true,
-    productos: true,
-    pedido: false,
-  });
+export class SideBar {
+  protected readonly sidebar = inject(SidebarService);
+  private readonly categoryService = inject(CategoryService);
 
-  constructor(private categoryService: CategoryService) {}
+  protected readonly categories = toSignal(
+    this.categoryService.getAll().pipe(
+      catchError(err => {
+        console.error('Error cargando categorías', err);
+        return of([] as CategoryResponse[]);
+      }),
+    ),
+    { initialValue: [] as CategoryResponse[] },
+  );
 
-  
-  ngOnInit(): void {
-    this.categoryService.getAll().subscribe({
-      next: cats => this.categories.set(cats),
-      error: err => console.error('Error cargando categorías', err),
-    });
-  }
+  protected readonly productsOpen = signal(true);
 
-  toggleSection(section: string): void {
-    this.openSections.update(s => ({ ...s, [section]: !s[section] }));
-  }
-
-  toggleSidebar(): void {
-    this.isOpen.update(v => !v);
+  protected toggleProducts(): void {
+    this.productsOpen.update(v => !v);
   }
 }

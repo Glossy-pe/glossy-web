@@ -8,6 +8,7 @@ import { finalize } from 'rxjs';
 import { OrderItemCard } from "../../../order-items/components/order-item-card/order-item-card";
 import { AuthService } from '../../../../manager-features/authentication/services/auth.service';
 import { OrderCustomerHeader } from '../order-customer-header/order-customer-header';
+import { ChristmasTreeBg } from '../christmas-tree-bg/christmas-tree-bg'; // ajusta la ruta
 
 export interface LightboxImage {
   url: string;
@@ -38,7 +39,7 @@ export interface ProductGroup {
 
 @Component({
   selector: 'app-order-detail',
-  imports: [CommonModule, OrderItemCard, OrderCustomerHeader],
+  imports: [CommonModule, OrderItemCard, OrderCustomerHeader, ChristmasTreeBg],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OrderDetailv2 } from './order-detailv2';
+import { ChristmasTreeBg } from './christmas-tree-bg';
 
-describe('OrderDetailv2', () => {
-  let component: OrderDetailv2;
-  let fixture: ComponentFixture<OrderDetailv2>;
+describe('ChristmasTreeBg', () => {
+  let component: ChristmasTreeBg;
+  let fixture: ComponentFixture<ChristmasTreeBg>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [OrderDetailv2]
+      imports: [ChristmasTreeBg]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(OrderDetailv2);
+    fixture = TestBed.createComponent(ChristmasTreeBg);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
