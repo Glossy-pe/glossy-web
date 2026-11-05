@@ -56,6 +56,10 @@ export const routes: Routes = [
       {
         path: 'orders/:id/order-items',          // estático antes que :id
         loadComponent: () => import('./manager-features/order-items/components/order-item-list/order-item-list').then(m => m.OrderItemList)
+      },
+      {
+        path: 'order-calendar',          // estático antes que :id
+        loadComponent: () => import('./manager-features/orders/components/order-calendar/order-calendar').then(m => m.OrderCalendar)
       }
 
     ]

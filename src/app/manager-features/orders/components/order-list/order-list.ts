@@ -185,6 +185,7 @@ private syncUrlAndLoad(): void {
         costTotal: 0,
         total: 0,
         expiresAt: expiresAt.toISOString(),
+        scheduledSendAt: null,
       })
       .pipe(finalize(() => this.isCreating.set(false)))
       .subscribe({
@@ -252,6 +253,7 @@ private syncUrlAndLoad(): void {
         costTotal: 0,
         total: 0,
         expiresAt: expiresAt.toISOString(),
+        scheduledSendAt: null,
       })
       .pipe(finalize(() => this.isCreating.set(false)))
       .subscribe({

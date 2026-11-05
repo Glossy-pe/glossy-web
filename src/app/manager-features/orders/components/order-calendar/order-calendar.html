@@ -1,0 +1,23 @@
+<section class="rounded-xl border border-gray-200 bg-white p-2 shadow-sm sm:p-3">
+
+  <div class="mb-2 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+    <!-- Leyenda: en móvil hace scroll horizontal en una sola línea -->
+    <div class="-mx-1 flex items-center gap-x-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:px-0 sm:pb-0">
+      @for (s of statuses(); track s.id) {
+      <span class="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] text-gray-500">
+        <span class="h-2 w-2 rounded-full" [style.background]="colorOf(s.id)"></span>
+        {{ s.description }}
+      </span>
+      }
+    </div>
+    <span class="text-xs text-gray-400">
+      @if (isLoading()) { Cargando... } @else { {{ totalInRange() }} pedido(s) en este período }
+    </span>
+  </div>
+
+  @if (errorMsg()) {
+  <div class="mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{{ errorMsg() }}</div>
+  }
+
+  <full-calendar [options]="calendarOptions()" />
+</section>

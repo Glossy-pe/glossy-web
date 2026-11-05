@@ -17,6 +17,7 @@ export interface OrderResponseFull {
   total: number;
   publicToken: string;
   expiresAt: string | null;
+  scheduledSendAt: string | null;
   createdAt: string | null;
   updatedAt: string | null;
   items: ManagerOrderItemResponseStructured[];

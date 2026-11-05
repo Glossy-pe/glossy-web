@@ -70,6 +70,7 @@ export class OrderMainDetail {
       description: [''],
       orderStatusId: [null, Validators.required],
       expiresAt: [null],
+      scheduledSendAt: [null],   // nuevo
       publicToken: ['']
     });
   }
@@ -111,6 +112,7 @@ export class OrderMainDetail {
       expiresAt: o.expiresAt
         ? this.toDateTimeLocal(o.expiresAt)
         : null,
+      scheduledSendAt: o.scheduledSendAt ? this.toDateTimeLocal(o.scheduledSendAt) : null,
       publicToken: o.publicToken
     });
 
@@ -135,9 +137,14 @@ export class OrderMainDetail {
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
 
+    const value = {
+      ...this.form.value,
+      scheduledSendAt: this.form.value.scheduledSendAt || null,
+    };
+
     this.isSaving.set(true);
     this.orderService
-      .update(this.orderId, this.form.value)
+      .update(this.orderId, value)
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: updated => {

@@ -8,4 +8,5 @@ export interface OrderRequest {
   costTotal: number;
   total: number;
   expiresAt: string | null;
+  scheduledSendAt: string | null;
 }

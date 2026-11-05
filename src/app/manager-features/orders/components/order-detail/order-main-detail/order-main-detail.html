@@ -154,6 +154,19 @@
                 }
             </div>
 
+            <!-- Envío programado -->
+            <div>
+                <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Envío programado</span>
+                @if (isEditing()) {
+                <input type="datetime-local" [formControl]="$any(form.get('scheduledSendAt'))"
+                    class="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100" />
+                } @else {
+                <span class="text-sm text-gray-800">
+                    {{ order()!.scheduledSendAt ? (order()!.scheduledSendAt | date:'dd/MM/yyyy HH:mm') : '—' }}
+                </span>
+                }
+            </div>
+
             <!-- Token público (fila completa) -->
             <div class="sm:col-span-2 lg:col-span-4">
                 <span class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Token público</span>
