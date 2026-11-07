@@ -60,6 +60,14 @@ export const routes: Routes = [
       {
         path: 'order-calendar',          // estático antes que :id
         loadComponent: () => import('./manager-features/orders/components/order-calendar/order-calendar').then(m => m.OrderCalendar)
+      },
+      {
+        path: 'kits',          // estático antes que :id
+        loadComponent: () => import('./manager-features/kits/components/kit-list/kit-list').then(m => m.KitList)
+      },
+      {
+        path: 'kits/:id',          // estático antes que :id
+        loadComponent: () => import('./manager-features/kits/components/kit-detail/kit-detail').then(m => m.KitDetail)
       }
 
     ]
@@ -84,7 +92,7 @@ export const routes: Routes = [
         path: 'products/:id',
         loadComponent: () => import('./public-features/products/components/product-detail/product-detail').then(m => m.ProductDetail),
       },
-      { path: 'calendario-de-adviento', loadComponent: () => import('./public-features/campaigns/components/advent-calendar/advent-calendar').then(m => m.AdventCalendar) },
+      { path: 'adviento/:code', loadComponent: () => import('./public-features/campaigns/components/advent-calendar/advent-calendar').then(m => m.AdventCalendar) },
     ]
   },
   {

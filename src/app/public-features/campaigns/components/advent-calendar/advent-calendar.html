@@ -5,16 +5,18 @@
   <canvas #snowCanvas class="fixed inset-0 pointer-events-none z-0 opacity-70"></canvas>
 
   <!-- FLOATING SHADE DRAWER BUTTON -->
+  @if (status() === 'ready') {
   <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
     <button (click)="openOrderDrawer()"
       class="bg-[#B85B75] hover:bg-[#A04A62] text-white p-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg font-bold text-xs sm:text-sm flex items-center gap-2 border border-[#FFDDE5] transition-all transform hover:scale-105 active:scale-95">
       <span class="text-base">🎀</span>
       <span class="hidden sm:inline">Mis Tonos Elegidos</span>
       <span class="bg-white text-[#B85B75] px-2.5 py-0.5 rounded-full text-[11px] font-extrabold shadow-inner">
-        {{ selectedCount() }}/12 Tonos
+        {{ selectedCount() }}/{{ totalProducts() }} Tonos
       </span>
     </button>
   </div>
+  }
 
   <!-- MAIN CALENDAR CONTAINER -->
   <main class="relative z-10 w-full max-w-6xl mx-auto space-y-6">
@@ -27,22 +29,50 @@
       <h1 class="text-2xl sm:text-4xl font-serif font-bold text-[#3D1D28]">
         Calendario de Adviento Glossy 2026 🎄
       </h1>
+      @if (status() === 'ready') {
       <p class="text-xs text-[#7A4052] max-w-lg mx-auto mt-1">
-        Abre las cajitas del 01 al 12 para personalizar tus tonos. Las cajitas del 13 al 24 guardan sorpresas secretas.
+        Abre las cajitas con producto para personalizar tus tonos. Las cajitas con sello dorado guardan sorpresas secretas.
       </p>
+      }
     </div>
 
-    <!-- ESTADO DE CARGA / ERROR -->
-    @if (loading()) {
+    <!-- ESTADOS -->
+    @switch (status()) {
+    @case ('loading') {
     <div
       class="max-w-2xl mx-auto text-center text-xs text-[#7A4052] bg-white border border-[#E8D0D8] rounded-xl p-3 animate-pulse">
       Cargando productos del calendario… 🌸
     </div>
-    } @else if (loadError()) {
+    }
+    @case ('expired') {
+    <div class="max-w-md mx-auto text-center bg-white border border-[#F0C4D0] rounded-2xl p-6 shadow-xs">
+      <div class="text-3xl mb-2">⏳</div>
+      <h2 class="font-serif font-bold text-lg text-[#3D1D28] mb-1">Este enlace ya expiró</h2>
+      <p class="text-xs text-[#7A4052]">Contáctanos para que te enviemos uno nuevo. 🌸</p>
+    </div>
+    }
+    @case ('invalid') {
+    <div class="max-w-md mx-auto text-center bg-white border border-[#F0C4D0] rounded-2xl p-6 shadow-xs">
+      <div class="text-3xl mb-2">🔗</div>
+      <h2 class="font-serif font-bold text-lg text-[#3D1D28] mb-1">Enlace no válido</h2>
+      <p class="text-xs text-[#7A4052]">Revisa que el enlace esté completo o contáctanos. 🌸</p>
+    </div>
+    }
+    @case ('unavailable') {
+    <div class="max-w-md mx-auto text-center bg-white border border-[#F0C4D0] rounded-2xl p-6 shadow-xs">
+      <div class="text-3xl mb-2">🎀</div>
+      <h2 class="font-serif font-bold text-lg text-[#3D1D28] mb-1">Este calendario ya no está disponible</h2>
+      <p class="text-xs text-[#7A4052]">Contáctanos y te ayudamos. 🌸</p>
+    </div>
+    }
+    @case ('error') {
     <div class="max-w-2xl mx-auto text-center text-xs text-[#B85B75] bg-white border border-[#F0C4D0] rounded-xl p-3">
       No pudimos cargar los productos. Intenta recargar la página.
     </div>
     }
+    }
+
+    @if (status() === 'ready') {
 
     <!-- PROGRESS BAR & CONTROLS -->
     <div
@@ -50,13 +80,13 @@
       <div class="text-center sm:text-left">
         <span class="text-[10px] text-[#7A4052] uppercase font-bold tracking-wider block">Progreso de Selección</span>
         <span class="text-sm font-serif font-bold text-[#3D1D28]">
-          {{ openedCount() }} de 12 Cajas Personalizadas
+          {{ openedCount() }} de {{ totalProducts() }} Cajas Personalizadas
         </span>
       </div>
 
       <div class="w-full sm:w-48 bg-[#FFDDE5] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#F0C4D0]">
         <div class="bg-[#B85B75] h-full rounded-full transition-all duration-300"
-          [style.width.%]="(openedCount() / 12) * 100"></div>
+          [style.width.%]="progressPercent()"></div>
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
@@ -76,196 +106,39 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-[#FFDDE5] p-3 sm:p-4 rounded-xl border border-[#F0C4D0]">
 
-        <!-- PANEL 1: LEFT PANEL (DAYS 01 - 12) -->
+        <!-- PANEL 1: DÍAS 01 - 12 -->
         <div
           class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
           <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
             <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
-              ❀ Panel Izquierdo (Días 01 - 12) ❀
+              ❀ Días 01 - 12 ❀
             </span>
           </div>
 
-          <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
           <div class="grid gap-1.5 h-[500px]"
             style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
             @for (item of leftPanelItems(); track item.id) {
             <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
-              <button (click)="handleBoxClick(item)" [disabled]="!item.product"
-                class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden disabled:opacity-60 disabled:cursor-wait">
-
-                <div
-                  class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden transition-all duration-300"
-                  [class.bg-white]="isOpened(item.id)" [class.bg-[#FFDDE5]]="!isOpened(item.id)">
-
-                  <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none"
-                      stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
-                  </svg>
-
-                  @if (!isOpened(item.id)) {
-                  <!-- CLOSED BOX STATE -->
-                  <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
-                    class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden group-hover:bg-[#FFDDE5] transition-colors">
-
-                    <div
-                      class="relative z-10 text-[#B85B75] opacity-90 group-hover:scale-105 transition-transform shrink-0">
-                      <ng-container
-                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                    </div>
-
-                    <div class="relative z-10 flex items-center justify-center"
-                      [ngClass]="isCompact(item) ? 'shrink-0' : 'my-auto w-full'">
-                      @if (item.orientation === 'vertical') {
-                      <span
-                        class="text-xs font-serif italic font-bold text-[#5C2736] tracking-widest uppercase writing-mode-vertical">
-                        {{ item.dayLabel }}
-                      </span>
-                      } @else if (item.isWord) {
-                      <span class="font-serif italic text-[#5C2736] font-bold"
-                        [ngClass]="isLarge(item) ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'">
-                        {{ item.dayLabel }}
-                      </span>
-                      } @else {
-                      <span class="font-serif text-[#3D1D28] font-light"
-                        [ngClass]="isCompact(item) ? 'text-lg' : isLarge(item) ? 'text-3xl' : 'text-xl sm:text-2xl'">
-                        {{ item.dayLabel }}
-                      </span>
-                      }
-                    </div>
-
-                    <div class="relative z-10 text-[#B85B75] text-[9px]">🎀</div>
-                  </div>
-                  } @else {
-                  <!-- OPENED BOX STATE -->
-                  @if (isCompact(item)) {
-<!-- Caja de una sola fila: solo imagen con el tono encima -->
-<div class="relative w-full h-full p-1 bg-white border border-[#B85B75] animate-fade-in overflow-hidden">
-  @if (openedBoxImage(item); as img) {
-  <img [src]="img" [alt]="item.product?.name" class="w-full h-full object-cover rounded-md"
-    loading="lazy" />
-  } @else {
-  <div class="w-full h-full flex items-center justify-center text-[#B85B75]">
-    <ng-container
-      *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-  </div>
-  }
-
-  @if (getSavedVariant(item.id); as variant) {
-                  <span
-                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] truncate text-[8px] bg-white/90 text-[#B85B75] px-1.5 py-0.5 rounded-full border border-[#F0C4D0] font-bold shadow-xs">
-                      {{ variant.toneName }}
-                    </span>
-  } @else {
-  <span
-    class="absolute bottom-1 inset-x-1 truncate text-center text-[8px] leading-tight bg-white/85 text-[#7A4052] px-1 py-0.5 rounded-b-md font-medium animate-pulse">
-    Elegir Tono
-  </span>
-  }
-</div>
-} @else {
-                  <div
-                    class="relative w-full h-full p-1.5 bg-white border border-[#B85B75] animate-fade-in overflow-hidden">
-                    @if (openedBoxImage(item); as img) {
-                    <img [src]="img" [alt]="item.product?.name" class="w-full h-full object-cover rounded-md"
-                      loading="lazy" />
-                    } @else {
-                    <div class="w-full h-full flex items-center justify-center text-[#B85B75]">
-                      <ng-container
-                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                    </div>
-                    }
-
-                    @if (getSavedVariant(item.id); as variant) {
-                    <span
-                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] truncate text-[8px] bg-white/90 text-[#B85B75] px-1.5 py-0.5 rounded-full border border-[#F0C4D0] font-bold shadow-xs">
-                      {{ variant.toneName }}
-                    </span>
-                    } @else {
-                    <span
-                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[8px] bg-white/90 text-[#7A4052] px-1.5 py-0.5 rounded-full border border-[#E8D0D8] font-medium animate-pulse">
-                      Elegir Tono
-                    </span>
-                    }
-                  </div>
-                  }
-                  }
-
-                </div>
-              </button>
+              <ng-container *ngTemplateOutlet="boxTpl; context: { $implicit: item }"></ng-container>
             </div>
             }
           </div>
         </div>
 
-        <!-- PANEL 2: RIGHT PANEL (DAYS 13 - 24 INCOGNITO) -->
+        <!-- PANEL 2: DÍAS 13 - 24 -->
         <div
           class="bg-[#FAF5EF] p-3 rounded-lg border border-[#E8D0D8] shadow-xs relative flex flex-col justify-between">
           <div class="text-center pb-2 mb-2.5 border-b border-[#E8D0D8]">
             <span class="text-[11px] font-serif font-bold text-[#B85B75] tracking-widest uppercase">
-              ❀ Panel Derecho (Días 13 - 24 Incógnitos) ❀
+              ❀ Días 13 - 24 ❀
             </span>
           </div>
 
-          <!-- GRILLA 6×8: cada caja tiene posición explícita y las 12 cubren las 48 celdas, sin huecos -->
           <div class="grid gap-1.5 h-[500px]"
             style="grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr));">
             @for (item of rightPanelItems(); track item.id) {
             <div class="relative group min-w-0 min-h-0" [style.grid-area]="gridArea(item)">
-              <button (click)="handleBoxClick(item)"
-                class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden group">
-
-                <div
-                  class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden bg-[#FFDDE5]">
-
-                  <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none"
-                      stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
-                  </svg>
-
-                  <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
-                    class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden">
-
-                    <div class="relative z-10 flex items-center justify-center"
-                      [ngClass]="isCompact(item) ? 'shrink-0' : 'pt-0.5 w-full'">
-                      @if (item.orientation === 'vertical') {
-                      <span
-                        class="text-[10px] font-serif italic text-[#B85B75] tracking-widest uppercase font-medium writing-mode-vertical">
-                        {{ item.dayLabel }}
-                      </span>
-                      } @else if (item.isWord) {
-                      <span class="font-serif italic text-[#B85B75] font-bold"
-                        [ngClass]="isLarge(item) ? 'text-base' : 'text-xs'">
-                        {{ item.dayLabel }}
-                      </span>
-                      } @else {
-                      <span class="font-serif text-[#5C2736]"
-                        [ngClass]="isCompact(item) ? 'text-base' : isLarge(item) ? 'text-2xl' : 'text-sm sm:text-lg'">
-                        {{ item.dayLabel }}
-                      </span>
-                      }
-                    </div>
-
-                    <!-- GOLDEN WAX SEAL -->
-                    <div
-                      class="relative z-10 transform group-hover:scale-105 group-hover:rotate-6 transition-all duration-300 shrink-0"
-                      [ngClass]="isCompact(item) ? '' : 'my-auto'">
-                      <div [ngClass]="sealClass(item)"
-                        class="rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center shadow-xs text-white font-bold">
-                        ?
-                      </div>
-                    </div>
-
-                    <div class="relative z-10 text-[#B85B75] shrink-0">
-                      <ng-container
-                        *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
-                    </div>
-
-                  </div>
-
-                </div>
-              </button>
+              <ng-container *ngTemplateOutlet="boxTpl; context: { $implicit: item }"></ng-container>
             </div>
             }
           </div>
@@ -273,7 +146,125 @@
 
       </div>
     </div>
+    }
   </main>
+
+  <!-- PLANTILLA DE UNA CAJA (se reutiliza en ambos paneles) -->
+  <ng-template #boxTpl let-item>
+    <button (click)="handleBoxClick(item)"
+      class="w-full h-full text-left focus:outline-none rounded-lg transition-all duration-300 transform active:scale-95 block relative overflow-hidden group">
+
+      <div
+        class="w-full h-full relative rounded-lg shadow-xs border border-[#E8D0D8] overflow-hidden transition-all duration-300"
+        [class.bg-white]="!item.isIncognito && isOpened(item.id)"
+        [class.bg-[#FFDDE5]]="item.isIncognito || !isOpened(item.id)">
+
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10 text-[#F0C4D0]"
+          xmlns="http://www.w3.org/2000/svg">
+          <rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="6" fill="none"
+            stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+        </svg>
+
+        @if (item.isIncognito) {
+        <!-- CAJA INCÓGNITA (sin producto en esa posición) -->
+        <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
+          class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden">
+
+          <div class="relative z-10 flex items-center justify-center"
+            [ngClass]="isCompact(item) ? 'shrink-0' : 'pt-0.5 w-full'">
+            @if (item.orientation === 'vertical') {
+            <span
+              class="text-[10px] font-serif italic text-[#B85B75] tracking-widest uppercase font-medium writing-mode-vertical">
+              {{ item.dayLabel }}
+            </span>
+            } @else if (item.isWord) {
+            <span class="font-serif italic text-[#B85B75] font-bold"
+              [ngClass]="isLarge(item) ? 'text-base' : 'text-xs'">
+              {{ item.dayLabel }}
+            </span>
+            } @else {
+            <span class="font-serif text-[#5C2736]"
+              [ngClass]="isCompact(item) ? 'text-base' : isLarge(item) ? 'text-2xl' : 'text-sm sm:text-lg'">
+              {{ item.dayLabel }}
+            </span>
+            }
+          </div>
+
+          <div
+            class="relative z-10 transform group-hover:scale-105 group-hover:rotate-6 transition-all duration-300 shrink-0"
+            [ngClass]="isCompact(item) ? '' : 'my-auto'">
+            <div [ngClass]="sealClass(item)"
+              class="rounded-full bg-[#D4AF37] border border-[#B58B2A] flex items-center justify-center shadow-xs text-white font-bold">
+              ?
+            </div>
+          </div>
+
+          <div class="relative z-10 text-[#B85B75] shrink-0">
+            <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+          </div>
+        </div>
+        } @else if (!isOpened(item.id)) {
+        <!-- CAJA CON PRODUCTO, CERRADA -->
+        <div [ngClass]="item.colorBg + ' ' + layoutClass(item)"
+          class="w-full h-full p-1.5 flex items-center text-center relative overflow-hidden group-hover:bg-[#FFDDE5] transition-colors">
+
+          <div class="relative z-10 text-[#B85B75] opacity-90 group-hover:scale-105 transition-transform shrink-0">
+            <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+          </div>
+
+          <div class="relative z-10 flex items-center justify-center"
+            [ngClass]="isCompact(item) ? 'shrink-0' : 'my-auto w-full'">
+            @if (item.orientation === 'vertical') {
+            <span
+              class="text-xs font-serif italic font-bold text-[#5C2736] tracking-widest uppercase writing-mode-vertical">
+              {{ item.dayLabel }}
+            </span>
+            } @else if (item.isWord) {
+            <span class="font-serif italic text-[#5C2736] font-bold"
+              [ngClass]="isLarge(item) ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'">
+              {{ item.dayLabel }}
+            </span>
+            } @else {
+            <span class="font-serif text-[#3D1D28] font-light"
+              [ngClass]="isCompact(item) ? 'text-lg' : isLarge(item) ? 'text-3xl' : 'text-xl sm:text-2xl'">
+              {{ item.dayLabel }}
+            </span>
+            }
+          </div>
+
+          <div class="relative z-10 text-[#B85B75] text-[9px]">🎀</div>
+        </div>
+        } @else {
+        <!-- CAJA CON PRODUCTO, ABIERTA -->
+        <div class="relative w-full h-full bg-white border border-[#B85B75] animate-fade-in overflow-hidden"
+          [ngClass]="isCompact(item) ? 'p-1' : 'p-1.5'">
+          @if (openedBoxImage(item); as img) {
+          <img [src]="img" [alt]="item.product?.name" class="w-full h-full object-cover rounded-md" loading="lazy" />
+          } @else {
+          <div class="w-full h-full flex items-center justify-center text-[#B85B75]">
+            <ng-container *ngTemplateOutlet="softIconTemplate; context: { type: item.iconType }"></ng-container>
+          </div>
+          }
+
+          @if (getSavedVariant(item.id); as variant) {
+          <span
+            class="absolute left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] truncate text-[8px] bg-white/90 text-[#B85B75] px-1.5 py-0.5 rounded-full border border-[#F0C4D0] font-bold shadow-xs"
+            [ngClass]="isCompact(item) ? 'bottom-1.5' : 'bottom-2.5'">
+            {{ variant.toneName }}
+          </span>
+          } @else {
+          <span
+            class="absolute left-1/2 -translate-x-1/2 text-[8px] bg-white/90 text-[#7A4052] px-1.5 py-0.5 rounded-full border border-[#E8D0D8] font-medium animate-pulse"
+            [ngClass]="isCompact(item) ? 'bottom-1.5' : 'bottom-2.5'">
+            Elegir Tono
+          </span>
+          }
+        </div>
+        }
+
+      </div>
+    </button>
+  </ng-template>
 
   <!-- MODAL: PRODUCT DETAILS & VARIANT SELECTOR -->
   @if (activeModal(); as slot) {
@@ -296,10 +287,12 @@
         <span class="text-[10px] font-bold text-[#B85B75] uppercase tracking-wider block mb-0.5">Cajita Incógnita</span>
         <h3 class="text-lg font-serif font-bold text-[#3D1D28] mb-1.5">Día {{ slot.id }} - Regalo Secreto</h3>
 
+        @if (slot.mysteryHint) {
         <div class="bg-[#FFDDE5] p-2.5 rounded-xl border border-[#F0C4D0] mb-3 text-xs text-[#5C2736]">
           <span class="font-bold text-[#B85B75] block mb-0.5">🔮 Pista Enigmática:</span>
           <p class="italic">"{{ slot.mysteryHint }}"</p>
         </div>
+        }
 
         <p class="text-xs text-[#7A4052] leading-relaxed mb-3">
           Esta cajita contiene un producto sorpresa de maquillaje K-Beauty.
@@ -313,7 +306,6 @@
       } @else if (slot.product; as product) {
       <!-- REVEALED PRODUCT MODAL -->
       <div>
-        <!-- Imagen principal -->
         <div
           class="w-full h-44 mb-2 rounded-xl overflow-hidden bg-[#FAF5EF] border border-[#E8D0D8] flex items-center justify-center">
           @if (previewImage(); as img) {
@@ -332,7 +324,6 @@
           }
         </div>
 
-        <!-- Miniaturas (de la variante elegida, o del producto) -->
         @if (galleryImages().length > 1) {
         <div class="flex gap-1.5 justify-center mb-2 overflow-x-auto pb-1">
           @for (url of galleryImages(); track url) {
@@ -385,8 +376,6 @@
           Por ahora no hay tonos disponibles para este producto. 🌸
         </p>
         }
-
-
         }
 
         <button (click)="saveVariantAndClose(slot.id)"
@@ -417,7 +406,6 @@
   </div>
   }
 
-
   <!-- DRAWER: ORDER SUMMARY & WHATSAPP RESERVATION -->
   @if (showOrderDrawer()) {
   <div class="fixed inset-0 z-50 flex justify-end bg-[#3D1D28]/30 backdrop-blur-xs animate-fade-in">
@@ -430,11 +418,11 @@
         </div>
 
         <h4 class="text-xs font-bold text-[#B85B75] uppercase tracking-wider mb-2">
-          Tonos Seleccionados (Días 01 al 12):
+          Tonos Seleccionados ({{ totalProducts() }} productos):
         </h4>
 
         <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-          @for (item of leftPanelItems(); track item.id) {
+          @for (item of productItems(); track item.id) {
           <div
             class="bg-[#FAF5EF] p-2 rounded-lg border border-[#E8D0D8] flex items-center justify-between gap-2 text-xs">
             <div class="flex items-center gap-2 min-w-0">

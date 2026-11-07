@@ -1,0 +1,50 @@
+<div class="max-w-4xl mx-auto p-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold">Kits</h1>
+    <button
+      (click)="create()"
+      [disabled]="creating()"
+      class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm disabled:opacity-50"
+    >
+      {{ creating() ? 'Creando…' : '+ Crear kit' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="text-sm text-red-600">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="text-sm text-slate-500">Cargando…</p>
+  } @else if (kits().length === 0) {
+    <p class="text-sm text-slate-500">Aún no hay kits creados.</p>
+  } @else {
+    <div class="border rounded-lg divide-y bg-white">
+      @for (kit of kits(); track kit.id) {
+        <div class="flex items-center justify-between gap-3 p-3 text-sm">
+          <div class="min-w-0">
+            <div class="font-medium truncate">#{{ kit.id }} · {{ kit.name }}</div>
+            <div class="text-xs text-slate-500">{{ kit.createdAt | date: 'dd/MM/yyyy' }}</div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              (click)="toggleActive(kit)"
+              class="px-2 py-1 rounded-full text-xs border"
+              [class]="kit.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500'"
+            >
+              {{ kit.active ? 'Activo' : 'Inactivo' }}
+            </button>
+            <a [routerLink]="['/manager/kits', kit.id]" [queryParams]="{ modo: 'ver' }"
+               class="px-2 py-1 border rounded-lg text-xs">Ver</a>
+            <a [routerLink]="['/manager/kits', kit.id]"
+               class="px-2 py-1 border rounded-lg text-xs">Editar</a>
+            <button (click)="remove(kit)" class="px-2 py-1 border rounded-lg text-xs text-red-600">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
