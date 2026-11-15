@@ -47,3 +47,23 @@ export interface KitPublicResponse {
   name: string;
   items: KitPublicItem[];
 }
+
+export interface KitVariant {
+  id: number;
+  toneName: string | null;
+  toneCode: string | null;
+  price: number;
+  stock: number;
+  position: number | null;
+  image: string | null;
+}
+
+
+export interface KitItemWithVariants {
+  itemId: number;
+  position: number;
+  productId: number;
+  productName: string | null;
+  image: string | null;
+  variants: KitVariant[];
+}

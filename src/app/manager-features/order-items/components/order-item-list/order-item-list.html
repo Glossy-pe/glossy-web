@@ -33,8 +33,7 @@
           @else { Sin cambios }
         </button>
         } @else {
-        <button type="button"
-          class="h-9 rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-700"
+        <button type="button" class="h-9 rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-700"
           (click)="startEditMode()">
           Editar
         </button>
@@ -46,19 +45,17 @@
     <!-- Acciones masivas -->
     <div class="flex flex-wrap gap-1.5">
       @for (f of flags; track f.key) {
-      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition"
-        [class]="allOn(f.key)
+      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition" [class]="allOn(f.key)
           ? 'border-emerald-600 bg-emerald-600 text-white'
-          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'"
-        [attr.aria-pressed]="allOn(f.key)" (click)="toggleAll(f.key)">
+          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'" [attr.aria-pressed]="allOn(f.key)"
+        (click)="toggleAll(f.key)">
         {{ allOn(f.key) ? f.bulkOff : f.bulkOn }}
       </button>
       }
-      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition"
-        [class]="paymentOpen()
+      <button type="button" class="h-8 rounded-lg border px-3 text-xs font-medium transition" [class]="paymentOpen()
           ? 'border-gray-900 bg-gray-900 text-white'
-          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'"
-        [attr.aria-expanded]="paymentOpen()" (click)="togglePayment()">
+          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'" [attr.aria-expanded]="paymentOpen()"
+        (click)="togglePayment()">
         Registrar pago {{ paymentOpen() ? '▴' : '▾' }}
       </button>
 
@@ -93,8 +90,7 @@
         [value]="paymentInput() ?? ''" (input)="onPaymentInput(paymentEl.value)" (keydown.enter)="applyGeneralPayment()"
         placeholder="Monto pagado (S/)"
         class="h-9 w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm outline-none focus:border-gray-400 focus:bg-white" />
-      <button type="button"
-        class="h-9 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white disabled:opacity-40"
+      <button type="button" class="h-9 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white disabled:opacity-40"
         [disabled]="!paymentInput()" (click)="applyGeneralPayment()">
         Distribuir
       </button>
@@ -111,8 +107,25 @@
   </div>
   }
 
-  <!-- Buscador -->
+    <!-- Buscador -->
   <div class="mb-3 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+
+    <!-- Toggle Producto | Kit -->
+    <div class="mb-2 flex gap-1 rounded-lg bg-gray-100 p-1">
+      <button type="button" class="h-8 flex-1 rounded-md text-sm font-medium transition"
+        [class]="pickerMode() === 'product' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:bg-white'"
+        [attr.aria-pressed]="pickerMode() === 'product'" (click)="pickerMode.set('product')">
+        Producto
+      </button>
+      <button type="button" class="h-8 flex-1 rounded-md text-sm font-medium transition"
+        [class]="pickerMode() === 'kit' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:bg-white'"
+        [attr.aria-pressed]="pickerMode() === 'kit'" (click)="pickerMode.set('kit')">
+        Kit
+      </button>
+    </div>
+
+    @if (pickerMode() === 'product') {
+
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span>
       <input #searchInput type="text" autocomplete="off" aria-label="Buscar producto" [value]="query()"
@@ -191,6 +204,10 @@
     </div>
     } @else if (query().trim()) {
     <p class="mt-2 text-center text-sm text-gray-400">No se encontraron productos.</p>
+    }
+
+    } @else {
+    <app-order-item-kit-picker (itemsPicked)="addKitItems($event)" />
     }
   </div>
   }

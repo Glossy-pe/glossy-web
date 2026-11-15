@@ -6,6 +6,7 @@ import {
   KitDetailResponse,
   KitItemRequest,
   KitItemResponse,
+  KitItemWithVariants,
   KitPublicResponse,
   KitRequest,
   KitResponse,
@@ -63,6 +64,10 @@ export class KitService {
   // ── Lectura pública (para el calendario) ──
   getPublicKit(id: number): Observable<KitPublicResponse> {
     return this.http.get<KitPublicResponse>(`${environment.apiUrl}/api/public/kits/${id}`);
+  }
+
+  getItemsWithVariants(kitId: number): Observable<KitItemWithVariants[]> {
+    return this.http.get<KitItemWithVariants[]>(`${this.managerUrl}/${kitId}/items-with-variants`);
   }
 }
 

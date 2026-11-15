@@ -11,7 +11,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
-
+import { Location } from '@angular/common';
 import { OrderService } from '../../services/order.service';
 import { OrderCalendarService } from '../../services/order-calendar.service';
 import { OrderCalendarItem } from '../../models/order-calendar.model';
@@ -19,6 +19,8 @@ import { OrderStatusResponse } from '../../models/order-status-response.model';
 
 const PALETTE = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#64748b'];
 const DEFAULT_COLOR = '#9ca3af';
+/** Estados que no se muestran en el calendario */
+const HIDDEN_STATUS_IDS = new Set([4, 5]);
 
 /** Debe coincidir con el breakpoint `sm` de Tailwind (640px) */
 const MOBILE_QUERY = '(max-width: 639px)';
@@ -68,7 +70,7 @@ export class OrderCalendar {
   private orderService = inject(OrderService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-
+  private location = inject(Location);
   private calendar = viewChild(FullCalendarComponent);
   private mq = window.matchMedia(MOBILE_QUERY);
 
@@ -80,7 +82,14 @@ export class OrderCalendar {
   isLoading = signal(false);
   errorMsg  = signal<string | null>(null);
 
-  totalInRange = computed(() => this.orders().length);
+    // reemplaza totalInRange
+  visibleOrders = computed(() =>
+    this.orders().filter((o) => o.orderStatusId == null || !HIDDEN_STATUS_IDS.has(o.orderStatusId))
+  );
+  visibleStatuses = computed(() =>
+    this.statuses().filter((s) => !HIDDEN_STATUS_IDS.has(s.id))
+  );
+  totalInRange = computed(() => this.visibleOrders().length);
 
   calendarOptions = signal<CalendarOptions>({
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
@@ -97,7 +106,10 @@ export class OrderCalendar {
     editable: true,
     events: [],
     datesSet: (arg) => this.onDatesSet(arg),
-    eventClick: (info) => this.router.navigate(['/manager/orders', info.event.id]),
+    eventClick: (info) => {
+    info.jsEvent.preventDefault();
+    this.openOrderInNewTab(info.event.id);
+    },
     eventDrop: (info) => this.onEventDrop(info.event, info.revert),
     ...responsiveOptions(this.mq.matches),
   });
@@ -173,13 +185,19 @@ export class OrderCalendar {
     this.refreshOptions();
   }
 
+  private openOrderInNewTab(id: string): void {
+    const tree = this.router.createUrlTree(['/manager/orders', id]);
+    const url = this.location.prepareExternalUrl(this.router.serializeUrl(tree));
+    window.open(url, '_blank', 'noopener');
+  }
+
   // ---------- eventos y contador por día ----------
 
   private refreshOptions(): void {
     const counts = new Map<string, number>();
     const events: EventInput[] = [];
 
-    for (const o of this.orders()) {
+    for (const o of this.visibleOrders()) {
       if (!o.scheduledSendAt) continue;
 
       const day = o.scheduledSendAt.substring(0, 10);
@@ -188,7 +206,7 @@ export class OrderCalendar {
       const color = this.colorOf(o.orderStatusId);
       events.push({
         id: String(o.id),
-        title: `${o.orderCode} · ${o.customerName}`,
+        title: o.customerName,
         start: o.scheduledSendAt,
         backgroundColor: color,
         borderColor: color,

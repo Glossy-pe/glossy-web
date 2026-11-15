@@ -29,6 +29,7 @@ import { OrderItemRequest } from '../../models/order-item-request.model';
 import { ProductService } from '../../../products/services/product.service';
 import { ProductResponseFull } from '../../../products/models/product-response-full.model';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
+import { OrderItemKitPicker, PickedKitItem } from '../../../kits/components/order-item-kit-picker/order-item-kit-picker';
 
 interface ItemSnapshot {
   amountPaid: number | null;
@@ -50,7 +51,7 @@ type ItemFilter = 'all' | 'unpaid' | 'unpacked';
 
 @Component({
   selector: 'app-order-item-list',
-  imports: [DecimalPipe, FormsModule],
+  imports: [DecimalPipe, FormsModule, OrderItemKitPicker],
   templateUrl: './order-item-list.html',
   styleUrl: './order-item-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,8 +106,6 @@ export class OrderItemList implements OnChanges {
     return s.added + s.removed + s.modified > 0;
   });
 
-
-
   // ── Filtro y orden ───────────────────────────────────────────────
   readonly filter = signal<ItemFilter>('all');
   readonly filterOptions: { key: ItemFilter; label: string }[] = [
@@ -134,12 +133,12 @@ export class OrderItemList implements OnChanges {
   }
 
   readonly visibleItems = computed(() => {
-  const f = this.filter();
-  return this.orderedItems().filter((i) => {
-    if (f === 'all') return true;
-    return f === 'unpaid' ? this.isUnpaid(i) : !i.isPacked;
+    const f = this.filter();
+    return this.orderedItems().filter((i) => {
+      if (f === 'all') return true;
+      return f === 'unpaid' ? this.isUnpaid(i) : !i.isPacked;
+    });
   });
-});
 
   readonly counts = computed(() => {
     const active = this.items().filter((i) => !i.pendingDelete);
@@ -164,6 +163,7 @@ export class OrderItemList implements OnChanges {
   private nextTempId = -1;
 
   // ── Buscador / agregar ───────────────────────────────────────────
+  readonly pickerMode = signal<'product' | 'kit'>('product');
   readonly query = signal('');
   readonly results = signal<ProductResponseFull[]>([]);
   readonly selectedProduct = signal<ProductResponseFull | null>(null);
@@ -388,14 +388,14 @@ export class OrderItemList implements OnChanges {
   }
 
   private applyFlag(item: EditableManagerOrderItem, key: FlagKey, on: boolean): void {
-  if (key === 'paid') {
-    // Encendido: completa el monto. Apagado: lo deja en 0.
-    item.amountPaid = on ? this.totalOwed(item) : 0;
-  } else {
-    item[key] = on;
+    if (key === 'paid') {
+      // Encendido: completa el monto. Apagado: lo deja en 0.
+      item.amountPaid = on ? this.totalOwed(item) : 0;
+    } else {
+      item[key] = on;
+    }
+    if (!item.isNew) item.dirty = this.differsFromSnapshot(item);
   }
-  if (!item.isNew) item.dirty = this.differsFromSnapshot(item);
-}
 
   toggleFlag(item: EditableManagerOrderItem, key: FlagKey): void {
     if (!this.editMode() || item.pendingDelete) return;
@@ -474,7 +474,33 @@ export class OrderItemList implements OnChanges {
     this.selectedVariant.set(null);
   }
 
+  /** Agrega los items de un kit como nuevos locales (cantidad 1, cada uno independiente). */
+  addKitItems(picked: PickedKitItem[]): void {
+    const drafts = picked.map((p) => {
+      const draft = {
+        id: this.nextTempId--,
+        productVariantId: p.variantId,
+        productId: p.productId,
+        orderId: this.orderId,
+        quantity: 1,
+        price: p.price,
+        definedPrice: null,
+        amountPaid: 0,
+        isSeparated: false,
+        isPacked: false,
+        productName: p.productName,
+        toneName: p.toneName,
+        image: p.image,
+      } as unknown as ManagerOrderItemResponseStructured;
+      return { ...this.toEditable(draft), isNew: true };
+    });
+
+    // orderedItems invierte los nuevos; se invierte aquí para que el kit se vea en su orden.
+    this.items.update((list) => [...list, ...drafts.reverse()]);
+  }
+
   private resetPicker(): void {
+    this.pickerMode.set('product');
     this.query.set('');
     this.results.set([]);
     this.selectedProduct.set(null);
