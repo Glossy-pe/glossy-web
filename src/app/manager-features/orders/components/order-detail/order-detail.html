@@ -2,6 +2,8 @@
   <div class="product-container">
     <app-order-main-detail [orderId]="o.id" />
 
+    <app-order-payment-proofs [orderId]="o.id" />
+
     <app-order-item-list
       [orderItems]="o.items"
       [orderId]="o.id"

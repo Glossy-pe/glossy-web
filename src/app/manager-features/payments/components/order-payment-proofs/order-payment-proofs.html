@@ -1,0 +1,76 @@
+<div class="mb-3 rounded-xl border border-gray-200 bg-white shadow-sm">
+  <button type="button" class="flex w-full items-center justify-between px-4 py-2.5 text-left"
+    [attr.aria-expanded]="open()" (click)="open.set(!open())">
+    <span class="text-sm font-semibold text-gray-800">
+      Comprobantes de pago
+      <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{{ proofs().length }}</span>
+    </span>
+    <span class="text-gray-400" aria-hidden="true">{{ open() ? '▴' : '▾' }}</span>
+  </button>
+
+  @if (open()) {
+  <div class="space-y-2 border-t border-gray-100 p-3">
+
+    @if (error()) {
+    <p class="rounded-md bg-red-50 px-2 py-1 text-xs text-red-600">{{ error() }}</p>
+    }
+
+    <!-- Zona: pegar, arrastrar o elegir -->
+    <label class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-3 py-4 text-center transition"
+      [class]="dragging() ? 'border-gray-900 bg-gray-50' : 'border-gray-300 hover:bg-gray-50'"
+      (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+      @if (uploading()) {
+      <span class="text-sm text-gray-500">Subiendo...</span>
+      } @else {
+      <span class="text-sm font-medium text-gray-700">Pega con Ctrl+V, arrastra o haz clic</span>
+      <span class="text-xs text-gray-400">Se comprimen automáticamente antes de subir</span>
+      }
+      <input #fileInput type="file" accept="image/*" multiple class="hidden" (change)="onPick(fileInput)" />
+    </label>
+
+    <!-- Miniaturas -->
+    <!-- Miniaturas -->
+@if (proofs().length > 0) {
+<div class="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9">
+  @for (p of proofs(); track p.id) {
+  <div class="group relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+    <button type="button" class="block w-full" (click)="preview.set(p)">
+      <img [src]="p.url" alt="Comprobante" loading="lazy"
+        class="aspect-[9/16] w-full object-cover object-top" />
+    </button>
+    <span class="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5 text-[10px] text-white">
+      {{ p.createdAt | date: 'dd/MM HH:mm' }}
+    </span>
+    <button type="button" aria-label="Eliminar comprobante"
+      class="absolute right-1 top-1 h-6 w-6 rounded-full bg-white/90 text-xs text-red-600 shadow hover:bg-white"
+      (click)="remove(p)">✕</button>
+  </div>
+  }
+</div>
+} @else {
+<p class="text-center text-xs text-gray-400">Aún no hay comprobantes.</p>
+}
+  </div>
+  }
+</div>
+
+@if (preview(); as p) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" (click)="preview.set(null)">
+  <div class="relative flex max-h-[92vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+      <span class="text-xs text-gray-500">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+      <div class="flex items-center gap-2">
+        <a [href]="p.url" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Abrir original</a>
+        <button type="button" aria-label="Cerrar" class="h-7 w-7 rounded-full text-gray-500 hover:bg-gray-100"
+          (click)="preview.set(null)">✕</button>
+      </div>
+    </div>
+
+    <div class="overflow-y-auto bg-gray-50">
+      <img [src]="p.url" alt="Comprobante" class="mx-auto block w-full" />
+    </div>
+  </div>
+</div>
+}

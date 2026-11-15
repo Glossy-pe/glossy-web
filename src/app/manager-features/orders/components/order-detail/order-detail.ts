@@ -12,11 +12,12 @@ import { OrderMainDetail } from "./order-main-detail/order-main-detail";
 import { OrderItemService } from '../../../order-items/services/order-item.service';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
 import { ProductResponseFull } from '../../../products/models/product-response-full.model';
+import { OrderPaymentProofs } from '../../../payments/components/order-payment-proofs/order-payment-proofs';
 
 
 @Component({
   selector: 'app-order-detail',
-  imports: [CommonModule, ReactiveFormsModule, OrderItemList, OrderMainDetail],
+  imports: [CommonModule, ReactiveFormsModule, OrderItemList, OrderMainDetail, OrderPaymentProofs],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
