@@ -30,6 +30,8 @@ import { ProductService } from '../../../products/services/product.service';
 import { ProductResponseFull } from '../../../products/models/product-response-full.model';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
 import { OrderItemKitPicker, PickedKitItem } from '../../../kits/components/order-item-kit-picker/order-item-kit-picker';
+import { CfImagePipe } from '../../../../../shared/pipes/cf-image.pipe';
+import { IMAGE_SIZES } from '../../../../../shared/utils/image-url';
 
 interface ItemSnapshot {
   amountPaid: number | null;
@@ -51,7 +53,7 @@ type ItemFilter = 'all' | 'unpaid' | 'unpacked';
 
 @Component({
   selector: 'app-order-item-list',
-  imports: [DecimalPipe, FormsModule, OrderItemKitPicker],
+  imports: [DecimalPipe, FormsModule, OrderItemKitPicker, CfImagePipe],
   templateUrl: './order-item-list.html',
   styleUrl: './order-item-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,6 +69,9 @@ export class OrderItemList implements OnChanges {
   readonly paymentInput = signal<number | null>(null);
   readonly paymentLeftover = signal<number | null>(null);
   readonly paymentOpen = signal(false);
+
+  readonly thumbWidth = IMAGE_SIZES.thumb;
+  readonly miniWidth = IMAGE_SIZES.mini;
 
   readonly failedImages = signal<ReadonlySet<string>>(new Set());
 

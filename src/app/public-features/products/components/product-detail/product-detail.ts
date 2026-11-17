@@ -7,6 +7,8 @@ import { CategoryResponse } from '../../../categories/models/category-response.m
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { VariantResponseFull } from '../../../variants/models/variant-response.full.mode';
 import { Location } from '@angular/common';
+import { CfImagePipe } from '../../../../../shared/pipes/cf-image.pipe';
+import { IMAGE_SIZES } from '../../../../../shared/utils/image-url';
 
 interface GalleryImage {
   url: string;
@@ -22,7 +24,7 @@ const PLACEHOLDER_IMAGE: GalleryImage = {
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule],
+  imports: [CommonModule, CfImagePipe],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -30,6 +32,9 @@ export class ProductDetail {
   product   = signal<ProductResponseFull | null>(null);
   isLoading = signal(true);
   hasError  = signal(false);
+  readonly thumbWidth = IMAGE_SIZES.thumb;
+  readonly mediumWidth = IMAGE_SIZES.medium;
+  readonly miniWidth = IMAGE_SIZES.mini;
 // nuevo signal
 mediaError = signal(false);
   categories = signal<CategoryResponse[]>([]);

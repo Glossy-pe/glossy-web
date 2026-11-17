@@ -10,16 +10,18 @@ import { ProductCard } from '../product-card/product-card';
 import { ProductImagesList } from "../product-images-list/product-images-list";
 import { ProductMainDetail } from "../product-main-detail/product-main-detail";
 import { ProductOrders } from '../product-orders/product-orders';
+import { VariantBulkCreate } from '../variant-bulk-create/variant-bulk-create';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail, ProductOrders],
+  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail, ProductOrders, VariantBulkCreate],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
 export class ProductDetail implements OnInit {
 
   product = signal<ProductResponse | null>(null);
+  variantsKey = signal(0);
 
   private productId = 0;
 
@@ -35,6 +37,10 @@ export class ProductDetail implements OnInit {
     if (this.productId) {
       this.loadProduct();
     }
+  }
+
+  onVariantsCreated(): void {       // ← nuevo
+    this.variantsKey.update(v => v + 1);
   }
 
   loadProduct(): void {

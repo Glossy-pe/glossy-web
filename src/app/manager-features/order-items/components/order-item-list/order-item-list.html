@@ -155,7 +155,8 @@
           (click)="selectProduct(product)">
           <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
             @if (product.images?.[0]?.url; as imageUrl) {
-            <img [src]="imageUrl" [alt]="product.name" class="h-full w-full object-cover" />
+            <img [src]="imageUrl | cfImage:miniWidth" [alt]="product.name" loading="lazy"
+  class="h-full w-full object-cover" />
             } @else {
             <span class="flex h-full w-full items-center justify-center text-lg text-gray-300"
               aria-hidden="true">🖼️</span>
@@ -226,8 +227,9 @@
       <div class="relative">
         @let img = imageOf(item);
         @if (img && !failedImages().has(img)) {
-        <img [src]="img" [alt]="item.productName" loading="lazy" class="h-28 w-full object-cover"
-          [class.grayscale]="item.pendingDelete" (error)="onImageError(img)" />
+        <img [src]="img | cfImage:thumbWidth" [alt]="item.productName" loading="lazy"
+  class="h-28 w-full object-cover"
+  [class.grayscale]="item.pendingDelete" (error)="onImageError(img)" />
         } @else {
         <div class="flex h-28 w-full items-center justify-center bg-gray-100 text-2xl text-gray-300">🖼️</div>
         }

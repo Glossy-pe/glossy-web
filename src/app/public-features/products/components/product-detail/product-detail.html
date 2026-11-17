@@ -53,9 +53,11 @@
           <video [src]="activeImage().url" controls playsinline (loadeddata)="onMediaLoaded()" (error)="onMediaError()"
             class="w-full h-full object-cover" [class.grayscale]="activeImage().grayscale"></video>
           } @else {
-          <img [src]="activeImage().url" [alt]="p.name" (click)="openLightbox()" (load)="onMediaLoaded()"
-            (error)="onMediaError()" class="w-full h-full object-cover cursor-pointer"
-            [class.grayscale]="activeImage().grayscale">
+          <img [src]="activeImage().url | cfImage:mediumWidth" [alt]="p.name" (click)="openLightbox()"
+  (load)="onMediaLoaded()" (error)="onMediaError()"
+  fetchpriority="high"
+  class="w-full h-full object-cover cursor-pointer"
+  [class.grayscale]="activeImage().grayscale">
           }
 
           <!-- ============ SPINNER DE CARGA AL CAMBIAR DE IMAGEN/TONO ============ -->
@@ -108,7 +110,8 @@
               <span class="text-white text-xs leading-none">▶</span>
             </div>
             } @else {
-            <img [src]="img.url" class="w-full h-full object-cover">
+            <img [src]="img.url | cfImage:miniWidth" [alt]="p.name" loading="lazy"
+  class="w-full h-full object-cover">
             }
           </button>
           }

@@ -35,9 +35,13 @@
       
     </div>
 
-    <!-- Variantes: ancho completo porque suele ser tabla/lista -->
-    <div class="mt-6">
-      <app-variant-list [productId]="p.id" />
+    <!-- Variantes -->
+    <div class="mt-6 space-y-3">
+      <app-variant-bulk-create [productId]="p.id" (created)="onVariantsCreated()" />
+
+      @for (k of [variantsKey()]; track k) {
+        <app-variant-list [productId]="p.id" />
+      }
     </div>
 
     <div class="mt-6">

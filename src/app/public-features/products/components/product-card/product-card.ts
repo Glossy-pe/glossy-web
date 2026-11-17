@@ -4,10 +4,12 @@ import { ProductService } from '../../services/product.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CfImagePipe } from '../../../../../shared/pipes/cf-image.pipe';
+import { IMAGE_SIZES } from '../../../../../shared/utils/image-url';
 
 @Component({
   selector: 'app-product-card',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CfImagePipe],
   templateUrl: './product-card.html',
   styleUrl: './product-card.scss',
 })
@@ -17,6 +19,7 @@ export class ProductCard {
   confirmingDelete = signal(false);
   isDeleting = signal(false);
   deleteError = signal<string | null>(null);
+  readonly thumbWidth = IMAGE_SIZES.thumb;
 
   constructor(private router: Router) {}
 
