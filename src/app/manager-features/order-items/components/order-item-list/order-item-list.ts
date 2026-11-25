@@ -22,7 +22,8 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-
+import { BoxPresentationService } from '../../../purchases/services/box-presentation.service';
+import { SaleTemplateResponse } from '../../../purchases/models/box-presentation.model';
 import { OrderItemService } from '../../services/order-item.service';
 import { ManagerOrderItemResponseStructured } from '../../models/order-item-response-structured.model';
 import { OrderItemRequest } from '../../models/order-item-request.model';
@@ -69,10 +70,11 @@ export class OrderItemList implements OnChanges {
   readonly paymentInput = signal<number | null>(null);
   readonly paymentLeftover = signal<number | null>(null);
   readonly paymentOpen = signal(false);
-
+private readonly boxService = inject(BoxPresentationService);
   readonly thumbWidth = IMAGE_SIZES.thumb;
   readonly miniWidth = IMAGE_SIZES.mini;
-
+readonly templates = signal<SaleTemplateResponse[]>([]);
+readonly loadingTemplates = signal(false);
   readonly failedImages = signal<ReadonlySet<string>>(new Set());
 
   /** Deuda pendiente de los items activos. */
@@ -443,12 +445,29 @@ export class OrderItemList implements OnChanges {
     this.query.set(value);
     this.selectedProduct.set(null);
     this.selectedVariant.set(null);
+    this.templates.set([]);
   }
 
-  selectProduct(product: ProductResponseFull): void {
-    this.selectedProduct.update((current) => (current?.id === product.id ? null : product));
-    this.selectedVariant.set(null);
-  }
+selectProduct(product: ProductResponseFull): void {
+  const closing = this.selectedProduct()?.id === product.id;
+  this.selectedProduct.set(closing ? null : product);
+  this.selectedVariant.set(null);
+  this.templates.set([]);
+  if (!closing) this.loadTemplates(product.id);
+}
+
+private loadTemplates(productId: number): void {
+  this.loadingTemplates.set(true);
+  this.boxService.getTemplates(productId).pipe(
+    catchError(() => of([] as SaleTemplateResponse[])),
+    finalize(() => this.loadingTemplates.set(false)),
+  ).subscribe(list => {
+    // Ignora la respuesta si el usuario ya abrió otro producto
+    if (this.selectedProduct()?.id === productId) {
+      this.templates.set(list.filter(t => t.active));
+    }
+  });
+}
 
   selectVariant(variant: VariantResponseFull): void {
     this.selectedVariant.update((current) => (current?.id === variant.id ? null : variant));
@@ -504,12 +523,49 @@ export class OrderItemList implements OnChanges {
     this.items.update((list) => [...list, ...drafts.reverse()]);
   }
 
+  /** ¿Hay stock suficiente de cada variante para esta plantilla? */
+templateInStock(t: SaleTemplateResponse): boolean {
+  const variants = this.selectedProduct()?.variants ?? [];
+  return t.items.every(i =>
+    (variants.find(v => v.id === i.variantId)?.stock ?? 0) >= i.quantity);
+}
+
+/** Agrega la plantilla como items nuevos: uno por unidad, con el precio de la plantilla. */
+addTemplate(t: SaleTemplateResponse): void {
+  const product = this.selectedProduct();
+  if (!product) return;
+
+  const drafts = t.items.flatMap(i =>
+    Array.from({ length: i.quantity }, () => {
+      const draft = {
+        id: this.nextTempId--,
+        productVariantId: i.variantId,
+        productId: product.id,
+        orderId: this.orderId,
+        quantity: 1,
+        price: i.unitPrice,          // precio normal de la variante
+        definedPrice: t.unitPrice,   // precio de la plantilla
+        amountPaid: 0,
+        isSeparated: false,
+        isPacked: false,
+        productName: product.name,
+        toneName: i.toneName,
+        image: product.images?.[0]?.url ?? null,
+      } as unknown as ManagerOrderItemResponseStructured;
+      return { ...this.toEditable(draft), isNew: true };
+    }));
+
+  // orderedItems invierte los nuevos; se invierte aquí para verlos en su orden
+  this.items.update(list => [...list, ...drafts.reverse()]);
+}
+
   private resetPicker(): void {
     this.pickerMode.set('product');
     this.query.set('');
     this.results.set([]);
     this.selectedProduct.set(null);
     this.selectedVariant.set(null);
+    this.templates.set([]);
   }
 
   // ── Guardar todo ─────────────────────────────────────────────────

@@ -26,8 +26,8 @@
 
   <!-- Grid -->
   <div class="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
-    @for (product of products(); track product.id) {
-      <app-product-card [product]="product" />
+    @for (product of products(); track product.id; let i = $index) {
+      <app-product-card [product]="product" [priority]="i < 6" />
     }
 
     <!-- Skeletons iniciales -->

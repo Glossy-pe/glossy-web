@@ -1,0 +1,174 @@
+<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <h2 class="mb-4 text-lg font-semibold text-gray-900">Presentación BOX</h2>
+
+  <!-- Unidades totales -->
+  <div class="flex flex-wrap items-end gap-3">
+    <label class="block">
+      <span class="mb-1 block text-xs font-medium text-gray-600">Unidades totales por BOX</span>
+      <input type="number" min="1" step="1" [ngModel]="totalUnits()"
+        (ngModelChange)="totalUnits.set($event === '' ? null : $event)"
+        class="w-36 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+    </label>
+    <button type="button" (click)="savePresentation()"
+      [disabled]="savingPres() || !totalUnits() || totalUnits()! < 1"
+      class="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50">
+      {{ savingPres() ? 'Guardando...' : 'Guardar' }}
+    </button>
+  </div>
+
+  @if (presError()) {
+    <div role="alert" class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ presError() }}</div>
+  }
+
+  @if (presentation(); as p) {
+    @if (p.valid) {
+      <p class="mt-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+        {{ p.activeVariants }} variantes activas · {{ p.unitsPerVariant }} unidades de cada una por BOX
+      </p>
+    } @else {
+      <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        {{ p.totalUnits }} unidades no se dividen exacto entre {{ p.activeVariants }} variantes activas.
+        Corrige el total o las variantes para poder registrar BOX.
+      </p>
+    }
+  } @else {
+    <p class="mt-3 text-sm text-gray-500">Aún no defines la Presentación BOX de este producto.</p>
+  }
+
+  <!-- Plantillas -->
+  @if (presentation()) {
+    <div class="mt-6 flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-gray-900">Plantillas de venta</h3>
+      @if (editing() === null) {
+        <button type="button" (click)="newTemplate()"
+          class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50">
+          + Nueva plantilla
+        </button>
+      }
+    </div>
+
+    @if (editing() === null) {
+      <ul class="mt-2 space-y-2">
+        @for (t of templates(); track t.id) {
+          <li class="rounded-lg border border-gray-200 p-3" [class.opacity-50]="!t.active">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ t.name }}
+                  @if (!t.active) { <span class="ml-1 text-xs font-normal text-gray-400">(inactiva)</span> }
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ t.totalUnits }} unidades:
+                  @for (i of t.items; track i.variantId; let last = $last) {
+                    {{ i.quantity }}× {{ i.toneName }}{{ last ? '' : ', ' }}
+                  }
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-semibold text-gray-900">S/ {{ t.totalPrice | number:'1.2-2' }}</p>
+                <p class="text-xs text-gray-500">S/ {{ t.unitPrice | number:'1.2-4' }} c/u</p>
+                <p class="text-xs text-gray-400 line-through">S/ {{ t.referencePrice | number:'1.2-2' }}</p>
+                @if (t.discount > 0) {
+                  <p class="text-xs font-medium text-green-600">
+                    Ahorro S/ {{ t.discount | number:'1.2-2' }} ({{ t.discountPercent | number:'1.0-1' }}%)
+                  </p>
+                } @else if (t.discount < 0) {
+                  <p class="text-xs font-medium text-red-600">Más caro que por unidad</p>
+                }
+              </div>
+            </div>
+            <div class="mt-2 flex gap-2">
+              <button type="button" (click)="editTemplate(t)"
+                class="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50">Editar</button>
+              @if (t.active) {
+                <button type="button" (click)="deactivate(t)"
+                  class="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50">Desactivar</button>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="text-sm text-gray-500">Sin plantillas. Crea una, por ejemplo "FILA".</li>
+        }
+      </ul>
+    } @else {
+      <!-- Editor -->
+      <div class="mt-3 rounded-lg border border-gray-200 p-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-gray-600">Nombre</span>
+            <input type="text" maxlength="60" [ngModel]="tplName()" (ngModelChange)="tplName.set($event)"
+              placeholder="FILA, DOCENA, BOX ENTERO..."
+              class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-gray-600">Precio por unidad (S/)</span>
+            <input type="number" min="0" step="0.01" [ngModel]="tplUnitPrice()"
+              (ngModelChange)="tplUnitPrice.set($event === '' ? null : $event)"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+          </label>
+        </div>
+
+        <div class="mb-1 mt-4 flex items-center justify-between">
+          <span class="text-xs font-medium text-gray-600">Variantes incluidas y cantidad de cada una</span>
+          <button type="button" (click)="selectAll()" class="text-xs font-medium text-gray-600 underline">Marcar todas</button>
+        </div>
+
+        <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+          @for (r of rows(); track r.variantId) {
+            <li class="flex items-center justify-between gap-3 px-3 py-2">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" [ngModel]="r.selected"
+                  (ngModelChange)="patchRow(r.variantId, { selected: $event })" />
+                <span class="h-4 w-4 rounded-full border border-gray-200" [style.background-color]="r.toneCode"></span>
+                <span class="text-sm text-gray-900">{{ r.toneName }}</span>
+                <span class="text-xs text-gray-400">S/ {{ r.unitPrice | number:'1.2-2' }} c/u</span>
+              </label>
+              <input type="number" min="1" step="1" [ngModel]="r.quantity" [disabled]="!r.selected"
+                (ngModelChange)="patchRow(r.variantId, { quantity: $event })"
+                class="w-20 rounded-lg border border-gray-200 px-3 py-1.5 text-right text-sm outline-none focus:border-black disabled:bg-gray-50" />
+            </li>
+          }
+        </ul>
+
+        <!-- Comparación con precio por unidad -->
+        <div class="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
+          <div class="flex justify-between">
+            <span>{{ editorUnits() }} unidades por unidad costarían</span>
+            <span class="font-medium">S/ {{ editorReference() | number:'1.2-2' }}</span>
+          </div>
+          @if (tplUnitPrice() !== null) {
+            <div class="flex justify-between">
+              <span>Esta plantilla: {{ editorUnits() }} × S/ {{ tplUnitPrice() | number:'1.2-4' }}</span>
+              <span class="font-medium">S/ {{ editorTotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="flex justify-between"
+              [class]="editorDiscount() >= 0 ? 'text-green-700' : 'text-red-600'">
+              <span>{{ editorDiscount() >= 0 ? 'Ahorro del cliente' : 'Sobreprecio' }}</span>
+              <span class="font-medium">
+                S/ {{ (editorDiscount() >= 0 ? editorDiscount() : -editorDiscount()) | number:'1.2-2' }}
+                ({{ editorPercent() | number:'1.0-1' }}%)
+              </span>
+            </div>
+          }
+        </div>
+
+        <label class="mt-3 flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" [ngModel]="tplActive()" (ngModelChange)="tplActive.set($event)" /> Activa
+        </label>
+
+        @if (tplError()) {
+          <div role="alert" class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ tplError() }}</div>
+        }
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" (click)="cancelEdit()"
+            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">Cancelar</button>
+          <button type="button" (click)="saveTemplate()" [disabled]="!canSaveTpl()"
+            class="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50">
+            {{ savingTpl() ? 'Guardando...' : 'Guardar plantilla' }}
+          </button>
+        </div>
+      </div>
+    }
+  }
+</section>

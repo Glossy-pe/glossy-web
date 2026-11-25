@@ -2,10 +2,12 @@ import { Component, computed, Input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProductGroup, LightboxImage } from '../../../orders/components/order-detail/order-detail';
+import { CfImagePipe } from '../../../../../shared/pipes/cf-image.pipe';
+import { IMAGE_SIZES } from '../../../../../shared/utils/image-url';
 
 @Component({
   selector: 'app-order-item-card',
-  imports: [CommonModule],
+  imports: [CommonModule, CfImagePipe],
   templateUrl: './order-item-card.html',
   styleUrl: './order-item-card.scss',
 })
@@ -15,6 +17,9 @@ export class OrderItemCard {
 
   isLightboxOpen = signal(false);
   selectedImageIndex = signal(0);
+
+  readonly miniWidth = IMAGE_SIZES.mini;     // nuevo
+  readonly largeWidth = IMAGE_SIZES.large;   // nuevo
 
   activeImage = computed<LightboxImage>(() =>
     this.group.images[this.selectedImageIndex()] ?? { url: '', type: 'image' }

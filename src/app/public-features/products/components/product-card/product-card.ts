@@ -1,53 +1,27 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ProductResponseFull } from '../../models/product-response-full.model';
-import { ProductService } from '../../services/product.service';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
 import { CfImagePipe } from '../../../../../shared/pipes/cf-image.pipe';
 import { IMAGE_SIZES } from '../../../../../shared/utils/image-url';
 
 @Component({
   selector: 'app-product-card',
-  imports: [CommonModule, ReactiveFormsModule, CfImagePipe],
+  imports: [CurrencyPipe, RouterLink, CfImagePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-card.html',
   styleUrl: './product-card.scss',
 })
 export class ProductCard {
-  @Input({ required: true }) product!: ProductResponseFull;
+  product = input.required<ProductResponseFull>();
+  priority = input(false);               // true para las primeras cards
 
-  confirmingDelete = signal(false);
-  isDeleting = signal(false);
-  deleteError = signal<string | null>(null);
   readonly thumbWidth = IMAGE_SIZES.thumb;
 
-  constructor(private router: Router) {}
+  mainImageUrl = computed(() => {
+    const images = this.product().images ?? [];
+    return (images.find(i => i.mainImage) ?? images[0])?.url ?? null;
+  });
 
-  goToDetail(id: number): void {
-    this.router.navigate(['/guest/products', id]);
-  }
-
-  // ── Imagen principal del producto ──────────────────────────────
-  get mainImageUrl(): string | null {
-    const images = this.product?.images ?? [];
-    if (images.length === 0) return null;
-
-    return images.find(img => img.mainImage)?.url ?? images[0].url;
-  }
-
-  toneGradient(): string {
-    const colors = (this.product.variants ?? [])
-      .map(v => v.toneCode)
-      .filter((c): c is string => !!c)
-      .slice(0, 6);
-
-    if (colors.length === 0) return 'linear-gradient(90deg, #F9A8D4, #DB2777)';
-    if (colors.length === 1) return colors[0];
-
-    const step = 100 / colors.length;
-    const stops = colors
-      .map((c, i) => `${c} ${i * step}%, ${c} ${(i + 1) * step}%`)
-      .join(', ');
-    return `linear-gradient(90deg, ${stops})`;
-  }
+  price = computed(() => this.product().variants?.[0]?.price ?? null);
 }

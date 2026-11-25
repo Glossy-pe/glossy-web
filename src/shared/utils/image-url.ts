@@ -1,5 +1,9 @@
-export const IMAGE_SIZES = { mini: 200, thumb: 400, medium: 900 } as const;
-
+export const IMAGE_SIZES = {
+  mini: 200,
+  thumb: 400,
+  medium: 900,
+  large: 1600,
+} as const;
 
 // Dominio propio de tu bucket R2 (el mismo donde está la zona de Cloudflare)
 const CDN_ORIGIN = 'https://img.tudominio.com';

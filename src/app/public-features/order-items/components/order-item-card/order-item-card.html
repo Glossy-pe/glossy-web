@@ -1,82 +1,94 @@
-<div class="rounded-xl border border-gray-200 bg-white/60 backdrop-blur-[2px] p-3 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between gap-4 w-full">
-  
-  <!-- Bloque Izquierdo: Imagen + Información del Producto -->
-  <div class="flex items-center gap-3 min-w-0 flex-1">
-    
-    <!-- Imagen / Trigger Lightbox -->
-    <button type="button" class="shrink-0 group relative focus:outline-none" (click)="openLightbox()">
-      @if (group.images[0]) {
-      <img [src]="group.images[0].url" [alt]="group.productName" class="h-12 w-12 rounded-lg object-cover ring-1 ring-gray-100 group-hover:opacity-90 transition-opacity" />
+<!-- ============ TARJETA ============ -->
+<div class="flex w-full items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white/60 p-3 shadow-sm backdrop-blur-[2px] transition-all hover:border-gray-300">
+
+  <!-- Imagen + info -->
+  <div class="flex min-w-0 flex-1 items-center gap-3">
+
+    <button type="button" class="group relative shrink-0 focus:outline-none"
+            aria-label="Ver imagen" (click)="openLightbox()">
+      @if (group.images[0]; as first) {
+        <img [src]="first.url | cfImage:miniWidth" [alt]="group.productName"
+             width="48" height="48" loading="lazy" decoding="async"
+             class="h-12 w-12 rounded-lg object-cover ring-1 ring-gray-100 transition-opacity group-hover:opacity-90" />
       } @else {
-      <div class="h-12 w-12 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
-        <span class="text-lg">🖼️</span>
-      </div>
+        <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+          <span class="text-lg">🖼️</span>
+        </div>
       }
     </button>
 
-    <!-- Info del Producto y Tonos en línea -->
     <div class="min-w-0 flex-1">
-      <!-- Nombre del Producto -->
       <button type="button" (click)="navigateToProduct()"
         class="block w-full truncate text-left text-sm font-bold leading-snug text-gray-800 hover:text-blue-600 hover:underline focus:outline-none">
         {{ group.productName }}
       </button>
 
-      <!-- Tonos agrupados en formato texto (Tono (xCant), Tono (xCant)) -->
-      <p class="text-xs text-gray-500  mt-0.5">
+      <p class="mt-0.5 text-xs text-gray-500">
         @for (variant of group.variants; track variant.variantId; let last = $last) {
           <span class="font-medium">{{ variant.toneName }}</span>
-          <span class="text-gray-400 font-semibold text-[11px] ml-0.5">(x{{ variant.quantity }})</span>{{ last ? '' : ', ' }}
+          <span class="ml-0.5 text-[11px] font-semibold text-gray-400">(x{{ variant.quantity }})</span>{{ last ? '' : ', ' }}
         }
       </p>
     </div>
   </div>
 
-<!-- Bloque Derecho: Montos Totales -->
-<div class="text-right shrink-0 min-w-[90px]">
-  <!-- Línea 1: precio actual + tachado si hay descuento -->
-  <div class="flex items-baseline justify-end gap-1.5">
-    @if (hasProductDiscount()) {
-      <span class="text-[10px] font-semibold text-red-400 line-through">
-        S/ {{ group.originalTotal | number:'1.2-2' }}
-      </span>
-    }
-    <span class="text-sm font-extrabold text-gray-800">
-      S/ {{ group.totalAmount | number:'1.2-2' }}
-    </span>
-  </div>
+  <!-- Montos -->
+  <div class="min-w-[96px] shrink-0 text-right">
+    @if (group.pendingAmount > 0) {
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Falta pagar</p>
+      <p class="text-base font-extrabold leading-tight text-gray-900">
+        S/ {{ group.pendingAmount | number:'1.2-2' }}
+      </p>
 
-  <!-- Línea 2: cuánto ha pagado -->
-  <div class="text-[11px] font-medium text-gray-400 mt-0.5">
-    Pagado: S/ {{ group.amountPaid | number:'1.2-2' }}
+      <div class="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-100">
+        <div class="h-full rounded-full bg-amber-400"
+             [style.width.%]="group.totalAmount > 0 ? (group.amountPaid / group.totalAmount) * 100 : 0"></div>
+      </div>
+
+      <p class="mt-1 text-[11px] text-gray-400">
+        Pagado S/ {{ group.amountPaid | number:'1.2-2' }} de S/ {{ group.totalAmount | number:'1.2-2' }}
+      </p>
+    } @else {
+      <p class="text-sm font-extrabold text-gray-800">S/ {{ group.totalAmount | number:'1.2-2' }}</p>
+      <p class="mt-0.5 text-[11px] font-semibold text-emerald-600">✓ Pagado completo</p>
+    }
+
+    @if (hasProductDiscount()) {
+      <p class="text-[10px] font-semibold text-red-400 line-through">
+        S/ {{ group.originalTotal | number:'1.2-2' }}
+      </p>
+    }
   </div>
 </div>
 
-  <!-- Lightbox (Mantiene su lógica, optimizado visualmente para el layout) -->
-  @if (isLightboxOpen()) {
-<div class="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" (click)="closeLightbox()">
-    <button type="button" (click)="closeLightbox()"
-      class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xl rounded-full transition-colors cursor-pointer">
+<!-- ============ LIGHTBOX (hermano de la tarjeta, fuera del blur) ============ -->
+@if (isLightboxOpen()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
+       role="dialog" aria-modal="true" (click)="closeLightbox()">
+
+    <button type="button" (click)="closeLightbox()" aria-label="Cerrar"
+      class="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-xl text-white transition-colors hover:bg-white/20">
       ✕
     </button>
 
     @if (group.images.length > 1) {
-    <span class="absolute top-5 left-4 text-[11px] font-bold tracking-wider text-white/80 bg-black/40 px-3 py-1 rounded-full">
-      {{ selectedImageIndex() + 1 }} / {{ group.images.length }}
-    </span>
-    <button type="button" (click)="prevImage(); $event.stopPropagation()"
-      class="absolute left-4 w-12 h-12 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl rounded-full transition-colors cursor-pointer">‹</button>
-    <button type="button" (click)="nextImage(); $event.stopPropagation()"
-      class="absolute right-4 w-12 h-12 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl rounded-full transition-colors cursor-pointer">›</button>
+      <span class="absolute left-4 top-5 rounded-full bg-black/40 px-3 py-1 text-[11px] font-bold tracking-wider text-white/80">
+        {{ selectedImageIndex() + 1 }} / {{ group.images.length }}
+      </span>
+      <button type="button" (click)="prevImage(); $event.stopPropagation()" aria-label="Anterior"
+        class="absolute left-4 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/10 text-2xl text-white transition-colors hover:bg-white/20">‹</button>
+      <button type="button" (click)="nextImage(); $event.stopPropagation()" aria-label="Siguiente"
+        class="absolute right-4 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/10 text-2xl text-white transition-colors hover:bg-white/20">›</button>
     }
 
     @if (activeImage().type === 'video') {
-    <video [src]="activeImage().url" controls autoplay playsinline (click)="$event.stopPropagation()"
-      class="max-h-[85vh] max-w-[90vw] rounded-lg shadow-2xl object-contain"></video>
+      <video [src]="activeImage().url" controls autoplay playsinline preload="metadata"
+        (click)="$event.stopPropagation()"
+        class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"></video>
     } @else {
-    <img [src]="activeImage().url" (click)="$event.stopPropagation()"
-      class="max-h-[85vh] max-w-[90vw] rounded-lg shadow-2xl object-contain" />
+      <img [src]="activeImage().url | cfImage:largeWidth" [alt]="group.productName"
+        decoding="async" (click)="$event.stopPropagation()"
+        class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl" />
     }
   </div>
-  }
-</div>
+}

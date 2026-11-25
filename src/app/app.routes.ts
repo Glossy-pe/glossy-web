@@ -62,6 +62,14 @@ export const routes: Routes = [
         loadComponent: () => import('./manager-features/orders/components/order-calendar/order-calendar').then(m => m.OrderCalendar)
       },
       {
+        path: 'purchases/box',
+        loadComponent: () => import('./manager-features/purchases/components/purchase-box-form/purchase-box-form').then(m => m.PurchaseBoxForm)
+      },
+      {
+        path: 'purchases/unit',
+        loadComponent: () => import('./manager-features/purchases/components/purchase-unit-form/purchase-unit-form').then(m => m.PurchaseUnitForm)
+      },
+      {
         path: 'kits',          // estático antes que :id
         loadComponent: () => import('./manager-features/kits/components/kit-list/kit-list').then(m => m.KitList)
       },

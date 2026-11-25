@@ -1,14 +1,15 @@
-import { Component, computed, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, inject, DestroyRef } from '@angular/core';
 import { PageResponse } from '../../../../../shared/models/page-response.model';
 import { ProductResponseFull } from '../../models/product-response-full.model';
 import { ProductCard } from '../product-card/product-card';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, EMPTY, finalize, map, Subject, switchMap, take } from 'rxjs';
+import { catchError, debounceTime, defer, distinctUntilChanged, EMPTY, filter, finalize, map, Subject, switchMap, take } from 'rxjs';
 import { ProductService } from '../../services/product.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CategoryResponse } from '../../../categories/models/category-response.model';
 import { CategoryService } from '../../../categories/services/category.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-product-list',
@@ -34,6 +35,9 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   sort = signal('newest');
   categories = signal<CategoryResponse[]>([]);
 
+  private destroyRef = inject(DestroyRef);
+  private request$ = new Subject<{ reset: boolean }>();
+
   private page = 0;
   private observer?: IntersectionObserver;
   private search$ = new Subject<string>();
@@ -45,48 +49,44 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
 ngOnInit(): void {
-  this.categoryService.getAll().subscribe(cats => this.categories.set(cats));
+  this.categoryService.getAll()
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe(cats => this.categories.set(cats));
 
-  // Search con debounce
+  // Único pipeline de carga
+  this.request$.pipe(
+    switchMap(({ reset }) => {
+      if (reset) this.reset();
+      // defer: loading=true se aplica DESPUÉS de cancelar el inner anterior,
+      // si no, el finalize del anterior lo deja en false
+      return defer(() => {
+        this.loading.set(true);
+        this.error.set(false);
+        return this.fetch().pipe(
+          catchError(() => { this.error.set(true); return EMPTY; }),
+          finalize(() => this.loading.set(false)),
+        );
+      });
+    }),
+    takeUntilDestroyed(this.destroyRef),
+  ).subscribe(res => this.handleResponse(res));
+
+  // Búsqueda con debounce → solo dispara request$
   this.search$.pipe(
+    map(q => q.trim()),
     debounceTime(400),
     distinctUntilChanged(),
-    switchMap(q => {
-      this.reset();
-      if (!q.trim()) return this.loadPage();
-      return this.productService.search(q, this.categoryId() ?? undefined).pipe(
-        map(results => ({
-          content: results,
-          page: 0,
-          size: results.length,
-          totalElements: results.length,
-          totalPages: 1,
-          first: true,
-          last: true,
-        } as PageResponse<ProductResponseFull>))
-      );
-    })
-  ).subscribe({                                    // ← faltaba esto
-    next: res => this.handleResponse(res),
-    error: () => this.error.set(true),
+    filter(q => q.length === 0 || q.length >= 2), // no buscar con 1 letra
+    takeUntilDestroyed(this.destroyRef),
+  ).subscribe(() => this.request$.next({ reset: true }));
+
+  // URL → filtros
+  this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(qp => {
+    this.categoryId.set(qp.get('categoryId') ? Number(qp.get('categoryId')) : null);
+    this.sort.set(qp.get('sort') ?? 'newest');
+    this.request$.next({ reset: true });
   });
-
-  // Carga inicial + reacción a cambios de URL
-  this.route.queryParamMap.subscribe(qp => {
-    const newCategoryId = qp.get('categoryId') ? Number(qp.get('categoryId')) : null;
-    const newSort = qp.get('sort') ?? 'newest';
-
-    this.categoryId.set(newCategoryId);
-    this.sort.set(newSort);
-    this.reset();
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  });
-
-    // ← ELIMINA el loadPage() que estaba aquí suelto
-  }
+}
 
   ngAfterViewInit(): void {
     this.observer = new IntersectionObserver(entries => {
@@ -131,29 +131,26 @@ ngOnInit(): void {
     this.search$.next(value);
   }
 
-  onSortChange(value: string): void {
-    this.sort.set(value);
-    this.reset();
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+  // Handlers: todos se reducen a una línea
+onSortChange(v: string) { this.sort.set(v); this.request$.next({ reset: true }); }
+selectCategory(id: number | null) {
+  if (this.categoryId() === id) return;
+  this.categoryId.set(id);
+  this.request$.next({ reset: true });
+}
+retry() { this.request$.next({ reset: false }); }
 
-  selectCategory(id: number | null): void {
-    if (this.categoryId() === id) return;
-    this.categoryId.set(id);
-    this.reset();
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
+  private fetch() {
+  const q = this.query().trim();
+  if (q) {
+    return this.productService.search(q, this.categoryId() ?? undefined).pipe(
+      map(results => ({ content: results, page: 0, size: results.length,
+        totalElements: results.length, totalPages: 1, first: true, last: true,
+      } as PageResponse<ProductResponseFull>)));
   }
+  return this.productService.getAllProducts(
+    this.page, 12, this.categoryId() ?? undefined, this.sort() || undefined);
+}
 
-  retry(): void {
-    this.loadPage().subscribe({
-      next: res => this.handleResponse(res),
-      error: () => this.error.set(true),
-    });
-  }
+
 }

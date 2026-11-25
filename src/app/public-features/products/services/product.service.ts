@@ -3,7 +3,7 @@ import { PageResponse } from "../../../../shared/models/page-response.model";
 import { environment } from "../../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { ProductResponseFull } from "../models/product-response-full.model";
-import { Observable } from "rxjs";
+import { catchError, Observable, shareReplay, throwError } from "rxjs";
 import { ProductResponse } from "../models/product-response.model";
 
 
@@ -12,7 +12,8 @@ import { ProductResponse } from "../models/product-response.model";
 })
 export class ProductService {
     private readonly baseUrl = `${environment.apiUrl}/api/guest/products`;
-
+private detailCache = new Map<number, { at: number; req$: Observable<ProductResponseFull> }>();
+private static readonly DETAIL_TTL_MS = 60_000;
   constructor(private http: HttpClient) {}
 
   getAllProducts(
@@ -37,4 +38,22 @@ export class ProductService {
     getById(id: number): Observable<ProductResponseFull> {
     return this.http.get<ProductResponseFull>(`${this.baseUrl}/${id}`);
   }
+  
+
+
+  getByIdCached(id: number): Observable<ProductResponseFull> {
+  const hit = this.detailCache.get(id);
+  if (hit && Date.now() - hit.at < ProductService.DETAIL_TTL_MS) return hit.req$;
+
+  const req$ = this.getById(id).pipe(
+    catchError(err => {
+      this.detailCache.delete(id);   // no cachear errores
+      return throwError(() => err);
+    }),
+    shareReplay({ bufferSize: 1, refCount: false }),
+  );
+
+  this.detailCache.set(id, { at: Date.now(), req$ });
+  return req$;
+}
 }

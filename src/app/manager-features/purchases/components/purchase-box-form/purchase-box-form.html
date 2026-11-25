@@ -1,0 +1,134 @@
+<div class="min-h-screen bg-gray-50">
+
+  <div class="mb-6 border-b border-gray-200 bg-white p-4">
+    <h1 class="text-2xl font-bold text-gray-900">Registrar BOX</h1>
+  </div>
+
+  <div class="mx-auto max-w-3xl px-4 pb-10">
+
+    @if (success()) {
+      <div role="status" class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{{ success() }}</div>
+    }
+
+    <!-- 1. Producto -->
+    @if (!product()) {
+      <div>
+        <input type="text" [ngModel]="query()" (ngModelChange)="onQueryChange($event)"
+          placeholder="Buscar producto..."
+          class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm
+                 outline-none focus:border-black focus:ring-1 focus:ring-black" />
+
+        @if (searching()) { <p class="mt-2 text-xs text-gray-400">Buscando...</p> }
+
+        @if (results().length > 0) {
+          <ul class="mt-2 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            @for (p of results(); track p.id) {
+              <li>
+                <button type="button" (click)="selectProduct(p)"
+                  class="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-gray-50">
+                  <span class="font-medium text-gray-900">{{ p.name }}</span>
+                  <span class="text-xs text-gray-400">{{ p.variants?.length ?? 0 }} variantes</span>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else if (query().trim().length >= 2 && !searching()) {
+          <p class="mt-2 text-sm text-gray-500">Sin resultados.</p>
+        }
+      </div>
+    }
+
+    <!-- 2. Formulario -->
+    @if (product(); as p) {
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400">Producto</p>
+            <p class="text-lg font-semibold text-gray-900">{{ p.name }}</p>
+          </div>
+          <button type="button" (click)="clearProduct()"
+            class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50">
+            Cambiar
+          </button>
+        </div>
+
+        @if (loadingPres()) {
+          <p class="text-sm text-gray-500">Cargando presentación...</p>
+        } @else if (!presentation()) {
+          <div class="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+            Este producto no tiene Presentación BOX.
+            <a [routerLink]="['/manager/products', p.id]" class="font-medium underline">Defínela en el detalle del producto</a>.
+          </div>
+        } @else if (!presentation()!.valid) {
+          <div class="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+            Las {{ presentation()!.totalUnits }} unidades del BOX no se dividen exacto entre las
+            {{ presentation()!.activeVariants }} variantes activas.
+            <a [routerLink]="['/manager/products', p.id]" class="font-medium underline">Corrígelo en el detalle del producto</a>.
+          </div>
+        } @else {
+
+          <p class="mb-4 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
+            Cada BOX trae <span class="font-medium">{{ presentation()!.totalUnits }} unidades</span>:
+            {{ presentation()!.unitsPerVariant }} de cada una de las {{ presentation()!.activeVariants }} variantes.
+          </p>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="block">
+              <span class="mb-1 block text-xs font-medium text-gray-600">Cantidad de BOX recibidos</span>
+              <input type="number" min="1" max="100" step="1" [ngModel]="boxCount()"
+                (ngModelChange)="boxCount.set($event === '' ? null : $event)"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-medium text-gray-600">Costo por BOX (S/)</span>
+              <input type="number" min="0" step="0.01" [ngModel]="costPerBox()"
+                (ngModelChange)="costPerBox.set($event === '' ? null : $event)"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+            </label>
+          </div>
+
+          @if (unitCost() !== null) {
+            <p class="mt-2 text-xs text-gray-500">
+              Costo por unidad: <span class="font-medium text-gray-700">S/ {{ unitCost()! | number:'1.2-4' }}</span>
+            </p>
+          }
+
+          <!-- Qué se va a sumar -->
+          <h2 class="mb-2 mt-4 text-sm font-semibold text-gray-900">Stock que se sumará</h2>
+          <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+            @for (v of activeVariants(); track v.id) {
+              <li class="flex items-center justify-between px-3 py-2 text-sm">
+                <span class="flex items-center gap-2">
+                  <span class="h-4 w-4 rounded-full border border-gray-200" [style.background-color]="v.toneCode"></span>
+                  {{ v.toneName }}
+                </span>
+                <span class="text-gray-600">
+                  {{ v.stock }} → <span class="font-medium text-gray-900">
+                    {{ v.stock + (presentation()!.unitsPerVariant ?? 0) * (boxCount() ?? 0) }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+
+          <label class="mt-4 block">
+            <span class="mb-1 block text-xs font-medium text-gray-600">Notas (opcional)</span>
+            <input type="text" maxlength="500" [ngModel]="notes()" (ngModelChange)="notes.set($event)"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-black" />
+          </label>
+
+          @if (error()) {
+            <div role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ error() }}</div>
+          }
+
+          <div class="mt-4 flex justify-end">
+            <button type="button" (click)="save()" [disabled]="!canSubmit()"
+              class="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50">
+              {{ saving() ? 'Registrando...' : 'Registrar BOX' }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

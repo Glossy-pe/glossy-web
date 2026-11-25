@@ -35,6 +35,7 @@ export interface ProductGroup {
   totalAmount: number;
   amountPaid: number;
   originalTotal: number;
+  pendingAmount: number; // lo que realmente falta pagar de este producto
 }
 
 @Component({
@@ -50,7 +51,8 @@ export class OrderDetail implements OnInit {
   hasError = signal(false);
   isExpired = signal(false);
   lastUpdated = signal<Date | null>(null);
-isCartExpanded = signal(false);
+  isCartExpanded = signal(false);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -175,6 +177,7 @@ isCartExpanded = signal(false);
         totalAmount: pending.reduce((s, v) => s + v.totalAmount, 0),
         originalTotal: pending.reduce((s, v) => s + v.currentPrice * v.quantity, 0),
         amountPaid: pending.reduce((s, v) => s + v.amountPaid, 0),
+        pendingAmount: pending.reduce((s, v) => s + Math.max(0, v.totalAmount - v.amountPaid), 0),
       });
     });
     return result;
@@ -194,20 +197,31 @@ isCartExpanded = signal(false);
         totalAmount: paid.reduce((s, v) => s + v.totalAmount, 0),
         originalTotal: paid.reduce((s, v) => s + v.currentPrice * v.quantity, 0),
         amountPaid: paid.reduce((s, v) => s + v.amountPaid, 0),
+        pendingAmount: 0,
       });
     });
     return result;
   });
 
+  // Subtotal de lo que falta en la sección "Por completar pago"
+  unpaidSubtotal = computed<number>(() =>
+    this.unpaidProducts().reduce((s, g) => s + g.pendingAmount, 0)
+  );
+
   totalPaid = computed<number>(() =>
     (this.order()?.items ?? []).reduce((sum, item) => sum + (item.amountPaid ?? 0), 0)
   );
 
+  // Math.max por ítem: así un pago de más en un ítem no resta al resto
+  // y el resumen siempre coincide con la suma de las tarjetas.
   totalPending = computed<number>(() =>
-    (this.order()?.items ?? []).reduce((sum, item) => sum + ((item.unitPrice ?? 0) * item.quantity - (item.amountPaid ?? 0)), 0)
+    (this.order()?.items ?? []).reduce(
+      (sum, item) => sum + Math.max(0, (item.unitPrice ?? 0) * item.quantity - (item.amountPaid ?? 0)),
+      0
+    )
   );
 
-    totalOriginal = computed<number>(() =>
+  totalOriginal = computed<number>(() =>
     [...this.unpaidProducts(), ...this.paidProducts()]
       .reduce((sum, g) => sum + g.originalTotal, 0)
   );

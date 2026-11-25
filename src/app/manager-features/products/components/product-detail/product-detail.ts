@@ -11,10 +11,11 @@ import { ProductImagesList } from "../product-images-list/product-images-list";
 import { ProductMainDetail } from "../product-main-detail/product-main-detail";
 import { ProductOrders } from '../product-orders/product-orders';
 import { VariantBulkCreate } from '../variant-bulk-create/variant-bulk-create';
+import { BoxPresentationSection } from '../../../purchases/components/box-presentation-section/box-presentation-section';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail, ProductOrders, VariantBulkCreate],
+  imports: [CommonModule, VariantList, ProductCard, ProductImagesList, ProductMainDetail, ProductOrders, VariantBulkCreate, BoxPresentationSection],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
